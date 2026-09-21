@@ -38,7 +38,6 @@
     "scripts": {
         "build": "rolldown -c rolldown.config.ts",
         "build:page": "rolldown -c rolldown.page.config.ts",
-        "clean": "rm -rf dist",
         "start": "pnpm build:page && sirv . --port 4173 --dev",
         "typecheck": "tsc --noEmit",
         "test": "pnpm build && playwright test",

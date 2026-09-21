@@ -1,8 +1,10 @@
 packages:
   - "packages/*"
-# Dawn-backed WebGPU for node, used by dunstkreis' GPU tests; its install script fetches the binding.
+  - "site"
+# webgpu: Dawn-backed WebGPU for node (dunstkreis GPU tests), its install script fetches the binding. esbuild: Astro.
 allowBuilds:
   webgpu: true
+  esbuild: true
 minimumReleaseAgeExclude:
   - '@rolldown/binding-android-arm64@1.2.2'
   - '@rolldown/binding-darwin-arm64@1.2.2'

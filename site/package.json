@@ -1,0 +1,22 @@
+{
+    "name": "@himmel/sternwarte",
+    "version": "0.0.0",
+    "private": true,
+    "description": "The himmel website: one chapter per @himmel/* library, explaining, showcasing and making it explorable.",
+    "type": "module",
+    "license": "MIT",
+    "scripts": {
+        "dev": "astro dev",
+        "build": "astro build",
+        "preview": "astro preview",
+        "typecheck": "astro check"
+    },
+    "dependencies": {
+        "@astrojs/mdx": "^8.0.1",
+        "astro": "^7.3.3"
+    },
+    "devDependencies": {
+        "@astrojs/check": "^0.9.10",
+        "typescript": "^6.0.0"
+    }
+}

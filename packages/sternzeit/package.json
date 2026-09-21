@@ -37,7 +37,6 @@
     ],
     "scripts": {
         "build": "rolldown -c rolldown.config.ts",
-        "clean": "rm -rf dist",
         "start": "sirv . --port 4173 --dev",
         "typecheck": "tsc --noEmit",
         "test": "playwright test",

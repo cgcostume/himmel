@@ -5,3 +5,4 @@ playwright-report/
 packages/dunstkreis/static/bundle.js
 osghimmel/
 .claude/settings.local.json
+.astro/

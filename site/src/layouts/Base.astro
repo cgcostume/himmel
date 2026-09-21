@@ -1,0 +1,55 @@
+---
+import { getCollection } from "astro:content";
+import "../styles/global.css";
+
+interface Props {
+    title: string;
+    description: string;
+}
+const { title, description } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const chapters = (await getCollection("chapters")).sort((a, b) => a.data.order - b.data.order);
+const current = Astro.url.pathname.replace(/\/$/, "");
+---
+
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="color-scheme" content="dark" />
+        <title>{title}</title>
+        <meta name="description" content={description} />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Roboto+Mono:wght@300;400;700&display=swap"
+            rel="stylesheet"
+        />
+    </head>
+    <body>
+        <header class="site-header">
+            <a class="brand" href={`${base}/`}>himmel / sternwarte</a>
+            <nav>
+                {
+                    chapters.map((c) => (
+                        <a href={`${base}/${c.id}/`} aria-current={current === `${base}/${c.id}` ? "page" : undefined}>
+                            {c.data.title}
+                        </a>
+                    ))
+                }
+                <a href="https://github.com/cgcostume/himmel" target="_blank" rel="noopener">GitHub ↗</a>
+            </nav>
+        </header>
+        <main>
+            <slot />
+        </main>
+        <footer class="site-footer">
+            <span>
+                A TypeScript + WebGPU port of{" "}
+                <a href="https://github.com/cgcostume/osghimmel" target="_blank" rel="noopener">osgHimmel</a>{" "}
+                by Daniel Limberger. MIT licensed.
+            </span>
+        </footer>
+    </body>
+</html>

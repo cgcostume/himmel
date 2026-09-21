@@ -65,7 +65,7 @@ everything; one `pnpm-lock.yaml`, one `biome.json`, one `tsconfig.base.json` (ea
 `tsconfig.json` extends it). Cross-package dependencies use `workspace:*` (e.g. dunstkreis' dev page
 uses sternzeit), which pnpm rewrites to real version ranges on publish.
 
-Root scripts: `pnpm build`, `pnpm typecheck`, `pnpm test` (recursive), `pnpm lint`, `pnpm format`.
+Root scripts: `pnpm dev` (site at http://localhost:4321/himmel/), `pnpm build`, `pnpm typecheck`, `pnpm test` (recursive), `pnpm lint`, `pnpm format`, `pnpm clean` (removes everything generated, including `node_modules`).
 
 ## Tooling (same across every `@himmel/*` package)
 
@@ -82,7 +82,8 @@ Root scripts: `pnpm build`, `pnpm typecheck`, `pnpm test` (recursive), `pnpm lin
 - **Shared config lives at the root** (`biome.json`, `tsconfig.base.json`), not in a config package.
 - **Astro** for the site (`site/`): content collections + MDX per chapter, zero JS by default,
   every interactive demo is an island. Only acceptable as long as it stays static-exportable to
-  GitHub Pages and runs locally with one command.
+  GitHub Pages and runs locally with one command. The site pins TypeScript 6: `astro check` needs the
+  programmatic compiler API, which TypeScript 7 (native) does not ship yet.
 - **MIT license**, no NOTICE/BSD-carryover needed. The user is the sole author/rights-holder of
   the original osgHimmel work (his own thesis, not employer-commissioned), so relicensing is his
   call.

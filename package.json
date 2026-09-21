@@ -5,11 +5,13 @@
     "type": "module",
     "license": "MIT",
     "scripts": {
+        "dev": "pnpm --filter @himmel/sternwarte dev",
         "build": "pnpm -r build",
         "typecheck": "pnpm -r typecheck",
         "test": "pnpm -r test",
         "format": "biome format --write .",
-        "lint": "biome check ."
+        "lint": "biome check .",
+        "clean": "rm -rf node_modules packages/*/node_modules packages/*/dist packages/dunstkreis/static/bundle.js site/node_modules site/dist site/.astro"
     },
     "devDependencies": {
         "@biomejs/biome": "^2.5.6"
