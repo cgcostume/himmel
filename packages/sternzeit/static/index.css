@@ -1,0 +1,332 @@
+:root {
+    color-scheme: light;
+    --accent: #007fff;
+}
+body {
+    font-family: "Roboto", sans-serif;
+    font-size: 1rem;
+    font-weight: 300;
+    line-height: 1.7;
+    margin: 0;
+    background: #fff;
+    color: #111;
+}
+h1 {
+    font-family: "Roboto Mono", ui-monospace, monospace;
+    font-size: 1.1rem;
+    font-weight: 400;
+}
+.title-row {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    pointer-events: none;
+}
+.title-row a {
+    color: var(--accent);
+    text-decoration: none;
+    pointer-events: auto;
+}
+.title-row a:hover {
+    text-decoration: underline;
+}
+h2 {
+    font-size: 1rem;
+    margin-top: 2rem;
+    font-weight: 400;
+}
+/* Reusable footnote scale: attributions, fine print, anything meant to read as an aside rather than body text. */
+.footnote {
+    font-size: 0.75em;
+}
+/* left, not right: the alt-az panels (see viz.css) now live in the bottom-right corner of #scene, and this
+   would otherwise sit right on top of the moon-relative one. Color matches .altaz-caption (viz.css): the same
+   muted aside tone for both, rather than two different grays. */
+.vis-credit {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    margin: 0;
+    padding: 0.5rem 1.5rem;
+    color: #666;
+    pointer-events: none;
+}
+.vis-credit a {
+    color: inherit;
+    pointer-events: auto;
+}
+strong,
+b {
+    color: var(--accent);
+}
+/* The schematic view (with the title overlaid on top of it, see .title-row) pins to the top of the viewport
+   as you scroll; everything else (inputs, tables) is a single centered column that scrolls underneath it.
+   No padding of its own: #scene fills it edge to edge, ending exactly at the border-bottom splitter. Grey,
+   matching the table's own outer border below (#ccc) rather than the accent color: a plain grid-line
+   separator, not something meant to draw attention on its own. */
+.sticky-vis {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #fff;
+    max-width: 1140px;
+    margin: 0 auto;
+    border-bottom: 1px solid #ccc;
+}
+/* Bootstrap's 12-column lg container width, so the tables' fixed columns finally have room to breathe. */
+.page {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 1.5rem 2rem 2rem;
+}
+details.domain {
+    margin-top: 2rem;
+}
+/* No native disclosure triangle (doesn't fit the flat design); a +/- glyph instead, positioned inside the
+   summary's own box (not list-style-position: outside, which draws in the margin and can end up clipped
+   behind the sticky vis when this scrolls underneath it). */
+details.domain > summary {
+    position: relative;
+    padding-left: 1.2em;
+    list-style: none;
+    font-size: 1rem;
+    font-weight: 400;
+    color: var(--accent);
+    cursor: pointer;
+}
+details.domain > summary::-webkit-details-marker {
+    display: none;
+}
+details.domain > summary::before {
+    content: "+";
+    position: absolute;
+    left: 0;
+    color: #999;
+}
+details.domain[open] > summary::before {
+    content: "\2212";
+}
+details.domain[open] > summary {
+    margin-bottom: 0.5rem;
+}
+.toolbar {
+    display: flex;
+    gap: 0.75rem;
+    align-items: baseline;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+}
+.toolbar label {
+    display: flex;
+    gap: 0.35rem;
+    align-items: baseline;
+}
+/* Julian Day / Latitude / Longitude as a grid, not three independent flex rows, so their label/input/step
+   columns line up regardless of how wide each row's label text is. */
+.input-grid {
+    display: grid;
+    grid-template-columns: auto auto auto 1fr;
+    gap: 0.5rem 0.75rem;
+    align-items: baseline;
+    margin-bottom: 1rem;
+}
+.input-grid-extra {
+    display: flex;
+    gap: 0.75rem;
+    align-items: baseline;
+    flex-wrap: wrap;
+}
+.input-grid-extra label {
+    display: flex;
+    gap: 0.35rem;
+    align-items: center;
+}
+/* Explicit column 2 (not column 1, the label) puts these under the input box they act on, not the label. */
+.input-grid-subrow {
+    grid-column: 2 / -1;
+    display: flex;
+    gap: 0.75rem;
+    align-items: baseline;
+    flex-wrap: wrap;
+}
+.input-grid-subrow label {
+    display: flex;
+    gap: 0.35rem;
+    align-items: baseline;
+}
+/* Native spinner arrows can't be intercepted the way keydown/wheel can (see wireStepping() in index.js),
+   so they'd silently misbehave the same way clicking them used to; hidden in favor of arrow-key/scroll. */
+input[type="number"] {
+    width: 12ch;
+}
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type="number"] {
+    appearance: textfield;
+    -moz-appearance: textfield;
+}
+#jd {
+    width: 20ch;
+}
+input.latlong {
+    width: 17ch;
+}
+input,
+button,
+select {
+    font: inherit;
+    line-height: 1.4;
+    box-sizing: border-box;
+    height: 1.65rem;
+    background: #fff;
+    color: #111;
+    border: 1px solid #999;
+    border-radius: 4px;
+    padding: 0.15rem 0.4rem;
+}
+/* Checkboxes are small native squares, not text boxes; the shared height/padding above (sized for text
+   inputs/buttons/selects) would otherwise stretch their box tall while the visible glyph stays pinned to its
+   top, throwing off vertical centering next to label text. */
+input[type="checkbox"] {
+    height: auto;
+}
+button:hover,
+select:hover {
+    border-color: var(--accent);
+}
+input:focus-visible,
+button:focus-visible,
+select:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+}
+code,
+pre,
+table,
+input,
+button,
+select {
+    font-family: "Roboto Mono", ui-monospace, monospace;
+}
+code,
+pre,
+table,
+input,
+button,
+select {
+    font-size: 85%;
+}
+code,
+pre {
+    background: #fafafa;
+    border: 1px solid #e5e5e5;
+    border-radius: 4px;
+    padding: 0.15rem 0.4rem;
+    color: var(--accent);
+}
+code {
+    user-select: all;
+}
+pre {
+    padding: 0.6rem 0.8rem;
+    overflow-x: auto;
+}
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-bottom: 1rem;
+    table-layout: fixed;
+    font-variant-numeric: tabular-nums;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    overflow: hidden;
+}
+th,
+td {
+    border: 1px solid #e5e5e5;
+    padding: 0.3rem 0.6rem;
+    text-align: left;
+    vertical-align: top;
+    overflow-wrap: break-word;
+}
+th {
+    opacity: 0.7;
+    font-weight: 400;
+    background: #fafafa;
+}
+col.name {
+    width: 30%;
+}
+col.unit {
+    width: 8%;
+}
+col.value {
+    width: 29%;
+}
+th.value,
+td.value {
+    text-align: right;
+    padding-right: 1rem;
+    white-space: pre;
+}
+td.missing {
+    opacity: 0.4;
+}
+/* Applies to both the export-name cell (see describe() in index.js) and the approx-column value cell
+   (see approxCell()'s delta-to-precise tooltip), no need to scope by column since both mean "hover for
+   more". */
+td[title] {
+    text-decoration: underline dotted #999;
+    cursor: help;
+    text-underline-offset: 3px;
+}
+tr:nth-child(even) {
+    background: #f7f7f7;
+}
+tbody tr:hover {
+    background: color-mix(in srgb, var(--accent) 10%, #fff);
+}
+
+/* Lead paragraph under the title: what the library is for, before any detail about this page. */
+.lead {
+    font-size: 1.15rem;
+    line-height: 1.6;
+    margin: 0 0 1rem;
+}
+.lead a {
+    color: var(--accent);
+    text-decoration: none;
+}
+.lead a:hover {
+    text-decoration: underline;
+}
+.family {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #ccc;
+    color: #666;
+}
+.family a {
+    color: var(--accent);
+    text-decoration: none;
+}
+.family a:hover {
+    text-decoration: underline;
+}
+.family ul {
+    margin: 0.5rem 0;
+    padding-left: 1.2rem;
+}
+.planned {
+    color: #999;
+    font-style: italic;
+}

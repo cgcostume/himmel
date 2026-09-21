@@ -1,0 +1,58 @@
+{
+    "name": "@himmel/dunstkreis",
+    "version": "0.1.0",
+    "description": "WebGPU compute-based atmospheric scattering (Bruneton precomputed model) for sky rendering, a TypeScript port of osgHimmel's atmosphere rendering.",
+    "type": "module",
+    "license": "MIT",
+    "sideEffects": false,
+    "author": "Daniel Limberger <cgdaniel@outlook.com> (https://github.com/cgcostume)",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/cgcostume/himmel.git",
+        "directory": "packages/dunstkreis"
+    },
+    "homepage": "https://github.com/cgcostume/himmel/tree/main/packages/dunstkreis#readme",
+    "keywords": [
+        "atmosphere",
+        "atmospheric-scattering",
+        "bruneton",
+        "sky-rendering",
+        "webgpu",
+        "compute-shader"
+    ],
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js"
+        },
+        "./approx": {
+            "types": "./dist/approx.d.ts",
+            "import": "./dist/approx.js"
+        }
+    },
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "rolldown -c rolldown.config.ts",
+        "build:page": "rolldown -c rolldown.page.config.ts",
+        "clean": "rm -rf dist",
+        "start": "pnpm build:page && sirv . --port 4173 --dev",
+        "typecheck": "tsc --noEmit",
+        "test": "pnpm build && playwright test",
+        "test:gpu": "pnpm build && DUNSTKREIS_GPU=1 playwright test"
+    },
+    "devDependencies": {
+        "@himmel/sternzeit": "workspace:*",
+        "@playwright/test": "^1.62.1",
+        "@types/node": "^26.6.2",
+        "@webgpu/types": "^0.1.71",
+        "rolldown": "^1.2.2",
+        "rolldown-plugin-dts": "^0.28.0",
+        "sirv-cli": "^3.0.1",
+        "typescript": "^7.0.2",
+        "webgpu": "^0.6.1"
+    }
+}

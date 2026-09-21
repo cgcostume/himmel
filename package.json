@@ -1,0 +1,18 @@
+{
+    "name": "himmel",
+    "private": true,
+    "description": "Monorepo of the @himmel/* sky-rendering libraries and their site, sternwarte.",
+    "type": "module",
+    "license": "MIT",
+    "scripts": {
+        "build": "pnpm -r build",
+        "typecheck": "pnpm -r typecheck",
+        "test": "pnpm -r test",
+        "format": "biome format --write .",
+        "lint": "biome check ."
+    },
+    "devDependencies": {
+        "@biomejs/biome": "^2.5.6"
+    },
+    "packageManager": "pnpm@11.20.0"
+}
