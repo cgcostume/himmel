@@ -1,0 +1,14 @@
+---
+import "./inspector.css";
+
+interface Props {
+    domain: "earth" | "sun" | "moon" | "eclipse";
+}
+const { domain } = Astro.props;
+---
+
+<div class="sternzeit-table wide" data-domain={domain}></div>
+
+<script>
+    import "./inspector.js";
+</script>

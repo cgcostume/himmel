@@ -1,0 +1,26 @@
+---
+import "./inspector.css";
+---
+
+<div class="scene-frame wide">
+    <div id="scene">
+        <svg id="stage" aria-hidden="true"></svg>
+        <div class="altaz-panels">
+            <div class="altaz-panel altaz-panel-sun">
+                <svg id="sunView" aria-hidden="true"></svg>
+                <span class="altaz-caption">sun-relative</span>
+            </div>
+            <div class="altaz-panel altaz-panel-moon">
+                <svg id="moonView" aria-hidden="true"></svg>
+                <span class="altaz-caption">moon-relative</span>
+            </div>
+        </div>
+        <p class="vis-credit footnote">
+            Visualized with <a href="https://zzz.dog/" target="_blank" rel="noopener">Zdog</a>.
+        </p>
+    </div>
+</div>
+
+<script>
+    import "./scene.js";
+</script>

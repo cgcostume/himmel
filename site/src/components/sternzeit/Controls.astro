@@ -1,0 +1,58 @@
+---
+import "./inspector.css";
+
+interface Props {
+    /** Starts unfolded; folded sets show just a one-line summary of the current moment and place. */
+    open?: boolean;
+}
+const { open = false } = Astro.props;
+// Unique per instance, so every label still points at its own input when a page has several sets of controls.
+const uid = `moment-${Math.random().toString(36).slice(2, 8)}`;
+---
+
+<details class="moment" open={open}>
+    <summary><span class="moment-title">Moment and place</span> <span class="note" data-field="summary"></span></summary>
+    <div class="input-grid">
+        <label for={`${uid}-jd`}>Julian Day</label>
+        <input id={`${uid}-jd`} data-field="jd" type="number" />
+        <select data-field="jdStep" aria-label="Julian Day step">
+            <option value="365.25">± year</option>
+            <option value="30.436875">± month</option>
+            <option value="7">± week</option>
+            <option value="1">± day</option>
+            <option value="0.0416666666667" selected>± hour</option>
+            <option value="0.0006944444444">± minute</option>
+            <option value="0.0000115740741">± second</option>
+        </select>
+        <span class="input-grid-extra">
+            <button data-field="now" type="button">now</button>
+            <label><input data-field="live" type="checkbox" /> live</label>
+        </span>
+
+        <label for={`${uid}-latitude`}>Latitude</label>
+        <input id={`${uid}-latitude`} data-field="latitude" class="latlong" type="number" />
+        <select data-field="latitudeStep" aria-label="Latitude step">
+            <option value="1" selected>± degree</option>
+            <option value="0.0166666666667">± minute</option>
+            <option value="0.0002777777778">± second</option>
+        </select>
+        <span class="input-grid-extra"><span data-field="latitudeDms" class="note"></span></span>
+
+        <label for={`${uid}-longitude`}>Longitude</label>
+        <input id={`${uid}-longitude`} data-field="longitude" class="latlong" type="number" />
+        <select data-field="longitudeStep" aria-label="Longitude step">
+            <option value="1" selected>± degree</option>
+            <option value="0.0166666666667">± minute</option>
+            <option value="0.0002777777778">± second</option>
+        </select>
+        <span class="input-grid-extra"><span data-field="longitudeDms" class="note"></span></span>
+        <span class="input-grid-subrow">
+            <button data-field="geolocate" type="button">use browser location</button>
+            <span data-field="location" class="note"></span>
+        </span>
+    </div>
+</details>
+
+<script>
+    import "./controls.js";
+</script>

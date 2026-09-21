@@ -1,0 +1,36 @@
+---
+import { getCollection } from "astro:content";
+import Base from "../../layouts/Base.astro";
+import { type Glossary, loadGlossary } from "../../lib/glossary";
+
+export async function getStaticPaths() {
+    const chapters = await getCollection("chapters");
+    return chapters.flatMap((chapter) => {
+        const glossary = loadGlossary(chapter.id);
+        return glossary ? [{ params: { chapter: chapter.id }, props: { chapter, glossary } }] : [];
+    });
+}
+const { chapter, glossary } = Astro.props as { chapter: { id: string; data: { package: string } }; glossary: Glossary };
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+---
+
+<Base title={`${chapter.data.package}: glossary`} description={`Terms used by ${chapter.data.package}.`}>
+    <p class="breadcrumb"><a href={`${base}/${chapter.id}/`}>{chapter.id}</a> / glossary</p>
+    <h1>Glossary</h1>
+    <p class="lead" set:html={glossary.intro} />
+    {
+        glossary.sections.map((section) => (
+            <section>
+                <h2>{section.title}</h2>
+                <dl class="glossary">
+                    {section.entries.map((entry) => (
+                        <div id={entry.id}>
+                            <dt>{entry.term.replace(/`/g, "")}</dt>
+                            <dd set:html={entry.html} />
+                        </div>
+                    ))}
+                </dl>
+            </section>
+        ))
+    }
+</Base>

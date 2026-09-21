@@ -51,5 +51,17 @@ const current = Astro.url.pathname.replace(/\/$/, "");
                 by Daniel Limberger. MIT licensed.
             </span>
         </footer>
+        <script>
+            // Keeps glossary and citation tooltips inside the viewport: shifted left by however far they would overflow.
+            const fit = (event: Event) => {
+                const tip = (event.target as Element).closest?.(".term, .cite")?.querySelector<HTMLElement>(".term-tip");
+                if (!tip) return;
+                tip.style.setProperty("--tip-shift", "0px");
+                const overflow = tip.getBoundingClientRect().right - (document.documentElement.clientWidth - 16);
+                if (overflow > 0) tip.style.setProperty("--tip-shift", `${-overflow}px`);
+            };
+            document.addEventListener("pointerover", fit);
+            document.addEventListener("focusin", fit);
+        </script>
     </body>
 </html>

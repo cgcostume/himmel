@@ -1,5 +1,8 @@
+import { fileURLToPath } from "node:url";
 import mdx from "@astrojs/mdx";
 import { defineConfig } from "astro/config";
+
+const source = (path) => fileURLToPath(new URL(`../packages/${path}`, import.meta.url));
 
 // Static output only: served locally by `pnpm dev` and deployed as plain files to GitHub Pages under /himmel.
 export default defineConfig({
@@ -7,4 +10,13 @@ export default defineConfig({
     base: "/himmel",
     output: "static",
     integrations: [mdx()],
+    vite: {
+        // The site always shows the libraries' current source, no package build needed in between.
+        resolve: {
+            alias: [
+                { find: /^@himmel\/sternzeit$/, replacement: source("sternzeit/src/index.ts") },
+                { find: /^@himmel\/sternzeit\/approx$/, replacement: source("sternzeit/src/approx.ts") },
+            ],
+        },
+    },
 });

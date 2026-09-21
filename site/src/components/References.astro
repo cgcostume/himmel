@@ -1,0 +1,30 @@
+---
+import { chapterReferences } from "../lib/references";
+
+interface Props {
+    chapter: string;
+    /** The chapter's MDX source, to check that every listed reference is actually cited somewhere. */
+    body: string;
+}
+const { chapter, body } = Astro.props;
+const list = await chapterReferences(chapter);
+for (const { id } of list) {
+    if (!body.includes(`<Cite id="${id}"`)) throw new Error(`"${id}" is listed in "${chapter}" but never cited`);
+}
+---
+
+{
+    list.length > 0 && (
+        <section class="references">
+            <h2 id="references">References</h2>
+            <ol>
+                {list.map(({ id, reference: r }) => (
+                    <li id={`ref-${id}`}>
+                        {r.authors}: {r.url ? <a href={r.url} target="_blank" rel="noopener">{r.title}</a> : <em>{r.title}</em>}.{" "}
+                        {r.venue}, {r.year}.{r.note && <span class="reference-note"> {r.note}</span>}
+                    </li>
+                ))}
+            </ol>
+        </section>
+    )
+}

@@ -1,0 +1,20 @@
+---
+import { findEntry } from "../lib/glossary";
+
+interface Props {
+    /** Glossary name to look up, e.g. "Julian Day"; the slotted text is shown instead, if given. */
+    of: string;
+    /** Package whose glossary to use; defaults to the chapter this page belongs to. */
+    lib?: string;
+}
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const { of, lib = Astro.url.pathname.slice(base.length).split("/")[1] ?? "" } = Astro.props;
+const entry = findEntry(lib, of);
+const label = Astro.slots.has("default") ? await Astro.slots.render("default") : of;
+---
+
+<a class="term" href={`${base}/${lib}/glossary/#${entry.id}`}
+    ><Fragment set:html={label} /><span class="term-tip" role="tooltip"
+        ><strong>{entry.term.replace(/`/g, "")}</strong> <Fragment set:html={entry.html} /></span
+    ></a
+>

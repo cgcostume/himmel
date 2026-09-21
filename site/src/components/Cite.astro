@@ -1,0 +1,19 @@
+---
+import { chapterReferences, formatReference } from "../lib/references";
+
+interface Props {
+    /** Id in src/data/references.ts, which must also be listed in the chapter's `references` frontmatter. */
+    id: string;
+}
+const { id } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const chapter = Astro.url.pathname.slice(base.length).split("/")[1] ?? "";
+const list = await chapterReferences(chapter);
+const index = list.findIndex((r) => r.id === id);
+const entry = list[index];
+if (!entry) throw new Error(`"${id}" is cited in "${chapter}" but not listed in its references`);
+---
+
+<a class="cite" href={`#ref-${id}`}
+    >[{index + 1}]<span class="term-tip cite-tip" role="tooltip">{formatReference(entry.reference)}</span></a
+>

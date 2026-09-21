@@ -17,6 +17,8 @@ html {
 }
 body {
     margin: 0;
+    /* Safety net against anything poking out sideways; clip, unlike hidden, creates no scroll container. */
+    overflow-x: clip;
     background: var(--bg);
     color: var(--text);
     font-family: "Roboto", system-ui, sans-serif;
@@ -107,5 +109,164 @@ main {
 }
 .chapter-list p {
     margin: 0.25rem 0 0;
+    color: var(--muted);
+}
+.footnote {
+    font-size: 0.75em;
+}
+code,
+pre {
+    font-size: 85%;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 0.1rem 0.35rem;
+}
+pre {
+    padding: 0.6rem 0.8rem;
+    overflow-x: auto;
+}
+pre code {
+    font-size: inherit;
+    background: none;
+    border: 0;
+    padding: 0;
+}
+/* Form controls, shared by every chapter's interactive parts. */
+input,
+button,
+select {
+    font-family: "Roboto Mono", ui-monospace, monospace;
+    font-size: 85%;
+    line-height: 1.4;
+    height: 1.65rem;
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 0.15rem 0.4rem;
+}
+input[type="checkbox"] {
+    height: auto;
+    accent-color: var(--accent);
+}
+button {
+    cursor: pointer;
+}
+button:hover,
+select:hover {
+    border-color: var(--accent);
+}
+input:focus-visible,
+button:focus-visible,
+select:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+}
+/* Arrow keys and wheel step number inputs by hand (see wireStepping in the sternzeit inspector); native spinners hidden. */
+input[type="number"] {
+    width: 12ch;
+    appearance: textfield;
+}
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+/* Breaks out of the reading column to the full site width, for scenes, controls and tables that need the room. */
+.wide {
+    --wide-width: min(var(--wide), 100vw - 3rem);
+    width: var(--wide-width);
+    margin-left: calc(50% - var(--wide-width) / 2);
+}
+/* Glossary terms in running text: a dotted underline, the definition on hover or focus, the entry on click. */
+.term {
+    position: relative;
+    color: inherit;
+    text-decoration: underline dotted var(--accent);
+    text-underline-offset: 3px;
+}
+.term:hover {
+    color: var(--accent);
+    text-decoration: underline dotted var(--accent);
+}
+.term-tip {
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.15s;
+    position: absolute;
+    left: var(--tip-shift, 0px);
+    top: calc(100% + 0.4rem);
+    z-index: 20;
+    width: max-content;
+    max-width: min(26rem, 80vw);
+    padding: 0.6rem 0.8rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    box-shadow: 0 8px 24px rgb(0 0 0 / 0.5);
+    color: var(--text);
+    font-size: 0.85rem;
+    font-style: normal;
+    font-weight: 300;
+    line-height: 1.5;
+    pointer-events: none;
+}
+.term:hover .term-tip,
+.term:focus-visible .term-tip,
+.cite:hover .term-tip,
+.cite:focus-visible .term-tip {
+    visibility: visible;
+    opacity: 1;
+}
+.breadcrumb {
+    color: var(--muted);
+    font-family: "Roboto Mono", ui-monospace, monospace;
+    font-size: 0.85rem;
+}
+.glossary > div {
+    margin-bottom: 1rem;
+    scroll-margin-top: 1rem;
+}
+.glossary dt {
+    color: var(--accent);
+    font-weight: 400;
+}
+.glossary dd {
+    margin: 0.2rem 0 0;
+}
+.glossary > div:target dt {
+    color: var(--text);
+    background: color-mix(in srgb, var(--accent) 25%, transparent);
+}
+.chapter-meta {
+    color: var(--muted);
+    font-size: 0.85rem;
+}
+/* Numbered citations share the glossary terms' tooltip. */
+.cite {
+    position: relative;
+    font-size: 0.8em;
+    vertical-align: super;
+    line-height: 0;
+}
+.cite-tip {
+    vertical-align: baseline;
+    line-height: 1.5;
+    font-size: 0.8rem;
+}
+.references {
+    margin-top: 3rem;
+    border-top: 1px solid var(--line);
+    font-size: 0.9rem;
+}
+.references li {
+    margin-bottom: 0.5rem;
+    scroll-margin-top: 1rem;
+}
+.references li:target {
+    background: color-mix(in srgb, var(--accent) 20%, transparent);
+}
+.reference-note {
     color: var(--muted);
 }

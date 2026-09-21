@@ -1,6 +1,8 @@
 ---
 import { getCollection, render } from "astro:content";
-import Base from "../layouts/Base.astro";
+import References from "../../components/References.astro";
+import Base from "../../layouts/Base.astro";
+import { loadGlossary } from "../../lib/glossary";
 
 export async function getStaticPaths() {
     const chapters = await getCollection("chapters");
@@ -8,10 +10,20 @@ export async function getStaticPaths() {
 }
 const { chapter } = Astro.props;
 const { Content } = await render(chapter);
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const hasGlossary = loadGlossary(chapter.id) !== null;
 ---
 
 <Base title={`${chapter.data.package}: ${chapter.data.summary}`} description={chapter.data.summary}>
     <h1 class="mono">{chapter.data.package}</h1>
     <p class="lead">{chapter.data.summary}</p>
+    {
+        hasGlossary && (
+            <p class="chapter-meta">
+                Unfamiliar term? Hover it, or see the <a href={`${base}/${chapter.id}/glossary/`}>glossary</a>.
+            </p>
+        )
+    }
     <Content />
+    <References chapter={chapter.id} body={chapter.body ?? ""} />
 </Base>

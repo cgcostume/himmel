@@ -1,0 +1,180 @@
+.scene-frame {
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 1.5rem;
+}
+.vis-credit {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    margin: 0;
+    padding: 0.5rem 1.5rem;
+    color: var(--muted);
+    pointer-events: none;
+}
+.vis-credit a {
+    color: inherit;
+    pointer-events: auto;
+}
+/* Julian Day / Latitude / Longitude as a grid, so label/input/step columns line up regardless of label width. */
+.input-grid {
+    display: grid;
+    grid-template-columns: auto auto auto 1fr;
+    gap: 0.5rem 0.75rem;
+    align-items: baseline;
+    margin-bottom: 1rem;
+}
+.input-grid-extra,
+.input-grid-subrow {
+    display: flex;
+    gap: 0.75rem;
+    align-items: baseline;
+    flex-wrap: wrap;
+}
+.input-grid-extra label {
+    display: flex;
+    gap: 0.35rem;
+    align-items: center;
+}
+/* Column 2, not 1 (the label): sits under the input box it acts on. */
+.input-grid-subrow {
+    grid-column: 2 / -1;
+}
+.moment input[data-field="jd"] {
+    width: 20ch;
+}
+.moment input.latlong {
+    width: 17ch;
+}
+.note {
+    color: var(--muted);
+}
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-bottom: 1rem;
+    table-layout: fixed;
+    font-family: "Roboto Mono", ui-monospace, monospace;
+    font-size: 85%;
+    font-variant-numeric: tabular-nums;
+    border: 1px solid var(--line);
+}
+th,
+td {
+    border: 1px solid var(--line);
+    padding: 0.3rem 0.6rem;
+    text-align: left;
+    vertical-align: top;
+    overflow-wrap: break-word;
+}
+th {
+    color: var(--muted);
+    font-weight: 400;
+    background: var(--surface);
+}
+col.name {
+    width: 30%;
+}
+col.unit {
+    width: 8%;
+}
+col.value {
+    width: 29%;
+}
+th.value,
+td.value {
+    text-align: right;
+    padding-right: 1rem;
+    white-space: pre;
+}
+td.missing {
+    opacity: 0.4;
+}
+/* Both the export-name cell and the approx value cell carry a tooltip: "hover for more". */
+td[title] {
+    text-decoration: underline dotted var(--muted);
+    cursor: help;
+    text-underline-offset: 3px;
+}
+tbody tr:nth-child(even) {
+    background: var(--surface);
+}
+tbody tr:hover {
+    background: color-mix(in srgb, var(--accent) 12%, var(--bg));
+}
+#scene {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 21 / 9;
+    max-height: 80vh;
+    overflow: hidden;
+    touch-action: none;
+}
+#stage {
+    display: block;
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+}
+#stage:active {
+    cursor: grabbing;
+}
+/* The two alt-az panels float on top of #stage, transparent and click-through, straddling its vertical middle. */
+.altaz-panels {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+.altaz-panel {
+    position: absolute;
+    right: 1.5rem;
+    height: 40%;
+    aspect-ratio: 1 / 1;
+}
+.altaz-panel-sun {
+    bottom: 55%;
+}
+.altaz-panel-moon {
+    top: 55%;
+}
+.altaz-panels svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+/* `top` is set inline by makeAltAzPanel (scene.js), just below the panel's horizon line. */
+.altaz-caption {
+    position: absolute;
+    left: 0;
+    right: 0;
+    font-size: 0.75em;
+    color: var(--muted);
+}
+/* A set of moment-and-place controls, foldable behind a one-line summary of the current values. */
+.moment {
+    margin: 1rem 0 1.5rem;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 0.4rem 0.8rem;
+}
+.moment[open] .input-grid {
+    margin: 0.75rem 0 0.25rem;
+}
+.moment summary {
+    cursor: pointer;
+    list-style: none;
+}
+.moment summary::-webkit-details-marker {
+    display: none;
+}
+.moment summary::before {
+    content: "+";
+    display: inline-block;
+    width: 1.2em;
+    color: var(--muted);
+}
+.moment[open] summary::before {
+    content: "\2212";
+}
+.moment-title {
+    color: var(--accent);
+}
