@@ -10,15 +10,15 @@ import "./inspector.css";
             <path class="annotation-arrow" data-annotation="observer"></path>
             <polygon class="annotation-arrowhead" data-annotation="observer"></polygon>
         </svg>
-        <span class="scene-annotation" data-annotation="observer">you are here</span>
+        <span class="scene-annotation" data-annotation="observer">observer</span>
         <div class="altaz-panels">
             <div class="altaz-panel altaz-panel-sun">
                 <svg id="sunView" aria-hidden="true"></svg>
-                <span class="altaz-caption">sun-fixed</span>
+                <span class="altaz-caption">sun-locked</span>
             </div>
             <div class="altaz-panel altaz-panel-moon">
                 <svg id="moonView" aria-hidden="true"></svg>
-                <span class="altaz-caption">moon-fixed</span>
+                <span class="altaz-caption">moon-locked</span>
             </div>
         </div>
         <p class="vis-credit footnote">
@@ -26,9 +26,9 @@ import "./inspector.css";
         </p>
     </div>
     <figcaption class="figure-caption">
-        An <Term of="Armillary sphere">armillary sphere</Term>: Earth's equator and axis, your latitude circle and
+        An <Term of="Armillary sphere">armillary sphere</Term>: Earth's equator and axis, the observer's latitude circle and
         meridian, and the Sun and the Moon in their real directions. Distances are schematic, the discs' sizes true to
-        each other. On the right, the Sun and the Moon as seen from your location.
+        each other. Right: the sun-locked and the moon-locked view, the Sun and the Moon as seen from the chosen place.
     </figcaption>
 </figure>
 

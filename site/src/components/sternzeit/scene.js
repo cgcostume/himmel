@@ -634,7 +634,7 @@ function frame() {
 
 requestAnimationFrame(frame);
 
-// "You are here": a label outside Earth, in the observer's direction on screen, with a straight arrow to the marker.
+// "observer": a label outside Earth, in the observer's direction on screen, with a straight arrow to the marker.
 // Placed by projecting the marker the way Zdog does: rotated with the scene, scaled by the zoom, around the center.
 const ANNOTATION_GAP_PX = 70;
 const ANNOTATION_TIP_GAP_PX = 7;

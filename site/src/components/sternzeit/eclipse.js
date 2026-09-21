@@ -70,7 +70,7 @@ function renderSolar(jd) {
         svg += `<rect x="${-HALF}" y="${f(top)}" width="${2 * HALF}" height="${f(HALF - top)}" class="eclipse-veil"/>`;
         if (horizon > -HALF)
             svg += `<line x1="${-HALF}" y1="${f(horizon)}" x2="${HALF}" y2="${f(horizon)}" class="eclipse-horizon"/>`;
-        else svg += `<text x="0" y="${SUN_RADIUS_UNITS + 16}" class="eclipse-veil-label">below your horizon</text>`;
+        else svg += `<text x="0" y="${SUN_RADIUS_UNITS + 16}" class="eclipse-veil-label">below the horizon</text>`;
     }
     if (!onPanel) svg += offPanelArrow(mx, my, `Moon, ${eclipse.separation.toFixed(1)}°`);
 
@@ -125,8 +125,8 @@ function renderLunar(jd) {
     ).altitude;
     if (moonAltitude < 0) {
         svg += `<rect x="${-HALF}" y="${-HALF}" width="${2 * HALF}" height="${2 * HALF}" class="eclipse-veil"/>`;
-        svg += `<text x="0" y="${16 - HALF}" class="eclipse-veil-label">below your horizon</text>`;
-        status += " (the Moon is below the horizon here)";
+        svg += `<text x="0" y="${16 - HALF}" class="eclipse-veil-label">below the horizon</text>`;
+        status += " (the Moon is below the horizon at the chosen place)";
     }
     return { svg, status };
 }
