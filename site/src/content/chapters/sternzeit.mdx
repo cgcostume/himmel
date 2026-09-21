@@ -21,6 +21,7 @@ references:
 
 import Cite from "../../components/Cite.astro";
 import Controls from "../../components/sternzeit/Controls.astro";
+import Eclipse from "../../components/sternzeit/Eclipse.astro";
 import Scene from "../../components/sternzeit/Scene.astro";
 import Table from "../../components/sternzeit/Table.astro";
 import Term from "../../components/Term.astro";
@@ -175,11 +176,17 @@ it looks the same from anywhere the Moon is up. Both are summarized as a single
 annular eclipse turns partial, 1 where the discs, or the Moon and the shadow, just touch, and above 1 when there is
 nothing to see. The fixed 0.5 boundary is what makes the phase usable as a texture coordinate for a shader.
 
+<Eclipse />
+
+Most of the time both panels show nothing but an arrow towards the Moon, so each has a button to an example. The total
+solar eclipse of August 12th, 2026 crossed northern Spain in the evening, low over the western horizon; the button
+moves you to Burgos at its maximum. Step the Julian Day by minutes and watch the Moon slide across. The total lunar
+eclipse of March 3rd, 2026 was seen from the Pacific side of the world, but the panel does not care where you are: the
+Moon's disc darkens in Earth's <Term of="Penumbra">penumbra</Term> first, barely noticeable, then turns a dark
+red in the umbra, lit only by sunlight that Earth's atmosphere bends around the planet.
+
 <Table domain="eclipse" />
 <Controls />
-
-Try it: the total solar eclipse of August 12th, 2026 crossed northern Spain in the evening. Set latitude 42.34 and
-longitude -3.70 (Burgos), step to JD 2461265.271 and watch `solar.phase` drop below 0.5: totality.
 
 ## Precise or approximate?
 

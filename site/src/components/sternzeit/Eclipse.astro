@@ -1,0 +1,26 @@
+---
+import "./inspector.css";
+---
+
+<div class="eclipse-views">
+    <figure class="eclipse-view" data-kind="solar">
+        <svg viewBox="-100 -100 200 200" aria-hidden="true"></svg>
+        <figcaption>
+            <span class="eclipse-title">solar</span>, as seen from here: <span data-field="status"></span>
+            <span class="eclipse-orientation">zenith up, azimuth increasing to the right</span>
+            <button type="button" data-jump="solar">jump to Burgos, 2026-08-12</button>
+        </figcaption>
+    </figure>
+    <figure class="eclipse-view" data-kind="lunar">
+        <svg viewBox="-100 -100 200 200" aria-hidden="true"></svg>
+        <figcaption>
+            <span class="eclipse-title">lunar</span>, the same from anywhere: <span data-field="status"></span>
+            <span class="eclipse-orientation">ecliptic north up, east left, as on the sky</span>
+            <button type="button" data-jump="lunar">jump to 2026-03-03</button>
+        </figcaption>
+    </figure>
+</div>
+
+<script>
+    import "./eclipse.js";
+</script>

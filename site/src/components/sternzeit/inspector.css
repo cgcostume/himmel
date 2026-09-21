@@ -180,3 +180,93 @@ tbody tr:hover {
 .moment-title {
     color: var(--accent);
 }
+/* The eclipse views: two square panels side by side within the reading column, stacked on narrow screens. */
+.eclipse-views {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    gap: 1.5rem;
+    margin: 1.5rem 0;
+}
+.eclipse-view {
+    margin: 0;
+}
+.eclipse-view svg {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--bg);
+}
+.eclipse-view figcaption {
+    margin: 0.5rem 0 0;
+    font-size: 0.85rem;
+}
+.eclipse-title {
+    color: var(--accent);
+}
+.eclipse-orientation {
+    display: block;
+    color: var(--muted);
+}
+.eclipse-view button {
+    margin-top: 0.4rem;
+}
+.eclipse-sun {
+    fill: var(--text);
+}
+.eclipse-corona-inner {
+    stop-color: var(--text);
+    stop-opacity: 0.55;
+}
+.eclipse-corona-outer {
+    stop-color: var(--cyanometer);
+    stop-opacity: 0;
+}
+.eclipse-moon-new {
+    fill: var(--bg);
+    stroke: var(--muted);
+    stroke-width: 0.6;
+}
+.eclipse-ground {
+    fill: var(--surface);
+}
+.eclipse-horizon {
+    stroke: var(--muted);
+    stroke-width: 0.6;
+}
+.eclipse-penumbra {
+    fill: color-mix(in srgb, var(--surface) 70%, var(--bg));
+}
+.eclipse-umbra {
+    fill: var(--surface);
+}
+.eclipse-moon-full {
+    fill: var(--text);
+}
+.eclipse-penumbra-on-moon {
+    fill: rgb(0 0 0 / 0.35);
+}
+/* A totally eclipsed Moon is not black: Earth's atmosphere bends sunset-red light into the umbra. */
+.eclipse-umbra-on-moon {
+    fill: hsl(12 55% 28% / 0.92);
+}
+.eclipse-edge {
+    fill: none;
+    stroke: var(--muted);
+    stroke-width: 0.6;
+    stroke-dasharray: 2 2;
+}
+.eclipse-arrow {
+    stroke: var(--muted);
+    stroke-width: 0.8;
+}
+.eclipse-arrowhead {
+    fill: var(--muted);
+}
+.eclipse-label {
+    fill: var(--muted);
+    font-size: 8px;
+    text-anchor: middle;
+    dominant-baseline: middle;
+}

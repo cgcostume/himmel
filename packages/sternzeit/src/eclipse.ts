@@ -113,6 +113,10 @@ export interface LunarEclipseState {
     /** See `linearPhase` above: the Moon's axis offset as one global fraction of the penumbra's radius, 0 to
      *  1, not fixed to 0.5 at the umbra/penumbra boundary like `phase` is. */
     linearPhase: number;
+    /** Radius of Earth's umbra (core shadow) at the Moon's distance, in kilometers. */
+    umbraRadiusKm: number;
+    /** Radius of Earth's penumbra (partial shadow) at the Moon's distance, in kilometers. */
+    penumbraRadiusKm: number;
 }
 
 /**
@@ -147,6 +151,8 @@ function classifyLunarEclipse(
         positionAngle: positionAngleDeg,
         phase: phase(df, epsilonU, epsilonP),
         linearPhase: linearPhase(df, epsilonP),
+        umbraRadiusKm: umbraKm,
+        penumbraRadiusKm: penumbraKm,
     };
 }
 

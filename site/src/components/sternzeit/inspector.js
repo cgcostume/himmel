@@ -24,6 +24,8 @@ const UNITS = {
     "lunar.axisOffsetKm": "km",
     "lunar.phase": "",
     "lunar.linearPhase": "",
+    "lunar.umbraRadiusKm": "km",
+    "lunar.penumbraRadiusKm": "km",
     illuminatedFraction: "",
     sunDirection: "",
     earthshine: "",

@@ -131,4 +131,8 @@ function sync(source) {
 }
 
 onChange(sync);
+// Anything else on the page may end live mode too, e.g. the eclipse views jumping to an example moment.
+onChange(() => {
+    if (!state.live && liveIntervalId !== null) setLive(false, null);
+});
 sync(null);

@@ -35,4 +35,6 @@ export const GLOSSARY_TERMS = {
     "lunar.phase": "Eclipse phase",
     "lunar.linearPhase": "Eclipse phase",
     "lunar.positionAngle": "Position angle",
+    "lunar.umbraRadiusKm": "Umbra",
+    "lunar.penumbraRadiusKm": "Penumbra",
 };

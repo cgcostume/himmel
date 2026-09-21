@@ -60,5 +60,6 @@
     "Storage texture": "A WebGPU texture a compute shader can write to directly. What the precompute passes target, replacing the original's render-to-FBO ping-pong.",
     "Transmittance (T)": "The fraction of light surviving a path, `T = exp(-τ)`, from Beer-Lambert's law. This is the quantity the transmittance LUT stores.",
     "Transmittance LUT": "2D, indexed by `(r, mu)`, storing `exp(-τ)` from the sample point to the top of the atmosphere. Shared by both variants, though the two papers map `(r, mu)` to uv differently.",
-    "True anomaly / true longitude": "The mean anomaly/longitude corrected for orbital eccentricity (see \"equation of the center\"), giving the body's actual angular position along its real elliptical orbit."
+    "True anomaly / true longitude": "The mean anomaly/longitude corrected for orbital eccentricity (see \"equation of the center\"), giving the body's actual angular position along its real elliptical orbit.",
+    "Umbra / penumbra": "The two parts of a shadow cast by a light source that is not a point. In the umbra, the core, the Sun is hidden completely; in the penumbra around it, only partly. Earth's shadow is a pair of cones behind it: at the Moon's distance the umbra is about 4,600 km in radius, the penumbra about 8,200 km, against the Moon's own 1,737 km."
 }

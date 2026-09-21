@@ -61,6 +61,15 @@ test("lunarEclipseState phase is near 0 (deep umbra) at the real 2022-11-08 ecli
     expect(state.phase).toBeLessThan(0.3);
 });
 
+test("lunarEclipseState shadow radii at the Moon's distance match the similar-triangle geometry", () => {
+    const state = precise.eclipse.lunar(LUNAR_ECLIPSE_JD);
+
+    expect(state.umbraRadiusKm).toBeGreaterThan(4300);
+    expect(state.umbraRadiusKm).toBeLessThan(4900);
+    expect(state.penumbraRadiusKm).toBeGreaterThan(7900);
+    expect(state.penumbraRadiusKm).toBeLessThan(8500);
+});
+
 test("lunarEclipseState phase is above 1 (no eclipse) for an ordinary date", () => {
     const state = precise.eclipse.lunar(precise.julianDayUT(time(2024, 1, 1, 12, 0, 0)));
 
