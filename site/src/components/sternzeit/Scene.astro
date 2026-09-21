@@ -1,10 +1,16 @@
 ---
+import Term from "../Term.astro";
 import "./inspector.css";
 ---
 
-<div class="scene-frame wide">
+<figure class="scene-frame wide">
     <div id="scene">
         <svg id="stage" aria-hidden="true"></svg>
+        <svg class="scene-annotations" aria-hidden="true">
+            <path class="annotation-arrow" data-annotation="observer"></path>
+            <polygon class="annotation-arrowhead" data-annotation="observer"></polygon>
+        </svg>
+        <span class="scene-annotation" data-annotation="observer">you are here</span>
         <div class="altaz-panels">
             <div class="altaz-panel altaz-panel-sun">
                 <svg id="sunView" aria-hidden="true"></svg>
@@ -16,10 +22,15 @@ import "./inspector.css";
             </div>
         </div>
         <p class="vis-credit footnote">
-            Visualized with <a href="https://zzz.dog/" target="_blank" rel="noopener">Zdog</a>.
+            Drag to rotate, scroll to zoom. Visualized with <a href="https://zzz.dog/" target="_blank" rel="noopener">Zdog</a>.
         </p>
     </div>
-</div>
+    <figcaption class="figure-caption">
+        An <Term of="Armillary sphere">armillary sphere</Term>: Earth's equator and axis, your latitude circle and
+        meridian, and the Sun and the Moon in their real directions. Distances are schematic, the discs' sizes true to
+        each other. On the right, the Sun and the Moon as seen from your location.
+    </figcaption>
+</figure>
 
 <script>
     import "./scene.js";

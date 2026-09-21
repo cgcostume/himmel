@@ -1,7 +1,9 @@
 ---
+import Term from "../Term.astro";
 import "./inspector.css";
 ---
 
+<figure class="eclipse-figure">
 <div class="eclipse-views">
     <figure class="eclipse-view" data-kind="solar">
         <svg viewBox="-100 -100 200 200" aria-hidden="true"></svg>
@@ -16,10 +18,15 @@ import "./inspector.css";
         <figcaption>
             <span class="eclipse-title">lunar</span>, the same from anywhere: <span data-field="status"></span>
             <span class="eclipse-orientation">ecliptic north up, east left, as on the sky</span>
-            <button type="button" data-jump="lunar">jump to 2026-03-03</button>
+            <button type="button" data-jump="lunar">jump to Honolulu, 2026-03-03</button>
         </figcaption>
     </figure>
 </div>
+    <figcaption class="figure-caption">
+        Eclipses: the Moon in front of the Sun as seen from your location, and the Moon in Earth's{" "}
+        <Term of="Umbra">umbra</Term> and penumbra.
+    </figcaption>
+</figure>
 
 <script>
     import "./eclipse.js";

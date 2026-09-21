@@ -2,7 +2,7 @@ import * as precise from "@himmel/sternzeit";
 import Zdog from "zdog";
 import { state } from "./state.js";
 
-const { Illustration, Anchor, Shape, Ellipse } = Zdog;
+const { Illustration, Anchor, Shape, Ellipse, Vector } = Zdog;
 const DEG = Math.PI / 180;
 
 // Schematic, not to scale: sizes/distances chosen for visibility, not physical proportion. MOON_DIST/
@@ -32,6 +32,9 @@ const cssColor = (name, fallback) =>
 const PAGE_ACCENT = cssColor("--accent", "#5aa9ff");
 // Every stroke that was plain black on the old light page: the site's text color, so the scene follows the theme.
 const INK = cssColor("--text", "#d6dae3");
+// The Moon's color in every figure except the eclipse panels (which show how it really looks): muted grey.
+const MOON_INK = cssColor("--muted", "#8a92a3");
+const SURFACE = cssColor("--surface", "#12151c");
 
 function v(x, y, z) {
     return { x, y, z };
@@ -223,11 +226,11 @@ const moonAnchor = new Anchor({ addTo: illustration });
 const moonDisc = new Ellipse({
     addTo: moonAnchor,
     diameter: APPARENT_SIZE_SCALE * precise.moon.apparentAngularDiameter(precise.J2000) * precise.RAD_TO_DEG,
-    color: INK,
+    color: MOON_INK,
     stroke: 1,
     fill: false,
 });
-const moonCenterDot = new Shape({ addTo: moonAnchor, stroke: 3, color: INK });
+const moonCenterDot = new Shape({ addTo: moonAnchor, stroke: 3, color: MOON_INK });
 
 // Two small, flat (never rotated), transparent alt-az panels overlaid directly on top of the main scene:
 // each anchors one body to x=0 (its own azimuth origin) and plots the other offset by azimuth difference,
@@ -262,7 +265,7 @@ function tangentPx(degreesFromCenter) {
     return Math.tan(degreesFromCenter * DEG) * ALTAZ_FOCAL_PX;
 }
 // The horizon's fixed screen height, in panel-local pixels (0 = panel center, positive = downward): reused
-// both to draw the horizon line itself and to place the caption below it (see makeAltAzPanel).
+// to draw the horizon line itself and to place the compass labels on it (see makeCompass).
 const ALTAZ_HORIZON_Y = -tangentPx(-ALTAZ_LOOK_UP_DEG);
 const ALTAZ_DOT_DIAMETER = 10;
 // Mini versions of the main scene's sunrays (see SUN_RAY_COUNT above): cheaper to read at a glance than an
@@ -273,13 +276,13 @@ const ALTAZ_SUN_RAY_GAP = 3;
 const ALTAZ_SUN_RAY_LENGTH = 5;
 
 // A fixed per-species look, regardless of anchor/other role: the sun is a solid-outlined, unfilled ring plus
-// rays (below); the moon is a plain solid INK disc. The anchor/other role is instead legible from position
+// rays (below); the moon is a plain solid MOON_INK disc. The anchor/other role is instead legible from position
 // alone (the anchor always sits at dead-center, see updateAltAzPanel), so it doesn't need its own styling too.
 function makeAltAzDot(panelIllustration, isSun) {
     const dot = new Ellipse({
         addTo: panelIllustration,
         diameter: ALTAZ_DOT_DIAMETER,
-        color: INK,
+        color: isSun ? INK : MOON_INK,
         stroke: 1,
         fill: !isSun,
     });
@@ -296,19 +299,21 @@ function makeAltAzPanel(elementSelector, anchorIsSun) {
     // Appended here (not hardcoded in the markup) so the caption can never drift out of sync with
     // ALTAZ_FIELD_OF_VIEW_DEG above.
     const caption = document.querySelector(elementSelector).closest(".altaz-panel")?.querySelector(".altaz-caption");
-    if (caption) {
-        caption.textContent += ` (${ALTAZ_FIELD_OF_VIEW_DEG}° FOV)`;
-        // Directly below the horizon line itself (a small fixed gap under it), in the part of the view below
-        // the ground, the least useful part of the picture (an observer never looks there), so the caption
-        // goes where it displaces the least without drifting far from the line it's labeling.
-        const horizonTopPercent = ((ALTAZ_PANEL_SIZE / 2 + ALTAZ_HORIZON_Y) / ALTAZ_PANEL_SIZE) * 100;
-        caption.style.top = `calc(${horizonTopPercent}% + 0.3rem)`;
-    }
+    if (caption) caption.textContent += `, ${ALTAZ_FIELD_OF_VIEW_DEG}° FOV, tilted ${ALTAZ_LOOK_UP_DEG}° up`;
     const panelIllustration = new Illustration({ element: elementSelector, zoom: 1 });
     panelIllustration.setSize(ALTAZ_PANEL_SIZE, ALTAZ_PANEL_SIZE);
     // Fixed forever at this height (see ALTAZ_LOOK_UP_DEG above): unlike the two dots, never touched in
     // updateAltAzPanel. PAGE_ACCENT rather than black: the one line in these panels worth calling out as
     // "the ground", distinct from the two bodies.
+    // The ground below the horizon, added first so everything else draws on top of it.
+    const half = ALTAZ_PANEL_SIZE / 2;
+    new Shape({
+        addTo: panelIllustration,
+        path: [v(-half, ALTAZ_HORIZON_Y, 0), v(half, ALTAZ_HORIZON_Y, 0), v(half, half, 0), v(-half, half, 0)],
+        stroke: false,
+        fill: true,
+        color: SURFACE,
+    });
     const horizon = new Shape({
         addTo: panelIllustration,
         path: [v(-1e5, ALTAZ_HORIZON_Y, 0), v(1e5, ALTAZ_HORIZON_Y, 0)],
@@ -322,7 +327,42 @@ function makeAltAzPanel(elementSelector, anchorIsSun) {
     const moonDot = makeAltAzDot(panelIllustration, false);
     const anchor = anchorIsSun ? sunDot : moonDot;
     const other = anchorIsSun ? moonDot : sunDot;
+    anchor.arrow = makeOffPanelArrow(panelIllustration, anchorIsSun);
+    other.arrow = makeOffPanelArrow(panelIllustration, !anchorIsSun);
     return { illustration: panelIllustration, horizon, anchor, other, compass: makeCompass(elementSelector) };
+}
+
+// A body outside the panel, usually far below the horizon, gets an arrow at the panel's edge pointing towards it,
+// its tail marked like the body: a ring for the Sun, a disc for the Moon. Above cannot happen, the view reaches the
+// zenith. Parked off-panel while the body is in view.
+const ALTAZ_ARROW_INSET = ALTAZ_PANEL_SIZE / 2 - 8;
+const ALTAZ_ARROW_LENGTH = 12;
+const ALTAZ_ARROW_HEAD = 4;
+const OFF_PANEL = v(1e5, 1e5, 0);
+
+function makeOffPanelArrow(panelIllustration, isSun) {
+    const color = isSun ? INK : MOON_INK;
+    const shaft = new Shape({ addTo: panelIllustration, path: [OFF_PANEL, OFF_PANEL], stroke: 1, color });
+    const head = new Shape({ addTo: panelIllustration, path: [OFF_PANEL], stroke: 1, color, fill: true });
+    const tail = new Ellipse({ addTo: panelIllustration, diameter: 5, stroke: 1, color, fill: !isSun });
+    return { shaft, head, tail };
+}
+
+function updateOffPanelArrow(arrow, point) {
+    const half = ALTAZ_PANEL_SIZE / 2;
+    const inside = Math.abs(point.x) <= half && Math.abs(point.y) <= half;
+    const clamp = (value) => Math.max(-ALTAZ_ARROW_INSET, Math.min(ALTAZ_ARROW_INSET, value));
+    const tip = inside ? OFF_PANEL : v(clamp(point.x), clamp(point.y), 0);
+    const length = Math.hypot(point.x - tip.x, point.y - tip.y) || 1;
+    const [ux, uy] = [(point.x - tip.x) / length, (point.y - tip.y) / length];
+    const back = v(tip.x - ux * ALTAZ_ARROW_LENGTH, tip.y - uy * ALTAZ_ARROW_LENGTH, 0);
+    const base = v(tip.x - ux * ALTAZ_ARROW_HEAD, tip.y - uy * ALTAZ_ARROW_HEAD, 0);
+    const [sx, sy] = [-uy * ALTAZ_ARROW_HEAD * 0.6, ux * ALTAZ_ARROW_HEAD * 0.6];
+    arrow.shaft.path = [back, base];
+    arrow.head.path = [tip, v(base.x + sx, base.y + sy, 0), v(base.x - sx, base.y - sy, 0)];
+    arrow.tail.translate = inside ? OFF_PANEL : v(back.x - ux * 4, back.y - uy * 4, 0);
+    arrow.shaft.updatePath();
+    arrow.head.updatePath();
 }
 
 // The eight compass directions as HTML labels sitting on the horizon line, placed by azimuth with the same tangent
@@ -377,6 +417,8 @@ function updateAltAzPanel(panel, anchorHorizontal, otherHorizontal) {
     panel.other.dot.translate = otherPoint;
     updateAltAzDotRays(panel.anchor, anchorPoint);
     updateAltAzDotRays(panel.other, otherPoint);
+    updateOffPanelArrow(panel.anchor.arrow, anchorPoint);
+    updateOffPanelArrow(panel.other.arrow, otherPoint);
     panel.illustration.updateRenderGraph();
     for (const { element, azimuth } of panel.compass) {
         const d = azimuthDelta(anchorHorizontal.azimuth, azimuth);
@@ -543,6 +585,7 @@ function frame() {
 
     illustration.rotate = { x: rotX, y: rotY, z: 0 };
     illustration.updateRenderGraph();
+    annotateObserver(vScale(observerPos, 1.02));
     // svgElement only exists once a shape has rendered at least once, hence setting this here rather than
     // at construction; idempotent, so doing it every frame is fine. See the earthAnchor comment for the
     // three-tier rationale. radiusLine and longitudeNutationLine are deliberately left alone here: each is itself
@@ -590,3 +633,35 @@ function frame() {
 }
 
 requestAnimationFrame(frame);
+
+// "You are here": a label outside Earth, in the observer's direction on screen, with a straight arrow to the marker.
+// Placed by projecting the marker the way Zdog does: rotated with the scene, scaled by the zoom, around the center.
+const ANNOTATION_GAP_PX = 70;
+const ANNOTATION_TIP_GAP_PX = 7;
+const annotationLabel = document.querySelector('.scene-annotation[data-annotation="observer"]');
+const annotationArrow = document.querySelector('.annotation-arrow[data-annotation="observer"]');
+const annotationHead = document.querySelector('.annotation-arrowhead[data-annotation="observer"]');
+
+function annotateObserver(point) {
+    const p = new Vector(point).rotate(illustration.rotate);
+    const zoom = illustration.zoom;
+    const [cx, cy] = [stageWidth / 2, stageHeight / 2];
+    const [px, py] = [cx + p.x * zoom, cy + p.y * zoom];
+    const length = Math.hypot(p.x, p.y) || 1;
+    const [ux, uy] = length > 1e-3 ? [p.x / length, p.y / length] : [0, -1];
+    const reach = EARTH_R * zoom + ANNOTATION_GAP_PX;
+    const [lx, ly] = [cx + ux * reach, cy + uy * reach];
+    annotationLabel.style.left = `${lx}px`;
+    annotationLabel.style.top = `${ly}px`;
+    // A straight line from just short of the label to just short of the marker.
+    const [sx, sy] = [lx - ux * 12, ly - uy * 12];
+    const toTip = Math.hypot(px - sx, py - sy) || 1;
+    const [dx, dy] = [(px - sx) / toTip, (py - sy) / toTip];
+    const [tx, ty] = [px - dx * ANNOTATION_TIP_GAP_PX, py - dy * ANNOTATION_TIP_GAP_PX];
+    annotationArrow.setAttribute("d", `M ${sx} ${sy} L ${tx} ${ty}`);
+    const [hx, hy] = [tx - dx * 7, ty - dy * 7];
+    annotationHead.setAttribute(
+        "points",
+        `${tx},${ty} ${hx - dy * 3.5},${hy + dx * 3.5} ${hx + dy * 3.5},${hy - dx * 3.5}`,
+    );
+}

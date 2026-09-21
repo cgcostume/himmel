@@ -13,10 +13,10 @@ const ARROW_TO = 94;
 // A Sun hidden completely gets its corona, this many solar radii wide.
 const CORONA_RADII = 2.4;
 
-// The two examples the chapter text mentions; the solar one also needs its place.
+// The two examples the chapter text mentions, each from a place where it was visible.
 const JUMPS = {
     solar: { jd: 2461265.2708333, latitude: 42.34, longitude: -3.7, live: false },
-    lunar: { jd: 2461102.9833333, live: false },
+    lunar: { jd: 2461102.9833333, latitude: 21.31, longitude: -157.86, live: false },
 };
 
 let idCount = 0;
@@ -60,15 +60,19 @@ function renderSolar(jd) {
         svg += circle(0, 0, SUN_RADIUS_UNITS * CORONA_RADII, "", `fill="url(#${corona})"`);
     }
     svg += circle(0, 0, SUN_RADIUS_UNITS, "eclipse-sun");
-    if (distance < HALF * Math.SQRT2 + moonRadius) svg += circle(mx, my, moonRadius, "eclipse-moon-new");
-    else svg += offPanelArrow(mx, my, `Moon, ${eclipse.separation.toFixed(1)}°`);
+    const onPanel = distance < HALF * Math.SQRT2 + moonRadius;
+    if (onPanel) svg += circle(mx, my, moonRadius, "eclipse-moon-new");
 
-    // The Sun sits at the center, so the horizon is its altitude below it; the ground hides whatever is beneath.
+    // The Sun sits at the center, so the horizon is its altitude below it; the ground veils whatever is beneath.
     const horizon = sunAltitude * scale;
     if (horizon < HALF) {
-        svg += `<rect x="${-HALF}" y="${f(horizon)}" width="${2 * HALF}" height="${f(HALF - horizon)}" class="eclipse-ground"/>`;
-        svg += `<line x1="${-HALF}" y1="${f(horizon)}" x2="${HALF}" y2="${f(horizon)}" class="eclipse-horizon"/>`;
+        const top = Math.max(horizon, -HALF);
+        svg += `<rect x="${-HALF}" y="${f(top)}" width="${2 * HALF}" height="${f(HALF - top)}" class="eclipse-veil"/>`;
+        if (horizon > -HALF)
+            svg += `<line x1="${-HALF}" y1="${f(horizon)}" x2="${HALF}" y2="${f(horizon)}" class="eclipse-horizon"/>`;
+        else svg += `<text x="0" y="${SUN_RADIUS_UNITS + 16}" class="eclipse-veil-label">below your horizon</text>`;
     }
+    if (!onPanel) svg += offPanelArrow(mx, my, `Moon, ${eclipse.separation.toFixed(1)}°`);
 
     let status;
     if (eclipse.separation <= inner) status = total ? "total, only the corona is left" : "annular";
@@ -112,6 +116,18 @@ function renderLunar(jd) {
         status = `partial, ${Math.round(inside * 100)}% of the Moon's diameter in the umbra`;
     } else if (km - moonKm < eclipse.penumbraRadiusKm) status = "penumbral, the Moon dims only slightly";
     else status = `none, the Moon is ${eclipse.separation.toFixed(1)}° from the shadow axis`;
+
+    // An eclipse happens for everyone at once, but only those with the Moon above their horizon get to see it.
+    const moonAltitude = precise.moon.horizontalPosition(
+        precise.fromJulianDay(jd),
+        state.latitude,
+        state.longitude,
+    ).altitude;
+    if (moonAltitude < 0) {
+        svg += `<rect x="${-HALF}" y="${-HALF}" width="${2 * HALF}" height="${2 * HALF}" class="eclipse-veil"/>`;
+        svg += `<text x="0" y="${16 - HALF}" class="eclipse-veil-label">below your horizon</text>`;
+        status += " (the Moon is below the horizon here)";
+    }
     return { svg, status };
 }
 

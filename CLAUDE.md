@@ -28,7 +28,7 @@ osghimmel/         read-only reference clone, gitignored
 |---|---|---|
 | `@himmel/sternzeit` (astronomy/sidereal time math) | `packages/sternzeit` | Julian Day, sidereal time, sun/moon/earth positions, moon phase, sun direction from the moon and earthshine done (precise + approx); stars stubbed |
 | `@himmel/dunstkreis` (WebGPU atmosphere, Bruneton precise + Hillaire fast) | `packages/dunstkreis` | Hillaire pipeline + dev page working; Bruneton, IBL, performance pending |
-| `@himmel/sternwarte` (the website, `private: true`) | `site/` | sternzeit chapter done (glossary tooltips, references); dunstkreis chapter placeholder; no Pages deploy yet |
+| `@himmel/sternwarte` (the website, `private: true`) | `site/` | sternzeit chapter done (figures, glossary tooltips, references, TOC); dunstkreis placeholder, and `planned: true` placeholders for nachtgestirn, sternenzelt, gewoelk; no Pages deploy yet |
 | `@himmel/gewoelk` (clouds) | not created yet | later |
 | `@himmel/sternenzelt` (star rendering) | not created yet | later |
 | `@himmel/nachtgestirn` (moon rendering) | not created yet | later |

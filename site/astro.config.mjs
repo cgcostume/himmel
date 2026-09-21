@@ -10,6 +10,21 @@ export default defineConfig({
     base: "/himmel",
     output: "static",
     integrations: [mdx()],
+    markdown: {
+        shikiConfig: {
+            // Drops the theme's inline background, so code blocks take the site's own (see pre in global.css).
+            transformers: [
+                {
+                    pre(node) {
+                        node.properties.style = String(node.properties.style ?? "").replace(
+                            /background-color:[^;]+;?/,
+                            "",
+                        );
+                    },
+                },
+            ],
+        },
+    },
     vite: {
         // The site always shows the libraries' current source, no package build needed in between.
         resolve: {

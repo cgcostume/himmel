@@ -21,6 +21,7 @@ references:
 
 import Cite from "../../components/Cite.astro";
 import Controls from "../../components/sternzeit/Controls.astro";
+import DayArc from "../../components/sternzeit/DayArc.astro";
 import Eclipse from "../../components/sternzeit/Eclipse.astro";
 import Scene from "../../components/sternzeit/Scene.astro";
 import Table from "../../components/sternzeit/Table.astro";
@@ -37,13 +38,8 @@ a C++ sky renderer written for a master's thesis in 2012 <Cite id="mueller2012th
 
 <Scene />
 
-The scene above is a schematic, not to scale: Earth sits in the middle, shown only as
-its equator, its rotation axis and the two circles that cross at your location. The Sun and the Moon are placed along
-their real directions, at distances chosen for legibility. Their disc sizes, however, are true to each other: they are
-drawn from their actual apparent diameters, which is why they are so close, and why total and annular solar eclipses
-both exist. Drag to rotate, scroll to zoom. The two small panels on the right show what an observer at your location
-would see, one fixed on the Sun and one on the Moon, with the compass directions passing by along the horizon as the
-sky turns.
+The discs are drawn from the Sun's and the Moon's actual apparent diameters. That they almost match is a coincidence
+of our time, and the reason both total and annular solar eclipses exist.
 
 ## Pick a moment and a place
 
@@ -70,19 +66,20 @@ keep the coefficients in a numerically comfortable range.
 Then there is <Term of="Sidereal time">sidereal time</Term>. A solar day, noon to noon, is 24 hours. But Earth also
 moves along its orbit, so it has to turn a little more than once for the Sun to come back to the same spot. Relative
 to the distant stars, one rotation takes about 23 hours and 56 minutes. Sidereal time measures that rotation, as an
-angle. It is what connects the sky's coordinates to your spot on the ground: in the scene, the dashed meridian through
+angle. It is what connects the sky's coordinates to your spot on the ground: in the armillary sphere, the dashed meridian through
 your location rotates with it.
 
 ```ts
-import { julianDayUT, siderealTime } from "@himmel/sternzeit";
+import { fromDate, fromJulianDay, julianDayUT, siderealTime, toDate } from "@himmel/sternzeit";
 
-// 2026-09-21, 20:00 in Berlin (UTC+2)
-const time = {
-    year: 2026, month: 9, day: 21,
-    hour: 20, minute: 0, second: 0, utcOffsetSeconds: 7200,
-};
+// Any JavaScript Date, e.g. new Date() for now; its time zone offset comes along.
+const time = fromDate(new Date("2026-09-21T20:00:00+02:00"));
+// The same moment spelled out: 2026-09-21, 20:00 in Berlin (UTC+2).
+const same = { year: 2026, month: 9, day: 21, hour: 20, minute: 0, second: 0, utcOffsetSeconds: 7200 };
+
 const jd = julianDayUT(time); // 2461305.25, the offset is applied
 const theta = siderealTime(time); // Greenwich mean sidereal time, in degrees
+const date = toDate(fromJulianDay(jd)); // and back to a Date
 ```
 
 ## Earth, the platform we observe from
@@ -95,7 +92,7 @@ It has two components: one in obliquity, tilting the axis a little more and a li
 sliding the point from which the sky's coordinates are measured, the vernal equinox. Both are tiny, below 20
 arcseconds, but they separate a position that is almost right from one that is right.
 
-In the scene, the true obliquity is the arc between Earth's rotation axis and the dotted axis of its orbit. The orbit
+In the armillary sphere, the true obliquity is the arc between Earth's rotation axis and the dotted axis of its orbit. The orbit
 itself is the dashed ellipse around everything, and at an eccentricity of about 0.0167 <Cite id="bretagnon1982" /> it
 is honestly almost a circle.
 
@@ -127,11 +124,22 @@ That position is still geocentric, as seen from Earth's center. For an actual ob
 <Term of="Horizontal coordinates">horizontal position</Term> turns it into what a renderer wants: an altitude above the
 horizon and an azimuth along it, measured from north through east.
 
+<DayArc />
+<Controls />
+
+Step through a year and watch the Sun's arc rise and sink with the seasons. The Moon moves about 13° a day against the
+stars, so its path never quite closes.
+
+The analemma's height swings with the seasons, from the tilt of Earth's axis. Its sideways swing comes
+from the <Term of="Equation of time">equation of time</Term>: Earth moves faster along its orbit in January than in
+July, and the tilt adds a second, twice-yearly wobble, so the Sun runs up to about 16 minutes ahead of the clock or
+behind it <Cite id="meeus1998" />. Where its dots crowd, the Sun is turning around.
+
 <Table domain="sun" />
 <Controls />
 
 `distance` and `apparentAngularDiameter` belong together. Earth is about 3% closer to the Sun in early January than in
-early July, and the Sun's disc in the scene grows and shrinks accordingly as you step through a year.
+early July, and the Sun's disc in the armillary sphere grows and shrinks accordingly as you step through a year.
 
 ## The Moon
 
@@ -177,13 +185,15 @@ annular eclipse turns partial, 1 where the discs, or the Moon and the shadow, ju
 nothing to see. The fixed 0.5 boundary is what makes the phase usable as a texture coordinate for a shader.
 
 <Eclipse />
+<Controls />
 
-Most of the time both panels show nothing but an arrow towards the Moon, so each has a button to an example. The total
-solar eclipse of August 12th, 2026 crossed northern Spain in the evening, low over the western horizon; the button
-moves you to Burgos at its maximum. Step the Julian Day by minutes and watch the Moon slide across. The total lunar
-eclipse of March 3rd, 2026 was seen from the Pacific side of the world, but the panel does not care where you are: the
-Moon's disc darkens in Earth's <Term of="Penumbra">penumbra</Term> first, barely noticeable, then turns a dark
-red in the umbra, lit only by sunlight that Earth's atmosphere bends around the planet.
+Most of the time there is nothing to see, hence the two buttons. The total solar eclipse of August 12th, 2026 crossed
+northern Spain in the evening, low over the western horizon: step the Julian Day by minutes from its maximum over
+Burgos and watch the Moon slide across. The total lunar eclipse of March 3rd, 2026 happened for the whole night side of
+Earth at once; from Europe the Moon had already set, from Honolulu it stood high in the middle of the night. The Moon
+darkens in the penumbra first, barely noticeable, then turns a dark red in the umbra, lit only by sunlight that Earth's
+atmosphere bends around the planet. The panel only hints at that color; rendering it properly, along with the Moon's
+surface, is the job of [nachtgestirn](../nachtgestirn/).
 
 <Table domain="eclipse" />
 <Controls />
@@ -219,3 +229,7 @@ const time = fromJulianDay(jd);
 const sunDirection = horizontalToDirection(sun.horizontalPosition(time, latitude, longitude));
 const moonLight = moon.sunDirection(time, latitude, longitude); // for shading the Moon's disc
 ```
+
+The same goes for the other libraries: the Moon's phase, libration, sun direction and earthshine are what
+[nachtgestirn](../nachtgestirn/) shades the Moon with, sidereal time is what will turn the stars of
+[sternenzelt](../sternenzelt/), and the Sun's and the Moon's directions light the clouds of [gewoelk](../gewoelk/).

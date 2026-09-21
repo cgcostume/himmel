@@ -1,4 +1,4 @@
-import { julianDay } from "@himmel/sternzeit";
+import { fromDate, julianDayUT } from "@himmel/sternzeit";
 
 /**
  * The one moment and place the whole page shows. Every set of controls writes here, and the tables and the scene
@@ -22,16 +22,7 @@ export function onChange(listener) {
 const JD_MIN_STEP = 1 / 86400;
 
 export function julianDayNow() {
-    const now = new Date();
-    const jd = julianDay({
-        year: now.getUTCFullYear(),
-        month: now.getUTCMonth() + 1,
-        day: now.getUTCDate(),
-        hour: now.getUTCHours(),
-        minute: now.getUTCMinutes(),
-        second: now.getUTCSeconds(),
-        utcOffsetSeconds: 0,
-    });
+    const jd = julianDayUT(fromDate(new Date()));
     return Number((Math.round(jd / JD_MIN_STEP) * JD_MIN_STEP).toFixed(7));
 }
 

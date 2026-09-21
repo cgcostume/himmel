@@ -23,6 +23,7 @@ export { eclipticalToEquatorial, equatorialToHorizontal, horizontalToDirection }
 export type { AstronomicalTime, JulianDay } from "./time.js";
 export { J2000, J2050, B1900, B1950, STANDARD_EQUINOX } from "./time.js"; // reference epochs
 export {
+    fromDate,
     fromJulianDay,
     julianDay,
     julianDay0UT,
@@ -30,6 +31,7 @@ export {
     julianDaysSinceStandardEquinox,
     julianCenturiesSinceStandardEquinox,
     modifiedJulianDay,
+    toDate,
     toUT,
 } from "./time.js"; // Julian Day conversions
 

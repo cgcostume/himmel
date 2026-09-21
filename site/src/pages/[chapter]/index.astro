@@ -8,13 +8,34 @@ export async function getStaticPaths() {
     return chapters.map((chapter) => ({ params: { chapter: chapter.id }, props: { chapter } }));
 }
 const { chapter } = Astro.props;
-const { Content } = await render(chapter);
+const { Content, headings } = await render(chapter);
+// A table of contents from the chapter's sections, for chapters long enough to need one.
+const sections = headings.filter((heading) => heading.depth === 2);
+const hasReferences = chapter.data.references.length > 0;
 ---
 
 <Base title={`${chapter.data.package}: ${chapter.data.summary}`} description={chapter.data.summary}>
     <h1 class="mono">{chapter.data.package}</h1>
     <p class="lead">{chapter.data.summary}</p>
     <p class="chapter-meta">Unfamiliar term? Hover it.</p>
+    {
+        sections.length >= 3 && (
+            <nav class="toc" aria-label="Contents">
+                <ol>
+                    {sections.map((heading) => (
+                        <li>
+                            <a href={`#${heading.slug}`}>{heading.text}</a>
+                        </li>
+                    ))}
+                    {hasReferences && (
+                        <li>
+                            <a href="#references">References</a>
+                        </li>
+                    )}
+                </ol>
+            </nav>
+        )
+    }
     <Content />
     <References chapter={chapter.id} body={chapter.body ?? ""} />
 </Base>

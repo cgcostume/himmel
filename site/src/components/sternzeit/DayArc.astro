@@ -1,0 +1,29 @@
+---
+import Term from "../Term.astro";
+import "./inspector.css";
+---
+
+<figure class="scene-frame wide">
+    <div class="dome-scene">
+        <svg class="dome-layer" data-layer="below" aria-hidden="true"></svg>
+        <svg class="dome-layer" data-layer="ground" aria-hidden="true"></svg>
+        <svg class="dome-layer" data-layer="above" aria-hidden="true"></svg>
+        <div class="dome-compass" aria-hidden="true"></div>
+        <div class="analemma-panel">
+            <svg aria-hidden="true"></svg>
+            <span class="analemma-caption">analemma: the Sun at this time of day, all year<span data-field="analemmaNote"></span></span>
+        </div>
+        <p class="vis-credit footnote">
+            Drag to rotate. Visualized with <a href="https://zzz.dog/" target="_blank" rel="noopener">Zdog</a>.
+        </p>
+    </div>
+    <figcaption class="figure-caption">
+        A <Term of="Sun path diagram">sun path diagram</Term>: the Sun's path (a dot per hour) and the Moon's (grey)
+        across your sky, local midnight to midnight, dotted below the horizon, arrows pointing forward in time. On the
+        right, the Sun's <Term of="Analemma">analemma</Term> at this time of day, its dots two weeks apart.
+    </figcaption>
+</figure>
+
+<script>
+    import "./dayarc.js";
+</script>

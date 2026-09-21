@@ -82,6 +82,7 @@ h3 {
     margin-top: 4rem;
 }
 main {
+    counter-reset: figure;
     max-width: var(--measure);
     margin: 0 auto;
     padding: 2rem 1.5rem;
@@ -109,6 +110,11 @@ main {
 }
 .chapter-list .mono {
     color: var(--accent);
+}
+.chapter-list .planned {
+    margin-left: 0.6rem;
+    color: var(--muted);
+    font-size: 0.8rem;
 }
 .chapter-list p {
     margin: 0.25rem 0 0;
@@ -233,6 +239,36 @@ input[type="number"]::-webkit-outer-spin-button {
 .cite:focus-visible .term-tip {
     visibility: visible;
     opacity: 1;
+}
+/* Every visualization is a numbered figure, counted through the page by CSS alone. */
+.figure-caption {
+    font-size: 0.85rem;
+    color: var(--muted);
+}
+.figure-caption::before {
+    counter-increment: figure;
+    content: "Figure " counter(figure) ". ";
+    color: var(--accent);
+}
+/* The chapter's sections, compact under its lead: numbered, in two columns where there is room. */
+.toc {
+    margin: 1.5rem 0 2rem;
+    padding: 0.6rem 1rem;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+.toc ol {
+    margin: 0;
+    padding-left: 1.4rem;
+    columns: 2 16rem;
+    column-gap: 2rem;
+}
+.toc li::marker {
+    color: var(--muted);
+}
+h2 {
+    scroll-margin-top: 1rem;
 }
 .chapter-meta {
     color: var(--muted);

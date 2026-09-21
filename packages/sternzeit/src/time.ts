@@ -102,6 +102,28 @@ export function fromJulianDay(jd: JulianDay, utcOffsetSeconds = 0): Astronomical
     return { year, month, day, hour: toInt(h), minute: toInt(m), second: toInt(s), utcOffsetSeconds };
 }
 
+/** A JavaScript `Date` as an AstronomicalTime in the runtime's local time zone, offset included, milliseconds as fractional seconds. */
+export function fromDate(date: Date): AstronomicalTime {
+    return {
+        year: date.getFullYear(),
+        month: date.getMonth() + 1,
+        day: date.getDate(),
+        hour: date.getHours(),
+        minute: date.getMinutes(),
+        second: date.getSeconds() + date.getMilliseconds() / 1000,
+        utcOffsetSeconds: -date.getTimezoneOffset() * 60,
+    };
+}
+
+/** Inverse of {@link fromDate}: the same instant as a JavaScript `Date`. */
+export function toDate(time: AstronomicalTime): Date {
+    const date = new Date(0);
+    // setUTCFullYear, unlike Date.UTC, doesn't map the years 0-99 to 1900-1999.
+    date.setUTCFullYear(time.year, time.month - 1, time.day);
+    date.setUTCHours(time.hour, time.minute, 0, 0);
+    return new Date(date.getTime() + (time.second - time.utcOffsetSeconds) * 1000);
+}
+
 /** `time` converted to UT (utcOffsetSeconds = 0). */
 export function toUT(time: AstronomicalTime): AstronomicalTime {
     if (time.utcOffsetSeconds === 0) return time;

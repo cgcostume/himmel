@@ -18,6 +18,7 @@ const chapters = (await getCollection("chapters")).sort((a, b) => a.data.order -
                 <li>
                     <a href={`${base}/${c.id}/`}>
                         <span class="mono">{c.data.package}</span>
+                        {c.data.planned && <span class="planned">planned</span>}
                         <p>{c.data.summary}</p>
                     </a>
                 </li>

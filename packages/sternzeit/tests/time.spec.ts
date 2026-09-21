@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { meanSiderealTime } from "../src/siderealTime.js";
-import { type AstronomicalTime, fromJulianDay, J2000, julianDay } from "../src/time.js";
+import { type AstronomicalTime, fromDate, fromJulianDay, J2000, julianDay, julianDayUT, toDate } from "../src/time.js";
 
 function utc(year: number, month: number, day: number, hour = 0, minute = 0, second = 0): AstronomicalTime {
     return { year, month, day, hour, minute, second, utcOffsetSeconds: 0 };
@@ -22,6 +22,12 @@ test("julianDay matches Meeus' worked example (1957-10-04.81)", () => {
 test("fromJulianDay is the inverse of julianDay", () => {
     const time = utc(2000, 1, 1, 12);
     expect(fromJulianDay(julianDay(time))).toEqual(time);
+});
+
+test("fromDate keeps the instant, whatever the runtime's time zone", () => {
+    const date = new Date("2026-09-21T20:00:00+02:00");
+    expect(julianDayUT(fromDate(date))).toBeCloseTo(2461305.25, 8);
+    expect(toDate(fromDate(date)).getTime()).toBe(date.getTime());
 });
 
 test("meanSiderealTime matches Meeus' worked examples (12.a/12.b)", () => {

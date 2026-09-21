@@ -9,6 +9,8 @@ const chapters = defineCollection({
         package: z.string(),
         summary: z.string(),
         order: z.number(),
+        /** A library that doesn't exist yet: its chapter is a placeholder, marked as such in the chapter list. */
+        planned: z.boolean().default(false),
         /** Ids from src/data/references.ts; each must be cited in the text via <Cite>, which also sets the numbering. */
         references: z.array(z.string()).default([]),
     }),
