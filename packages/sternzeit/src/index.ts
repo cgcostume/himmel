@@ -15,9 +15,9 @@ export {
 } from "./math.js";
 
 // Coordinate systems.
-export type { EclipticalCoords, EquatorialCoords, HorizontalCoords } from "./coords.js";
+export type { Direction, EclipticalCoords, EquatorialCoords, HorizontalCoords } from "./coords.js";
 export type { RefractionConditions } from "./earth.js";
-export { eclipticalToEquatorial, equatorialToHorizontal } from "./coords.js";
+export { eclipticalToEquatorial, equatorialToHorizontal, horizontalToDirection } from "./coords.js";
 
 // Time and Julian Day.
 export type { AstronomicalTime, JulianDay } from "./time.js";
@@ -89,6 +89,10 @@ export const moon = {
     opticalLibrations: moonImpl.opticalLibrations,
     parallacticAngle: moonImpl.parallacticAngle,
     positionAngleOfAxis: moonImpl.positionAngleOfAxis,
+    phaseAngle: moonImpl.phaseAngle,
+    illuminatedFraction: moonImpl.illuminatedFraction,
+    sunDirection: moonImpl.sunDirection,
+    earthshine: moonImpl.earthshine,
 };
 
 // Eclipses.

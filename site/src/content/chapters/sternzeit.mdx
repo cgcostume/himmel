@@ -16,6 +16,7 @@ references:
     - nishita1993
     - bruneton2008
     - mueller2012vmv
+    - vandehulst1980
 ---
 
 import Cite from "../../components/Cite.astro";
@@ -40,7 +41,8 @@ its equator, its rotation axis and the two circles that cross at your location. 
 their real directions, at distances chosen for legibility. Their disc sizes, however, are true to each other: they are
 drawn from their actual apparent diameters, which is why they are so close, and why total and annular solar eclipses
 both exist. Drag to rotate, scroll to zoom. The two small panels on the right show what an observer at your location
-would see, looking towards the Sun and towards the Moon.
+would see, one fixed on the Sun and one on the Moon, with the compass directions passing by along the horizon as the
+sky turns.
 
 ## Pick a moment and a place
 
@@ -142,12 +144,24 @@ shifted by up to a degree, about two of its own diameters. That is why the topoc
 <Table domain="moon" />
 <Controls />
 
-The last rows are for rendering the Moon rather than locating it. The Moon always shows the same face, almost: tilted
+The rows after `distance` are for rendering the Moon rather than locating it. The Moon always shows the same face, almost: tilted
 orbit and varying speed let us peek a few degrees around its edges over a month, the
 <Term of="Libration">optical libration</Term>. The <Term of="Position angle of axis">position angle of the axis</Term>
 says how the Moon's north pole is oriented on the sky, and the <Term of="Parallactic angle">parallactic angle</Term>
 how that sky direction relates to your local "up". Together they determine how the Moon's surface, and its lit
 crescent, appear rotated for you.
+
+The last four rows light it. The <Term of="Phase angle">phase angle</Term>, the angle Sun-Moon-Earth, says how much of
+the lit half faces us, and the <Term of="Illuminated fraction">illuminated fraction</Term> turns that into what the
+phase looks like, from 0 at new moon to 1 at full moon <Cite id="meeus1998" />. For actual shading, a renderer wants
+the light direction itself: `sunDirection` points from the Moon's center to the Sun, in the same frame as every other
+direction here. It is not quite the Sun's direction as seen from Earth, since the Moon sits a few hundred thousand
+kilometers off to the side, but it is close.
+
+The night side is not entirely dark either. The Earth reflects sunlight too, and around new moon, when the Moon sees
+an almost full Earth, that <Term of="Earthshine">earthshine</Term> gives the unlit part of a thin crescent a faint,
+ashen glow. How strong it is follows from the Earth's phase as seen from the Moon <Cite id="vandehulst1980" />, scaled
+by the Earth's albedo <Cite id="jensen2001" />.
 
 ## Eclipses
 
@@ -188,10 +202,10 @@ returns plain numbers, and it is up to you what to do with them. For example, th
 [dunstkreis](../dunstkreis/) takes to light its atmosphere:
 
 ```ts
-import { DEG_TO_RAD, fromJulianDay, sun } from "@himmel/sternzeit";
+import { fromJulianDay, horizontalToDirection, moon, sun } from "@himmel/sternzeit";
 
-const { altitude, azimuth } = sun.horizontalPosition(fromJulianDay(jd), latitude, longitude);
-const a = altitude * DEG_TO_RAD;
-const z = azimuth * DEG_TO_RAD;
-const sunDirection = [Math.cos(a) * Math.cos(z), Math.cos(a) * Math.sin(z), Math.sin(a)]; // x north, y east, z up
+const time = fromJulianDay(jd);
+// Unit vectors in the observer's frame: x north, y east, z up.
+const sunDirection = horizontalToDirection(sun.horizontalPosition(time, latitude, longitude));
+const moonLight = moon.sunDirection(time, latitude, longitude); // for shading the Moon's disc
 ```

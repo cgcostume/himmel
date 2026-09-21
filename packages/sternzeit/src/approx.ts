@@ -15,8 +15,8 @@ export {
 } from "./math.js";
 
 // Coordinate systems.
-export type { EclipticalCoords, EquatorialCoords, HorizontalCoords } from "./coords.js";
-export { eclipticalToEquatorial, equatorialToHorizontal } from "./coords.js";
+export type { Direction, EclipticalCoords, EquatorialCoords, HorizontalCoords } from "./coords.js";
+export { eclipticalToEquatorial, equatorialToHorizontal, horizontalToDirection } from "./coords.js";
 
 // Time and Julian Day.
 export type { AstronomicalTime, JulianDay } from "./time.js";
@@ -88,6 +88,10 @@ export const moon = {
     opticalLibrations: moonImpl.opticalLibrationsApprox,
     parallacticAngle: moonImpl.parallacticAngleApprox,
     positionAngleOfAxis: moonImpl.positionAngleOfAxisApprox,
+    phaseAngle: moonImpl.phaseAngleApprox,
+    illuminatedFraction: moonImpl.illuminatedFractionApprox,
+    sunDirection: moonImpl.sunDirectionApprox,
+    earthshine: moonImpl.earthshineApprox,
 };
 
 // Eclipses. Same shape as the precise `eclipse` namespace in `index.ts`.

@@ -15,7 +15,7 @@ dependency on [`@himmel/sternzeit`](https://github.com/cgcostume/himmel/tree/mai
 or any other `@himmel/*` package, so it drops into any existing WebGPU
 renderer.
 
-New to terms like inscatter, optical depth, or scale height? See [GLOSSARY.md](./GLOSSARY.md).
+New to terms like inscatter, optical depth, or scale height? The [himmel site](https://github.com/cgcostume/himmel) explains every one of them, right where it is used.
 
 ## Two variants
 
@@ -135,17 +135,17 @@ Echtzeit"](https://daniellimberger.de/resources/2012%20%E2%80%93%20Mueller%20%28
 (2012, German).
 
 - E. Bruneton, F. Neyret, ["Precomputed Atmospheric Scattering"](https://inria.hal.science/inria-00288758)
-  (EGSR 2008) — the precise variant, and the model osgHimmel's atmosphere is built on.
+  (EGSR 2008): the precise variant, and the model osgHimmel's atmosphere is built on.
 - S. Hillaire, ["A Scalable and Production Ready Sky and Atmosphere Rendering
-  Technique"](https://sebh.github.io/publications/egsr2020.pdf) (EGSR 2020) — the fast variant.
+  Technique"](https://sebh.github.io/publications/egsr2020.pdf) (EGSR 2020): the fast variant.
 - T. Nishita, T. Sirai, K. Tadamura, E. Nakamae, "Display of the Earth Taking into Account Atmospheric
-  Scattering" (SIGGRAPH 1993) — atmosphere thickness constant.
-- A. Bucholtz, "Rayleigh-scattering calculations for the terrestrial atmosphere" (1995) — Rayleigh
+  Scattering" (SIGGRAPH 1993): atmosphere thickness constant.
+- A. Bucholtz, "Rayleigh-scattering calculations for the terrestrial atmosphere" (1995): Rayleigh
   scattering coefficients.
-- G. G. Bennett, "The Calculation of the Astronomical Refraction in Marine Navigation" (1982) — atmospheric
+- G. G. Bennett, "The Calculation of Astronomical Refraction in Marine Navigation" (1982): atmospheric
   refraction.
 - Maxime Heckel, ["On rendering the sky, sunsets and
-  planets"](https://blog.maximeheckel.com/posts/on-rendering-the-sky-sunsets-and-planets/) — a WebGL/three.js
+  planets"](https://blog.maximeheckel.com/posts/on-rendering-the-sky-sunsets-and-planets/): a WebGL/three.js
   single-scattering raymarcher; the ozone absorption parameterization here follows it.
 - Daniel Müller (now Limberger), Juri Engel, Jürgen Döllner,
   ["Single-Pass Rendering of Day and Night Sky Phenomena"](https://diglib.eg.org/items/0b9332fd-d155-452a-b9e0-1c605d557730)
@@ -153,24 +153,21 @@ Echtzeit"](https://daniellimberger.de/resources/2012%20%E2%80%93%20Mueller%20%28
 
 ## Development
 
+Part of the [himmel monorepo](https://github.com/cgcostume/himmel); run these from the repository root.
+
 ```sh
-pnpm install
-pnpm build       # rolldown -> dist/*.js + dist/*.d.ts
-pnpm typecheck   # tsc --noEmit
-pnpm lint        # biome check .
-pnpm format      # biome format --write .
-pnpm test        # playwright test
-pnpm test:gpu    # the same, plus the WGSL tests, which execute real shaders via Dawn
-pnpm start       # sirv: serves the dev preview at localhost:4173/static/index.html (needs pnpm build first)
-pnpm clean       # rm -rf dist
+pnpm install     # everything, once
+pnpm build       # rolldown -> dist/*.js + dist/*.d.ts, for every package
+pnpm typecheck
+pnpm lint        # biome, repo-wide
+pnpm test        # playwright
 ```
 
-The dev preview additionally needs `@himmel/sternzeit` built (`pnpm build` in that repo), since it is linked
-in as a local path dependency rather than from npm. See the note in `.github/workflows/ci.yml`.
+Inside `packages/dunstkreis`:
 
-`pnpm start` serves the repo root, not just `static/`, because the page loads `../dist/*.js` and
-`../node_modules/@himmel/sternzeit/dist/index.js` as plain relative paths.
+```sh
+pnpm test:gpu    # the tests plus the WGSL ones, which execute real shaders via Dawn
+pnpm start       # the interim dev preview at localhost:4173/static/index.html, until the site chapter replaces it
+```
 
-The `webgpu` package needs its install script to run, which is approved in `pnpm-workspace.yaml`. pnpm only
-reads that setting from there, so `pnpm install --ignore-workspace` needs
-`--config.strict-dep-builds=false` added, or `pnpm approve-builds` run once.
+The `webgpu` package needs its install script to run, which is approved in the root `pnpm-workspace.yaml`.

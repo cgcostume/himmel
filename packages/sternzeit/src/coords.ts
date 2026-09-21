@@ -1,4 +1,4 @@
-// See ../GLOSSARY.md for equatorial/ecliptic/horizontal coordinates, obliquity, and hour angle.
+// Terms used here are explained in the himmel site's glossary (site/src/data/glossary.json).
 import { DEG_TO_RAD, normalizeDegrees, RAD_TO_DEG } from "./math.js";
 import type { JulianDay } from "./time.js";
 
@@ -99,4 +99,15 @@ export function applyParallax(
         rightAscension: normalizeDegrees(position.rightAscension + deltaAlpha * RAD_TO_DEG),
         declination: deltaPrime * RAD_TO_DEG,
     };
+}
+
+/** A unit direction in the observer's local frame: x north, y east, z up (right-handed, z towards the zenith). */
+export type Direction = readonly [x: number, y: number, z: number];
+
+/** Horizontal coordinates as a unit direction vector, the form a renderer's lighting and view rays are in. */
+export function horizontalToDirection({ azimuth, altitude }: HorizontalCoords): Direction {
+    const a = altitude * DEG_TO_RAD;
+    const z = azimuth * DEG_TO_RAD;
+
+    return [Math.cos(a) * Math.cos(z), Math.cos(a) * Math.sin(z), Math.sin(a)];
 }

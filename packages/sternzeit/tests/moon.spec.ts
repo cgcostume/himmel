@@ -45,3 +45,36 @@ test("approx.moon.distance roughly agrees with the precise result", () => {
 
     expect(Math.abs(approxDistance - preciseDistance)).toBeLessThan(2000);
 });
+
+// Meeus, "Astronomical Algorithms", example 48.a (1992-04-12.0 TD, the same instant as 47.a).
+test("moon.phaseAngle and illuminatedFraction match Meeus' worked example 48.a", () => {
+    expect(precise.moon.phaseAngle(JDE)).toBeCloseTo(69.0756, 1);
+    expect(precise.moon.illuminatedFraction(JDE)).toBeCloseTo(0.6786, 3);
+});
+
+test("approx.moon.phaseAngle and illuminatedFraction match Meeus' 48.4 result for example 48.a", () => {
+    expect(approx.moon.phaseAngle(JDE)).toBeCloseTo(68.88, 0);
+    expect(approx.moon.illuminatedFraction(JDE)).toBeCloseTo(0.6802, 2);
+});
+
+test("moon.earthshine peaks near new moon, vanishes near full moon, and approx stays within 3% of its peak", () => {
+    // 2026-08-12 (new moon, the solar eclipse) and 2026-08-28 (full moon).
+    const newMoon = 2461265.27;
+    const fullMoon = 2461280.66;
+    expect(precise.moon.earthshine(newMoon)).toBeGreaterThan(0.09);
+    expect(precise.moon.earthshine(fullMoon)).toBeLessThan(0.005);
+    for (let jd = newMoon; jd < newMoon + 29.5; jd += 0.5) {
+        expect(Math.abs(approx.moon.earthshine(jd) - precise.moon.earthshine(jd))).toBeLessThan(0.03 * 0.095);
+    }
+});
+
+test("moon.sunDirection is a unit vector within a fraction of a degree of the Sun's own direction", () => {
+    const time = precise.fromJulianDay(JDE);
+    for (const ns of [precise, approx]) {
+        const d = ns.moon.sunDirection(time, 52.4, 13.1);
+        const s = ns.horizontalToDirection(ns.sun.horizontalPosition(time, 52.4, 13.1));
+        expect(Math.hypot(...d)).toBeCloseTo(1, 9);
+        const angle = Math.acos(Math.min(1, d[0] * s[0] + d[1] * s[1] + d[2] * s[2])) * precise.RAD_TO_DEG;
+        expect(angle).toBeLessThan(0.2);
+    }
+});

@@ -5,7 +5,10 @@
     --line: #262b36;
     --text: #d6dae3;
     --muted: #8a92a3;
-    --accent: #5aa9ff;
+    /* A light step of Saussure's cyanometer (1789): Prussian blue lightened with white, the hue (~207°) kept. The
+       cyanometer measured how blue the sky is in 53 such steps; see Götz Hoeppe, "Blau: Die Farbe des Himmels". */
+    --cyanometer: hsl(207 62% 62%);
+    --accent: var(--cyanometer);
     --measure: 46rem;
     --wide: 1140px;
 }
@@ -179,9 +182,10 @@ input[type="number"]::-webkit-outer-spin-button {
     width: var(--wide-width);
     margin-left: calc(50% - var(--wide-width) / 2);
 }
-/* Glossary terms in running text: a dotted underline, the definition on hover or focus, the entry on click. */
+/* Glossary terms, in running text and tables: a dotted underline, the definition on hover or focus. */
 .term {
     position: relative;
+    cursor: help;
     color: inherit;
     text-decoration: underline dotted var(--accent);
     text-underline-offset: 3px;
@@ -210,7 +214,16 @@ input[type="number"]::-webkit-outer-spin-button {
     font-style: normal;
     font-weight: 300;
     line-height: 1.5;
+    font-family: "Roboto", system-ui, sans-serif;
+    text-align: left;
+    white-space: normal;
     pointer-events: none;
+}
+/* Row-specific context under a definition, e.g. in the sternzeit tables. */
+.tip-note {
+    display: block;
+    margin-top: 0.35rem;
+    color: var(--muted);
 }
 .term:hover .term-tip,
 .term:focus-visible .term-tip,
@@ -218,26 +231,6 @@ input[type="number"]::-webkit-outer-spin-button {
 .cite:focus-visible .term-tip {
     visibility: visible;
     opacity: 1;
-}
-.breadcrumb {
-    color: var(--muted);
-    font-family: "Roboto Mono", ui-monospace, monospace;
-    font-size: 0.85rem;
-}
-.glossary > div {
-    margin-bottom: 1rem;
-    scroll-margin-top: 1rem;
-}
-.glossary dt {
-    color: var(--accent);
-    font-weight: 400;
-}
-.glossary dd {
-    margin: 0.2rem 0 0;
-}
-.glossary > div:target dt {
-    color: var(--text);
-    background: color-mix(in srgb, var(--accent) 25%, transparent);
 }
 .chapter-meta {
     color: var(--muted);

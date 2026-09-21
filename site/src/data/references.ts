@@ -61,6 +61,13 @@ export const references: Record<string, Reference> = {
         year: 1986,
         note: "Atmospheric refraction from the true altitude.",
     },
+    vandehulst1980: {
+        authors: "Hendrik C. van de Hulst",
+        title: "Multiple Light Scattering: Tables, Formulas, and Applications",
+        venue: "Academic Press",
+        year: 1980,
+        note: "Earthshine from the Earth's phase as seen from the Moon.",
+    },
     nishita1993: {
         authors: "Tomoyuki Nishita, Takao Sirai, Katsumi Tadamura, Eihachiro Nakamae",
         title: "Display of the Earth Taking into Account Atmospheric Scattering",

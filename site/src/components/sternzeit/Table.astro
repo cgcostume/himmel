@@ -1,10 +1,14 @@
 ---
+import { findEntry } from "../../lib/glossary";
+import { GLOSSARY_TERMS } from "./glossary-map.js";
 import "./inspector.css";
 
 interface Props {
     domain: "earth" | "sun" | "moon" | "eclipse";
 }
 const { domain } = Astro.props;
+// Fails the build on a row mapped to a term the glossary doesn't have.
+for (const name of Object.values(GLOSSARY_TERMS)) findEntry(name);
 ---
 
 <div class="sternzeit-table wide" data-domain={domain}></div>

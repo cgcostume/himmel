@@ -26,9 +26,9 @@ osghimmel/         read-only reference clone, gitignored
 
 | npm package | Directory | Status |
 |---|---|---|
-| `@himmel/sternzeit` (astronomy/sidereal time math) | `packages/sternzeit` | Julian Day, sidereal time, sun/moon/earth positions done (precise + approx); stars stubbed |
+| `@himmel/sternzeit` (astronomy/sidereal time math) | `packages/sternzeit` | Julian Day, sidereal time, sun/moon/earth positions, moon phase, sun direction from the moon and earthshine done (precise + approx); stars stubbed |
 | `@himmel/dunstkreis` (WebGPU atmosphere, Bruneton precise + Hillaire fast) | `packages/dunstkreis` | Hillaire pipeline + dev page working; Bruneton, IBL, performance pending |
-| `@himmel/sternwarte` (the website, `private: true`) | `site/` | not started |
+| `@himmel/sternwarte` (the website, `private: true`) | `site/` | sternzeit chapter done (glossary tooltips, references); dunstkreis chapter placeholder; no Pages deploy yet |
 | `@himmel/gewoelk` (clouds) | not created yet | later |
 | `@himmel/sternenzelt` (star rendering) | not created yet | later |
 | `@himmel/nachtgestirn` (moon rendering) | not created yet | later |
@@ -36,7 +36,10 @@ osghimmel/         read-only reference clone, gitignored
 **sternwarte** is one site for all libraries, structured like a blog with one chapter per library:
 explains the techniques, showcases them, makes them explorable (WebGPU canvases, zdog
 visualizations, sliders/buttons, code examples). Plus a generated API reference (TypeDoc to
-Markdown) and a hand-written glossary per library. Final showpiece: one comprehensive demo
+Markdown). Terms are explained only as hover tooltips, in the text (`<Term>`) and in tables, from one
+site-wide glossary (`site/src/data/glossary.json`); no glossary pages, no per-package GLOSSARY.md.
+Sources are cited with `<Cite>` and listed at the end of each chapter (`site/src/data/references.ts`).
+Final showpiece: one comprehensive demo
 combining sun, moon, atmosphere, stars, clouds. Audience: developers who want to use the
 libraries; should be a joy to read, educational, and nerdy. Hard requirements, non-negotiable:
 runs locally with a single command, deploys as static files to GitHub Pages, no other hosting.

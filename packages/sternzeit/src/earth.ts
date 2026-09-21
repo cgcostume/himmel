@@ -1,4 +1,4 @@
-// See ../GLOSSARY.md for obliquity, nutation, orbital eccentricity, and atmospheric refraction.
+// Terms used here are explained in the himmel site's glossary (site/src/data/glossary.json).
 import { arcsecondsToDegrees, DEG_TO_RAD, RAD_TO_DEG } from "./math.js";
 import * as moon from "./moon.js";
 import * as sun from "./sun.js";
@@ -258,11 +258,10 @@ export interface RefractionConditions {
 }
 
 /**
- * Effect of atmospheric refraction on the true altitude, in degrees, per Meeus' "Astronomical Algorithms" (15.4),
- * G.G. Bennet, "The Calculation of the Astronomical Refraction in marine Navigation" (1982), and
- * Þorsteinn Sæmundsson, "Sky and Telescope" (1982).
+ * Effect of atmospheric refraction on the true altitude, in degrees, per Meeus' "Astronomical Algorithms" (15.4)
+ * and Þorsteinn Sæmundsson, "Atmospheric Refraction", Sky and Telescope (1986).
  *
- * Bennett's fit assumes an observer at sea level at 10 °C; `conditions` scales the result for anything else
+ * The fit assumes an observer at sea level at 10 °C; `conditions` scales the result for anything else
  * (AA.15, the P/1010 · 283/(273+T) factor, with the pressure ratio taken from `airPressureRatio`). Strictly,
  * refraction is the integral of the refractive index gradient along the whole ray, not a function of the
  * conditions at one end of it, but scaling by the observer's pressure is the standard approximation.
@@ -282,8 +281,8 @@ export function atmosphericRefraction(altitude: number, conditions: RefractionCo
 
 /**
  * Effect of atmospheric refraction, in degrees, as a function of the *apparent* altitude it produced, per
- * Meeus' "Astronomical Algorithms" (15.3) and G.G. Bennet, "The Calculation of the Astronomical Refraction in
- * marine Navigation" (1982). The inverse relation of `atmosphericRefraction`, and the one a renderer wants,
+ * Meeus' "Astronomical Algorithms" (15.3) and G. G. Bennett, "The Calculation of Astronomical Refraction in
+ * Marine Navigation", Journal of Navigation (1982). The inverse relation of `atmosphericRefraction`, and the one a renderer wants,
  * since a camera ray is by definition an apparent direction: subtracting this from the ray's apparent altitude
  * gives the true altitude to look the sky up at. `@himmel/dunstkreis` carries a WGSL twin for per-ray use on
  * the GPU; the two are pinned to each other by a test and must stay in sync.

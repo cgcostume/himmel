@@ -1,6 +1,8 @@
 import * as precise from "@himmel/sternzeit";
 import * as approx from "@himmel/sternzeit/approx";
+import { lookupEntry } from "../../lib/glossary";
 import { formatDMS } from "./format.js";
+import { GLOSSARY_TERMS } from "./glossary-map.js";
 import { onChange, state } from "./state.js";
 
 // Unit of each export's return value (or of an object return's fields, which all share one unit here).
@@ -9,6 +11,8 @@ const UNITS = {
     MEAN_RADIUS_KM: "km",
     ATMOSPHERE_THICKNESS_KM: "km",
     ATMOSPHERE_THICKNESS_NON_UNIFORM_KM: "km",
+    PRESSURE_SCALE_HEIGHT_M: "m",
+    airPressureRatio: "",
     APPARENT_MAGNITUDE_LIMIT: "mag",
     distance: "km",
     viewDistanceWithinAtmosphere: "km",
@@ -20,82 +24,85 @@ const UNITS = {
     "lunar.axisOffsetKm": "km",
     "lunar.phase": "",
     "lunar.linearPhase": "",
+    illuminatedFraction: "",
+    sunDirection: "",
+    earthshine: "",
 };
 const DEFAULT_UNIT = "deg";
 
-// One-sentence, plain-language descriptions shown as each row's title-attribute tooltip. Keyed by name, or
-// "name.field" for object-returning exports; same name means the same kind of quantity regardless of which
-// domain (sun/moon) it's under, so most entries don't need a body-specific variant.
+// Title and description for rows the glossary has no entry for (see glossary-map.js), shown in the same tooltip
+// style as glossary terms. Keyed by name or "name.field".
 const DESCRIPTIONS = {
-    MEAN_RADIUS_KM: "The body's mean radius, in kilometers.",
-    ATMOSPHERE_THICKNESS_KM:
+    MEAN_RADIUS_KM: ["Mean radius", "The body's mean radius, in kilometers."],
+    ATMOSPHERE_THICKNESS_KM: [
+        "Atmosphere thickness",
         "The uniform-density atmosphere thickness used for simplified scattering models, in kilometers.",
-    ATMOSPHERE_THICKNESS_NON_UNIFORM_KM:
+    ],
+    ATMOSPHERE_THICKNESS_NON_UNIFORM_KM: [
+        "Atmosphere thickness, non-uniform",
         "The atmosphere thickness accounting for its actual density falloff with altitude, in kilometers.",
-    APPARENT_MAGNITUDE_LIMIT: "The faintest apparent magnitude generally considered visible to the naked eye.",
-    atmosphericRefraction:
-        "How much refraction lifts the Sun above its true, geometric altitude right now (at the horizon while it is down).",
-    atmosphericRefractionFromApparent:
-        "The same refraction, computed from the apparent altitude instead: what a renderer bending its view rays needs.",
-    orbitEccentricity:
-        "How far Earth's orbit around the Sun deviates from a perfect circle (0 = circular, closer to 1 = more elongated).",
-    apparentAngularSunDiameter: "The Sun's apparent angular width as seen from Earth, in radians.",
-    apparentAngularMoonDiameter: "The Moon's apparent angular width as seen from Earth, in radians.",
-    longitudeNutation:
-        "The small periodic wobble in the direction of the equinox, caused mainly by the Moon's pull on Earth's equatorial bulge.",
-    obliquityNutation:
-        "The small periodic wobble in Earth's axial tilt itself, the companion effect to longitudeNutation.",
-    meanObliquity:
-        "Earth's axial tilt relative to its orbital plane, smoothed to remove the short-term nutation wobble.",
-    trueObliquity: "Earth's actual axial tilt relative to its orbital plane right now, including the nutation wobble.",
-    viewDistanceWithinAtmosphere:
+    ],
+    APPARENT_MAGNITUDE_LIMIT: [
+        "Apparent magnitude limit",
+        "The faintest apparent magnitude generally considered visible to the naked eye.",
+    ],
+    PRESSURE_SCALE_HEIGHT_M: [
+        "Pressure scale height",
+        "The height over which air pressure drops by a factor of e, in the standard atmosphere, in meters.",
+    ],
+    airPressureRatio: [
+        "Air pressure ratio",
+        "Air pressure relative to sea level, at the observer's height: 1 here, since the page's observer stands at sea level.",
+    ],
+    viewDistanceWithinAtmosphere: [
+        "View distance within the atmosphere",
         "How far a line of sight towards the Sun travels through Earth's atmosphere before leaving it, in kilometers.",
-    meanAnomaly:
-        "How far the body has traveled along its orbit since perihelion, as if the orbit were circular and traversed at constant speed.",
-    meanLongitude: "The body's ecliptical longitude if its orbit were circular and traversed at constant speed.",
-    center: "The correction added to the Sun's mean anomaly to account for its orbit's actual, elliptical (not circular) shape.",
-    trueAnomaly: "How far the body has actually traveled along its real, elliptical orbit since perihelion.",
-    trueLongitude:
-        "The Sun's actual ecliptical longitude: meanLongitude corrected for the orbit's true elliptical shape.",
-    "apparentPosition.rightAscension":
-        "The body's east-west sky coordinate, like celestial longitude, measured along the celestial equator from the vernal equinox.",
-    "apparentPosition.declination":
-        "The body's north-south sky coordinate, like celestial latitude, measured from the celestial equator.",
-    "horizontalPosition.altitude": "How high the body appears above the observer's local horizon, in degrees.",
-    "horizontalPosition.azimuth": "The compass-like direction of the body along the observer's local horizon.",
-    distance: "Distance from Earth's center to the body's center, in kilometers.",
-    meanElongation: "The Moon's mean angular separation from the Sun, as seen from Earth.",
-    meanArgumentOfLatitude:
-        "The Moon's mean angular distance from where its orbit crosses Earth's orbital plane, its ascending node.",
-    meanAscendingNodeLongitude:
-        "The ecliptical longitude of the point where the Moon's orbit crosses Earth's orbital plane heading north.",
-    "position.longitude":
-        "The Moon's ecliptical longitude: its position along the ecliptic, measured from the vernal equinox.",
-    "position.latitude": "The Moon's ecliptical latitude: how far it strays north or south of the ecliptic plane.",
-    "opticalLibrations.longitude":
-        "How far the Moon's near side rocks east-west beyond its average-facing hemisphere, letting us see a little past its edge.",
-    "opticalLibrations.latitude":
-        "How far the Moon's near side rocks north-south beyond its average-facing hemisphere, letting us see a little past its pole.",
-    parallacticAngle:
-        "The angle between the Moon's north pole direction and straight up (the local zenith) as seen by the observer.",
-    positionAngleOfAxis: "The angle between the Moon's rotation axis and celestial north, as seen from Earth.",
-    "solar.separation": "Apparent center-to-center separation between Sun and Moon as seen by the observer.",
-    "solar.positionAngle":
-        "Direction from the Sun's center to the Moon's center in the observer's sky, from up through east.",
-    "solar.phase":
-        "0 (centered) to 1 (discs just touching), 0.5 at the total/annular-to-partial boundary; above 1 means no eclipse.",
-    "solar.linearPhase": "Same as solar.phase, but as one global linear fraction (0.5 doesn't mean the same thing).",
-    "lunar.separation": "The Moon's angular distance from the axis of Earth's shadow, as seen geocentrically.",
-    "lunar.axisOffsetKm": "The Moon's linear distance from the axis of Earth's shadow, at the Moon's own distance.",
-    "lunar.positionAngle":
-        "Direction from Earth's shadow axis to the Moon, in ecliptical degrees from north through east.",
-    "lunar.phase":
-        "0 (umbra center) to 1 (penumbra edge), 0.5 at the umbra/penumbra boundary; above 1 means no eclipse.",
-    "lunar.linearPhase": "Same as lunar.phase, but as one global linear fraction (0.5 doesn't mean the same thing).",
+    ],
+    distance: ["Distance", "Distance from Earth's center to the body's center, in kilometers."],
+    sunDirection: [
+        "Sun direction from the Moon",
+        "Unit vector from the Moon's center to the Sun, in the observer's frame (x north, y east, z up): the light to shade the Moon with.",
+    ],
+    "solar.separation": [
+        "Separation",
+        "Apparent center-to-center separation between Sun and Moon as seen by the observer.",
+    ],
+    "lunar.separation": [
+        "Separation",
+        "The Moon's angular distance from the axis of Earth's shadow, as seen geocentrically.",
+    ],
+    "lunar.axisOffsetKm": [
+        "Shadow axis offset",
+        "The Moon's linear distance from the axis of Earth's shadow, at the Moon's own distance.",
+    ],
 };
 
-function describe(name, field) {
-    return DESCRIPTIONS[field ? `${name}.${field}` : name] ?? "";
+// Row-specific context shown beneath the glossary definition, e.g. what a row is evaluated for here.
+const NOTES = {
+    atmosphericRefraction: "Here: from the Sun's true altitude right now, or the horizon while it is down.",
+    atmosphericRefractionFromApparent:
+        "Here: from the Sun's apparent altitude, the direction a renderer's view ray already has.",
+};
+
+const escapeAttribute = (text) => text.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+
+// Same markup and styling as the Term component in the text: a dotted underline with a tooltip.
+function tooltip(label, tipHtml) {
+    return `<span class="term" tabindex="0">${label}<span class="term-tip" role="tooltip">${tipHtml}</span></span>`;
+}
+
+function nameCell(name, field) {
+    const key = field ? `${name}.${field}` : name;
+    const label = field ? `${name}.${field}` : name;
+    const glossaryName = GLOSSARY_TERMS[key] ?? GLOSSARY_TERMS[name];
+    const entry = glossaryName ? lookupEntry(glossaryName) : undefined;
+    const own = DESCRIPTIONS[key] ?? (field ? undefined : DESCRIPTIONS[name]);
+    const note = NOTES[key] ?? NOTES[name];
+    if (!entry && !own) return `<td>${label}</td>`;
+    const [title, text] = entry ? [entry.term, entry.html] : [own[0], escapeAttribute(own[1])];
+    const context = note ? `<span class="tip-note">${escapeAttribute(note)}</span>` : "";
+    const definition = `<strong>${escapeAttribute(title)}</strong> ${text}${context}`;
+    return `<td>${tooltip(label, definition)}</td>`;
 }
 
 // How to call an export that isn't just fn(julianDay). Anything not listed here falls back to
@@ -122,6 +129,9 @@ const CALL_OVERRIDES = {
     horizontalPosition: (fn, jd) => fn(precise.fromJulianDay(jd), state.latitude, state.longitude),
     topocentricPosition: (fn, jd) => fn(precise.fromJulianDay(jd), state.latitude, state.longitude),
     parallacticAngle: (fn, jd) => fn(precise.fromJulianDay(jd), state.latitude, state.longitude),
+    sunDirection: (fn, jd) => fn(precise.fromJulianDay(jd), state.latitude, state.longitude),
+    // The page has no observer height; sea level, like everywhere else here.
+    airPressureRatio: (fn) => fn(0),
     // lunar takes just jd like the fn(jd) default already handles; only solar needs observer location too.
     solar: (fn, jd) => fn(precise.fromJulianDay(jd), state.latitude, state.longitude),
 };
@@ -170,6 +180,8 @@ function formatNumber(n, unit) {
 
 function formatValue(value, unit) {
     if (typeof value === "number") return formatNumber(value, unit);
+    // Vectors in one row, as a tuple: "( 0.6951, -0.4916, -0.5245)".
+    if (Array.isArray(value)) return `(${value.map((n) => formatDecimal(n, unit)).join(", ")})`;
     if (typeof value === "object" && value !== null) {
         return Object.entries(value)
             .map(([k, v]) => `${k}: ${formatValue(v, unit)}`)
@@ -189,12 +201,13 @@ function callExport(name, entry, jd) {
     }
 }
 
+// Objects get one row per field; arrays (vectors) stay one row, see formatValue.
 function isPlainObject(value) {
-    return typeof value === "object" && value !== null;
+    return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function cell(value, present, unit) {
-    return present ? `<td class="value">${formatValue(value, unit)}</td>` : `<td class="value missing">—</td>`;
+    return present ? `<td class="value">${formatValue(value, unit)}</td>` : `<td class="value missing">n/a</td>`;
 }
 
 // Delta as a signed, fixed-decimal value with the row's own unit suffix, e.g. "Δ +0.0004°". Kept as a plain
@@ -210,14 +223,17 @@ function formatDelta(delta, unit) {
     return `Δ ${sign}${formatted}${suffix}`;
 }
 
-// Same as cell(), but for the approx column: adds a title tooltip showing the delta to the precise value,
+// Same as cell(), but for the approx column: adds a tooltip showing the delta to the precise value,
 // so the value cells themselves stay plain numbers (not replaced by the delta), while the "how far off" is
 // still a hover away.
 function approxCell(value, present, unit, preciseValue, precisePresent) {
-    if (!present) return `<td class="value missing">—</td>`;
-    const hasDelta = precisePresent && typeof value === "number" && typeof preciseValue === "number";
-    const title = hasDelta ? ` title="${formatDelta(value - preciseValue, unit)}"` : "";
-    return `<td class="value"${title}>${formatValue(value, unit)}</td>`;
+    if (!present) return `<td class="value missing">n/a</td>`;
+    const formatted = formatValue(value, unit);
+    const hasDelta =
+        precisePresent && typeof value === "number" && typeof preciseValue === "number" && value !== preciseValue;
+    if (!hasDelta) return `<td class="value">${formatted}</td>`;
+    const tip = `<strong>${formatDelta(value - preciseValue, unit)}</strong> off the precise value.`;
+    return `<td class="value">${tooltip(formatted, tip)}</td>`;
 }
 
 function computeRows(names, preciseNs, approxNs, jd) {
@@ -244,12 +260,12 @@ function computeRows(names, preciseNs, approxNs, jd) {
                     // Most object exports (apparentPosition, position, ...) have every field share one unit, but
                     // eclipse states mix degrees/km/dimensionless/strings, so a "name.field" entry wins if present.
                     const fieldUnit = UNITS[`${name}.${field}`] ?? unit;
-                    return `<tr><td title="${describe(name, field)}">${name}.${field}</td><td>${fieldUnit}</td>${cell(preciseValue?.[field], preciseHasField, fieldUnit)}${approxCell(approxValue?.[field], approxHasField, fieldUnit, preciseValue?.[field], preciseHasField)}</tr>`;
+                    return `<tr>${nameCell(name, field)}<td>${fieldUnit}</td>${cell(preciseValue?.[field], preciseHasField, fieldUnit)}${approxCell(approxValue?.[field], approxHasField, fieldUnit, preciseValue?.[field], preciseHasField)}</tr>`;
                 });
             }
 
             return [
-                `<tr><td title="${describe(name)}">${name}</td><td>${unit}</td>${cell(preciseValue, hasPrecise, unit)}${approxCell(approxValue, hasApprox, unit, preciseValue, hasPrecise)}</tr>`,
+                `<tr>${nameCell(name)}<td>${unit}</td>${cell(preciseValue, hasPrecise, unit)}${approxCell(approxValue, hasApprox, unit, preciseValue, hasPrecise)}</tr>`,
             ];
         })
         .join("");

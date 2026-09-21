@@ -1,11 +1,13 @@
-// See ../GLOSSARY.md for mean elongation, argument of latitude, ascending node, libration, parallactic angle, and parallax.
+// Terms used here are explained in the himmel site's glossary (site/src/data/glossary.json).
 import {
     applyParallax,
+    type Direction,
     type EclipticalCoords,
     type EquatorialCoords,
     eclipticalToEquatorial,
     equatorialToHorizontal,
     type HorizontalCoords,
+    horizontalToDirection,
 } from "./coords.js";
 import * as earth from "./earth.js";
 import {
@@ -14,8 +16,9 @@ import {
     meanAnomaly as sunMeanAnomaly,
     meanAnomalyApprox as sunMeanAnomalyApprox,
 } from "./elements.js";
-import { DEG_TO_RAD, normalizeDegrees, RAD_TO_DEG } from "./math.js";
+import { angularSeparation, DEG_TO_RAD, normalizeDegrees, RAD_TO_DEG } from "./math.js";
 import { meanSiderealTime, meanSiderealTimeApprox } from "./siderealTime.js";
+import * as sun from "./sun.js";
 import {
     type AstronomicalTime,
     type JulianCenturies,
@@ -624,4 +627,109 @@ export function positionAngleOfAxisApprox(t: JulianDay): number {
 /** Normalizes an angle in radians to the range [0, 2π). */
 function normalizeRadians(rad: number): number {
     return rad - Math.floor(rad / (2 * Math.PI)) * 2 * Math.PI;
+}
+
+/** Geocentric elongation of the Moon from the Sun (ψ), in degrees, per Meeus' "Astronomical Algorithms" (48.2). */
+function elongation(moonPosition: EquatorialCoords, sunPosition: EquatorialCoords): number {
+    const { rightAscension: a, declination: d } = moonPosition;
+
+    return angularSeparation(sunPosition.rightAscension, sunPosition.declination, a, d);
+}
+
+/**
+ * Phase angle (i), in degrees: the angle Sun-Moon-Earth, 0 at full moon and 180 at new moon, per Meeus'
+ * "Astronomical Algorithms" (48.3). Drives how much of the disc is lit (`illuminatedFraction`) and, from the other
+ * side, how much of the Earth the Moon sees lit (`earthshine`).
+ */
+export function phaseAngle(t: JulianDay): number {
+    const psi = elongation(apparentPosition(t), sun.apparentPosition(t)) * DEG_TO_RAD;
+    const R = sun.distance(t);
+
+    return Math.atan2(R * Math.sin(psi), distance(t) - R * Math.cos(psi)) * RAD_TO_DEG;
+}
+
+/** Phase angle from the mean elements alone, per Meeus' "Astronomical Algorithms" (48.4); within ~0.2° of 48.3. */
+export function phaseAngleApprox(t: JulianDay): number {
+    const D = meanElongationApprox(t) * DEG_TO_RAD;
+    const M = sunMeanAnomalyApprox(t) * DEG_TO_RAD;
+    const Mm = meanAnomalyApprox(t) * DEG_TO_RAD;
+
+    const i =
+        180 -
+        D * RAD_TO_DEG -
+        6.289 * Math.sin(Mm) +
+        2.1 * Math.sin(M) -
+        1.274 * Math.sin(2 * D - Mm) -
+        0.658 * Math.sin(2 * D) -
+        0.214 * Math.sin(2 * Mm) -
+        0.11 * Math.sin(D);
+
+    return normalizeDegrees(i);
+}
+
+/** Illuminated fraction of the Moon's disc (k), 0 at new moon to 1 at full moon, per Meeus' (48.1). */
+export function illuminatedFraction(t: JulianDay): number {
+    return (1 + Math.cos(phaseAngle(t) * DEG_TO_RAD)) / 2;
+}
+
+export function illuminatedFractionApprox(t: JulianDay): number {
+    return (1 + Math.cos(phaseAngleApprox(t) * DEG_TO_RAD)) / 2;
+}
+
+/**
+ * Unit direction from the Moon's center towards the Sun, in the observer's local frame (x north, y east, z up):
+ * the light direction for shading the Moon's disc. Not quite the Sun's own direction as seen from Earth: the Moon
+ * sits ~384,000 km off to the side, which turns the vector by up to ~0.15°.
+ */
+export function sunDirection(time: AstronomicalTime, latitude: number, longitude: number): Direction {
+    const t = julianDayUT(time);
+
+    return between(
+        horizontalToDirection(horizontalPosition(time, latitude, longitude)),
+        distance(t),
+        horizontalToDirection(sun.horizontalPosition(time, latitude, longitude)),
+        sun.distance(t),
+    );
+}
+
+export function sunDirectionApprox(time: AstronomicalTime, latitude: number, longitude: number): Direction {
+    const t = julianDayUT(time);
+
+    return between(
+        horizontalToDirection(horizontalPositionApprox(time, latitude, longitude)),
+        distanceApprox(t),
+        horizontalToDirection(sun.horizontalPositionApprox(time, latitude, longitude)),
+        sun.distanceApprox(t),
+    );
+}
+
+/** Unit vector from point `a` to point `b`, both given as a direction and a distance from the same origin. */
+function between(a: Direction, aDistance: number, b: Direction, bDistance: number): Direction {
+    const x = b[0] * bDistance - a[0] * aDistance;
+    const y = b[1] * bDistance - a[1] * aDistance;
+    const z = b[2] * bDistance - a[2] * aDistance;
+    const length = Math.hypot(x, y, z);
+
+    return [x / length, y / length, z / length];
+}
+
+/**
+ * Earthshine on the Moon, relative to full sunlight on it: sunlight reflected by the Earth, which lights the Moon's
+ * night side as a faint ashen glow. Peaks at ~0.095 around new moon, when the Moon sees a full Earth, and vanishes
+ * at full moon. Per van de Hulst, "Multiple Light Scattering" (1980), with Jensen et al.'s Earth albedo of 0.19,
+ * as used by osgHimmel.
+ */
+export function earthshine(t: JulianDay): number {
+    // Half the elongation, clamped off both ends, where the formula is a 0 * infinity limit that tends to 0.
+    const psi = elongation(apparentPosition(t), sun.apparentPosition(t)) * DEG_TO_RAD;
+    const e = Math.min(Math.max(psi / 2, 1e-6), Math.PI / 2 - 1e-6);
+
+    return 0.19 * 0.5 * (1 - Math.sin(e) * Math.tan(e) * Math.log(1 / Math.tan(e / 2)));
+}
+
+/** osgHimmel's polynomial fit of `earthshine`, within ~3% of it, with no logarithm or tangent to evaluate. */
+export function earthshineApprox(t: JulianDay): number {
+    const e = Math.PI - elongation(apparentPositionApprox(t), sun.apparentPositionApprox(t)) * DEG_TO_RAD;
+
+    return Math.max(0, -0.0061 * e * e * e + 0.0289 * e * e - 0.0105 * Math.sin(e));
 }

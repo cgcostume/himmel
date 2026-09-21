@@ -1,4 +1,4 @@
-// See ../GLOSSARY.md for ecliptical/horizontal coordinates, apparent angular diameter, and eclipses.
+// Terms used here are explained in the himmel site's glossary (site/src/data/glossary.json).
 import * as earth from "./earth.js";
 import { angularSeparation, DEG_TO_RAD, normalizeDegrees, positionAngle, RAD_TO_DEG } from "./math.js";
 import * as moon from "./moon.js";

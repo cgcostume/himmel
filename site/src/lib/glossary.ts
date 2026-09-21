@@ -1,31 +1,18 @@
-import { existsSync, readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import glossary from "../data/glossary.json";
 
-/** One `- **Term**: definition` entry of a package's GLOSSARY.md, the single source for tooltips and glossary pages. */
+/**
+ * The site-wide glossary (src/data/glossary.json: term -> definition, both with inline markdown), the single
+ * source for every tooltip, in the text (Term.astro) and in the tables (built in the browser). No node imports,
+ * so it bundles into client scripts as is.
+ */
 export interface GlossaryEntry {
-    id: string;
     term: string;
-    /** Lowercased names a `<Term of="...">` may use: the part before any parenthesis, split on " / ". */
-    names: string[];
     html: string;
 }
 
-export interface GlossarySection {
-    title: string;
-    entries: GlossaryEntry[];
-}
-
-export interface Glossary {
-    intro: string;
-    sections: GlossarySection[];
-}
-
-// Relative to the site root (Astro runs from there), not to this module, which ends up in a bundled chunk.
-const path = (lib: string) => resolve(process.cwd(), "../packages", lib, "GLOSSARY.md");
-
 const escapeHtml = (text: string) => text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-/** Just the inline markdown the glossaries use: code spans, bold and italics. */
+/** Just the inline markdown the glossary uses: code spans, bold and italics. */
 export function inlineMarkdown(text: string): string {
     return escapeHtml(text)
         .replace(/`([^`]+)`/g, "<code>$1</code>")
@@ -34,66 +21,20 @@ export function inlineMarkdown(text: string): string {
         .replace(/(^|\W)_([^_]+)_(?=\W|$)/g, "$1<em>$2</em>");
 }
 
-const slug = (text: string) =>
-    text
-        .toLowerCase()
-        .replace(/`/g, "")
-        .replace(/[^\p{L}\p{N}]+/gu, "-")
-        .replace(/^-|-$/g, "");
-
-/** Parsed on every call, no cache: cheap enough, and the dev server then picks up GLOSSARY.md edits right away. */
-export function loadGlossary(lib: string): Glossary | null {
-    const file = path(lib);
-    return existsSync(file) ? parse(readFileSync(file, "utf8")) : null;
-}
-
-function parse(markdown: string): Glossary {
-    const sections: GlossarySection[] = [];
-    const introLines: string[] = [];
-    let current: { term: string; lines: string[] } | null = null;
-
-    const flush = () => {
-        if (!current) return;
-        const section = sections.at(-1);
-        if (!section) throw new Error(`glossary entry "${current.term}" outside of a section`);
-        const base = current.term.replace(/\s*\(.*$/, "");
-        section.entries.push({
-            id: slug(base),
-            term: current.term,
-            names: base.split(" / ").map((name) => name.replace(/`/g, "").trim().toLowerCase()),
-            html: inlineMarkdown(current.lines.join(" ")),
-        });
-        current = null;
-    };
-
-    for (const line of markdown.split("\n")) {
-        const entry = line.match(/^- \*\*(.+?)\*\*:\s*(.*)$/);
-        if (line.startsWith("## ")) {
-            flush();
-            sections.push({ title: line.slice(3).trim(), entries: [] });
-        } else if (entry?.[1] !== undefined) {
-            flush();
-            current = { term: entry[1], lines: [entry[2] ?? ""] };
-        } else if (current && /^\s+\S/.test(line)) {
-            current.lines.push(line.trim());
-        } else if (!line.trim()) {
-            flush();
-        } else if (!line.startsWith("# ") && sections.length === 0) {
-            introLines.push(line.trim());
-        }
-    }
-    flush();
-    return { intro: inlineMarkdown(introLines.join(" ")), sections };
+// Every name an entry answers to, lowercased: the term before any parenthesis, split on " / ".
+const byName = new Map<string, GlossaryEntry>();
+for (const [term, definition] of Object.entries(glossary as Record<string, string>)) {
+    const entry = { term: term.replace(/`/g, ""), html: inlineMarkdown(definition) };
+    for (const name of term.replace(/\s*\(.*$/, "").split(" / "))
+        byName.set(name.replace(/`/g, "").trim().toLowerCase(), entry);
 }
 
 /** Finds an entry by one of its names, case-insensitively; throws so a typo fails the build instead of the page. */
-export function findEntry(lib: string, name: string): GlossaryEntry {
-    const glossary = loadGlossary(lib);
-    if (!glossary) throw new Error(`no glossary for "${lib}"`);
-    const wanted = name.toLowerCase();
-    for (const section of glossary.sections) {
-        const entry = section.entries.find((e) => e.names.includes(wanted));
-        if (entry) return entry;
-    }
-    throw new Error(`"${name}" is not in the ${lib} glossary`);
+export function findEntry(name: string): GlossaryEntry {
+    const entry = byName.get(name.toLowerCase());
+    if (!entry) throw new Error(`"${name}" is not in the glossary`);
+    return entry;
 }
+
+/** Like findEntry, but for the browser: undefined instead of throwing. */
+export const lookupEntry = (name: string): GlossaryEntry | undefined => byName.get(name.toLowerCase());

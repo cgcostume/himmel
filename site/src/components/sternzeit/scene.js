@@ -322,7 +322,24 @@ function makeAltAzPanel(elementSelector, anchorIsSun) {
     const moonDot = makeAltAzDot(panelIllustration, false);
     const anchor = anchorIsSun ? sunDot : moonDot;
     const other = anchorIsSun ? moonDot : sunDot;
-    return { illustration: panelIllustration, horizon, anchor, other };
+    return { illustration: panelIllustration, horizon, anchor, other, compass: makeCompass(elementSelector) };
+}
+
+// The eight compass directions as HTML labels sitting on the horizon line, placed by azimuth with the same tangent
+// mapping as the bodies: as the panel follows its body across the sky, the directions pass by along the horizon.
+const COMPASS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"].map((label, i) => ({ label, azimuth: i * 45 }));
+
+function makeCompass(elementSelector) {
+    const panel = document.querySelector(elementSelector).closest(".altaz-panel");
+    const horizonTopPercent = ((ALTAZ_PANEL_SIZE / 2 + ALTAZ_HORIZON_Y) / ALTAZ_PANEL_SIZE) * 100;
+    return COMPASS.map(({ label, azimuth }) => {
+        const element = document.createElement("span");
+        element.className = "altaz-compass";
+        element.textContent = label;
+        element.style.top = `calc(${horizonTopPercent}% - 0.3rem)`;
+        panel?.append(element);
+        return { element, azimuth };
+    });
 }
 const sunView = makeAltAzPanel("#sunView", true);
 const moonView = makeAltAzPanel("#moonView", false);
@@ -361,6 +378,12 @@ function updateAltAzPanel(panel, anchorHorizontal, otherHorizontal) {
     updateAltAzDotRays(panel.anchor, anchorPoint);
     updateAltAzDotRays(panel.other, otherPoint);
     panel.illustration.updateRenderGraph();
+    for (const { element, azimuth } of panel.compass) {
+        const d = azimuthDelta(anchorHorizontal.azimuth, azimuth);
+        const visible = Math.abs(d) <= ALTAZ_FIELD_OF_VIEW_DEG / 2;
+        element.style.visibility = visible ? "visible" : "hidden";
+        if (visible) element.style.left = `${50 + (tangentPx(d) / ALTAZ_PANEL_SIZE) * 100}%`;
+    }
 }
 
 // Zdog's SVG renderer scales stroke-width along with everything else in the viewBox (see the zoom comment

@@ -1,4 +1,4 @@
-// See ../GLOSSARY.md for mean/true anomaly, mean/true longitude, equation of the center, and apparent position.
+// Terms used here are explained in the himmel site's glossary (site/src/data/glossary.json).
 import {
     applyParallax,
     type EquatorialCoords,

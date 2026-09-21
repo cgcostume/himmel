@@ -89,12 +89,6 @@ td.value {
 td.missing {
     opacity: 0.4;
 }
-/* Both the export-name cell and the approx value cell carry a tooltip: "hover for more". */
-td[title] {
-    text-decoration: underline dotted var(--muted);
-    cursor: help;
-    text-underline-offset: 3px;
-}
 tbody tr:nth-child(even) {
     background: var(--surface);
 }
@@ -140,6 +134,14 @@ tbody tr:hover {
     display: block;
     width: 100%;
     height: 100%;
+}
+/* `top` and `left` are set by scene.js: the compass directions ride on the horizon line, following the azimuth. */
+.altaz-compass {
+    position: absolute;
+    transform: translate(-50%, -100%);
+    font-size: 0.75em;
+    line-height: 1;
+    color: var(--muted);
 }
 /* `top` is set inline by makeAltAzPanel (scene.js), just below the panel's horizon line. */
 .altaz-caption {
