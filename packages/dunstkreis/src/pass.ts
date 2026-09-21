@@ -27,7 +27,9 @@ export const MIN_OBSERVER_HEIGHT_M = 1;
 /** Everything that can change per frame. */
 export interface SkyParams {
     /**
-     * Unit vector towards the sun, in the observer's local frame, `z` up. This must be the *true* (geometric)
+     * Unit vector towards the sun, in the observer's local ENU frame (x east, y north, z up), the frame
+     * `@himmel/sternzeit`'s `horizontalToDirection` returns. The shaders only rely on `z` being up; the rest just
+     * has to match the view rays. This must be the *true* (geometric)
      * direction: if `refraction` is enabled the pass warps view rays instead, and feeding an already-refracted
      * direction as well would lift the sun twice.
      */

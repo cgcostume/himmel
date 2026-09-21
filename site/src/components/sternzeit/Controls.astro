@@ -46,6 +46,15 @@ const uid = `moment-${Math.random().toString(36).slice(2, 8)}`;
             <option value="0.0002777777778">± second</option>
         </select>
         <span class="input-grid-extra"><span data-field="longitudeDms" class="note"></span></span>
+        <label for={`${uid}-height`}>Height</label>
+        <input id={`${uid}-height`} data-field="height" class="latlong" type="number" min="0" max="8000" />
+        <select data-field="heightStep" aria-label="Height step">
+            <option value="1">± 1 m</option>
+            <option value="10" selected>± 10 m</option>
+            <option value="100">± 100 m</option>
+            <option value="1000">± 1000 m</option>
+        </select>
+        <span class="input-grid-extra"><span class="note">above sea level</span></span>
         <span class="input-grid-subrow">
             <button data-field="geolocate" type="button">use browser location</button>
             <span data-field="location" class="note"></span>

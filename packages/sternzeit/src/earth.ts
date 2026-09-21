@@ -311,32 +311,46 @@ function refractionConditionFactor({ observerHeightM = 0, temperatureC = 10 }: R
     return airPressureRatio(observerHeightM) * (283 / (273 + temperatureC));
 }
 
-/**
- * Distance traveled through the atmosphere, in kilometers, along a view direction whose vertical (up) component
- * is `y` (i.e. `y = sin(altitude)`), optionally corrected for atmospheric refraction.
- */
-export function viewDistanceWithinAtmosphere(y: number, refractionCorrected = false): number {
-    const t = ATMOSPHERE_THICKNESS_KM;
-    const r = MEAN_RADIUS_KM;
-
-    // The correction avoids loss of precision in h at y = 1.0.
-    let h = Math.asin(y * (1.0 - 1e-12));
-
-    if (refractionCorrected) h += atmosphericRefraction(Math.asin(y) * RAD_TO_DEG) * DEG_TO_RAD;
-
-    const cosa = Math.cos(h);
-    const rt = r + t;
-
-    // Law of sine for an arbitrary triangle with two sides and one angle known. Since the angle is
-    // (π/2 + a), cosine is used instead of sine.
-    return (Math.cos(h + Math.asin((cosa * r) / rt)) * rt) / cosa;
+export interface ViewDistanceOptions {
+    /** Observer height above sea level, in meters. */
+    observerHeightM?: number;
+    /** Bend the ray by atmospheric refraction first, treating `y` as the true direction. Precise variant only. */
+    refractionCorrected?: boolean;
 }
 
-// The bracket is airmass-shaped and should be ~1 at zenith (y=1), since by definition the path length
-// straight up equals exactly the atmosphere thickness t. The original osgHimmel C++ (earth2.cpp) has
-// 1116.0 here, which gives ~999.6 at zenith instead of ~1: a decimal-point typo for 1.116, off by exactly
-// 1000x. Fixed here since it's off by orders of magnitude at every altitude, not a porting decision.
-/** This is not refraction corrected. Only valid for the Earth's actual mean radius. */
-export function viewDistanceWithinAtmosphereApprox(y: number): number {
-    return (ATMOSPHERE_THICKNESS_KM * 1.116) / ((y + 0.004) * 1.1116);
+/**
+ * Distance traveled through the atmosphere, in kilometers, along a view direction whose vertical (up) component
+ * is `y` (i.e. `y = sin(altitude)`), through the uniform-density shell of `ATMOSPHERE_THICKNESS_KM`: an air mass
+ * in kilometers. A ray that hits the ground ends there, so looking down from sea level gives 0, while an elevated
+ * observer's slightly downward ray still crosses some air before it reaches the ground.
+ */
+export function viewDistanceWithinAtmosphere(y: number, options: ViewDistanceOptions = {}): number {
+    const { observerHeightM = 0, refractionCorrected = false } = options;
+    let yy = y;
+    if (refractionCorrected) {
+        const altitude = Math.asin(Math.max(-1, Math.min(1, y))) * RAD_TO_DEG;
+        yy = Math.sin((altitude + atmosphericRefraction(altitude, { observerHeightM })) * DEG_TO_RAD);
+    }
+    return rayThroughShell(yy, observerHeightM);
+}
+
+/** The same distance without refraction; it is exact and cheap, so the approximate variant needs no fit. */
+export function viewDistanceWithinAtmosphereApprox(
+    y: number,
+    options: Omit<ViewDistanceOptions, "refractionCorrected"> = {},
+): number {
+    return rayThroughShell(y, options.observerHeightM ?? 0);
+}
+
+// Ray from radius `ro` with vertical component `y` against two concentric spheres: the ground (R) and the top of
+// the shell (R + t). Distances along the ray solve |o + d·v|² = ρ², i.e. d = -ro·y ± sqrt(ro²y² - ro² + ρ²).
+function rayThroughShell(y: number, observerHeightM: number): number {
+    const R = MEAN_RADIUS_KM;
+    const top = R + ATMOSPHERE_THICKNESS_KM;
+    const ro = Math.min(R + Math.max(0, observerHeightM) / 1000, top);
+    const b = ro * y;
+    const toGround = b * b - ro * ro + R * R;
+    // Downward and the ground in the way: the first (near) intersection with it.
+    if (y < 0 && toGround >= 0) return Math.max(0, -b - Math.sqrt(toGround));
+    return -b + Math.sqrt(b * b - ro * ro + top * top);
 }

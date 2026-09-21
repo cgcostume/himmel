@@ -677,7 +677,7 @@ export function illuminatedFractionApprox(t: JulianDay): number {
 }
 
 /**
- * Unit direction from the Moon's center towards the Sun, in the observer's local frame (x north, y east, z up):
+ * Unit direction from the Moon's center towards the Sun, in the observer's local ENU frame (x east, y north, z up):
  * the light direction for shading the Moon's disc. Not quite the Sun's own direction as seen from Earth: the Moon
  * sits ~384,000 km off to the side, which turns the vector by up to ~0.15°.
  */

@@ -52,16 +52,16 @@ const DESCRIPTIONS = {
     ],
     airPressureRatio: [
         "Air pressure ratio",
-        "Air pressure relative to sea level, at the observer's height: 1 here, since the page's observer stands at sea level.",
+        "Air pressure relative to sea level, at the observer's height: exp(-height / pressure scale height).",
     ],
     viewDistanceWithinAtmosphere: [
         "View distance within the atmosphere",
-        "How far a line of sight towards the Sun travels through Earth's atmosphere before leaving it, in kilometers.",
+        "How far a line of sight towards the Sun travels through the atmosphere, in kilometers: to its top, or to the ground if the Sun is below the horizon.",
     ],
     distance: ["Distance", "Distance from Earth's center to the body's center, in kilometers."],
     sunDirection: [
         "Sun direction from the Moon",
-        "Unit vector from the Moon's center to the Sun, in the observer's frame (x north, y east, z up): the light to shade the Moon with.",
+        "Unit vector from the Moon's center to the Sun, in the observer's ENU frame (x east, y north, z up): the light to shade the Moon with.",
     ],
     "solar.separation": [
         "Separation",
@@ -79,7 +79,8 @@ const DESCRIPTIONS = {
 
 // Row-specific context shown beneath the glossary definition, e.g. what a row is evaluated for here.
 const NOTES = {
-    atmosphericRefraction: "Here: from the Sun's true altitude right now, or the horizon while it is down.",
+    atmosphericRefraction:
+        "Here: from the Sun's true altitude right now, at the observer's height; n/a once it is more than 1° below the horizon.",
     atmosphericRefractionFromApparent:
         "Here: from the Sun's apparent altitude, the direction a renderer's view ray already has.",
 };
@@ -107,22 +108,30 @@ function nameCell(name, field) {
 
 // How to call an export that isn't just fn(julianDay). Anything not listed here falls back to
 // fn.length === 0 ? fn() : fn(jd).
-// The Sun's current true altitude, clamped to the horizon while it is down: what the refraction and view-distance
-// rows are evaluated for, since they need a direction and the Sun's is the one a sky renderer cares about most.
+// The Sun's current true altitude: what the refraction and view-distance rows are evaluated for, since they need a
+// direction and the Sun's is the one a sky renderer cares about most.
 function sunAltitude(jd) {
-    const { altitude } = precise.sun.horizontalPosition(precise.fromJulianDay(jd), state.latitude, state.longitude);
-    return Math.max(0, altitude);
+    return precise.sun.horizontalPosition(precise.fromJulianDay(jd), state.latitude, state.longitude).altitude;
+}
+
+// Refraction is only meaningful for a body at or near the horizon, not for one well below it: null reads as n/a.
+const REFRACTION_FLOOR_DEG = -1;
+function refractionTowardsSun(fn, jd, apparent) {
+    const altitude = sunAltitude(jd);
+    if (altitude < REFRACTION_FLOOR_DEG) return null;
+    const conditions = { observerHeightM: state.heightM };
+    return fn(apparent ? altitude + precise.earth.atmosphericRefraction(altitude, conditions) : altitude, conditions);
 }
 
 // How to call an export that isn't just fn(julianDay). Anything not listed here falls back to
 // fn.length === 0 ? fn() : fn(jd).
 const CALL_OVERRIDES = {
-    atmosphericRefraction: (fn, jd) => fn(sunAltitude(jd)),
+    atmosphericRefraction: (fn, jd) => refractionTowardsSun(fn, jd, false),
     // Fed the apparent altitude it expects: the true one lifted by the refraction from the row above.
-    atmosphericRefractionFromApparent: (fn, jd) =>
-        fn(sunAltitude(jd) + precise.earth.atmosphericRefraction(sunAltitude(jd))),
+    atmosphericRefractionFromApparent: (fn, jd) => refractionTowardsSun(fn, jd, true),
     // y = sin(altitude), the vertical component of a unit view direction vector.
-    viewDistanceWithinAtmosphere: (fn, jd) => fn(Math.sin(sunAltitude(jd) * DEG_TO_RAD)),
+    viewDistanceWithinAtmosphere: (fn, jd) =>
+        fn(Math.sin(sunAltitude(jd) * DEG_TO_RAD), { observerHeightM: state.heightM }),
     // jd is already an absolute instant; fromJulianDay(jd) (offset 0) round-trips it as a UT AstronomicalTime,
     // which is what julianDayUT() inside horizontalPosition/parallacticAngle expects. A nonzero offset here
     // would double-shift the instant, since jd carries no timezone to begin with.
@@ -130,8 +139,7 @@ const CALL_OVERRIDES = {
     topocentricPosition: (fn, jd) => fn(precise.fromJulianDay(jd), state.latitude, state.longitude),
     parallacticAngle: (fn, jd) => fn(precise.fromJulianDay(jd), state.latitude, state.longitude),
     sunDirection: (fn, jd) => fn(precise.fromJulianDay(jd), state.latitude, state.longitude),
-    // The page has no observer height; sea level, like everywhere else here.
-    airPressureRatio: (fn) => fn(0),
+    airPressureRatio: (fn) => fn(state.heightM),
     // lunar takes just jd like the fn(jd) default already handles; only solar needs observer location too.
     solar: (fn, jd) => fn(precise.fromJulianDay(jd), state.latitude, state.longitude),
 };
@@ -239,10 +247,13 @@ function approxCell(value, present, unit, preciseValue, precisePresent) {
 function computeRows(names, preciseNs, approxNs, jd) {
     return names
         .flatMap((name) => {
-            const hasPrecise = name in preciseNs;
-            const hasApprox = name in approxNs;
+            let hasPrecise = name in preciseNs;
+            let hasApprox = name in approxNs;
             const preciseValue = hasPrecise ? callExport(name, preciseNs[name], jd) : undefined;
             const approxValue = hasApprox ? callExport(name, approxNs[name], jd) : undefined;
+            // An override returning null means "not meaningful right now", shown as n/a like a missing variant.
+            if (preciseValue === null) hasPrecise = false;
+            if (approxValue === null) hasApprox = false;
             const unit = UNITS[name] ?? DEFAULT_UNIT;
 
             // Object results (apparentPosition, horizontalPosition, position, opticalLibrations, ...) get one row

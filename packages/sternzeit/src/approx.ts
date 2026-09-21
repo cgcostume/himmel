@@ -16,6 +16,7 @@ export {
 
 // Coordinate systems.
 export type { Direction, EclipticalCoords, EquatorialCoords, HorizontalCoords } from "./coords.js";
+export type { RefractionConditions, ViewDistanceOptions } from "./earth.js";
 export { eclipticalToEquatorial, equatorialToHorizontal, horizontalToDirection } from "./coords.js";
 
 // Time and Julian Day.

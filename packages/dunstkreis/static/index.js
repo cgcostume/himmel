@@ -1,6 +1,6 @@
 // A separate package with no relationship to this one: it computes where the Sun is, this one renders what
 // the air does to its light. The vector handed over below is the entire interface between them.
-import { fromJulianDay, julianDay, sun } from "@himmel/sternzeit";
+import { fromJulianDay, horizontalToDirection, julianDay, sun } from "@himmel/sternzeit";
 import {
     createSkyPassApprox,
     DEFAULT_ATMOSPHERE_MODEL,
@@ -196,7 +196,7 @@ const state = {
     julianDay: julianDay(nowAsAstronomicalTime()),
     latitude: 52.39206070410163,
     longitude: 13.0925764790797,
-    // Camera, in the same frame as the Sun: x north, y east, z up.
+    // Camera, in the same ENU frame as the Sun (x east, y north, z up); yaw is a compass azimuth.
     yaw: 0,
     pitch: 12 * DEG,
 };
@@ -215,16 +215,13 @@ function nowAsAstronomicalTime() {
 }
 
 /**
- * The Sun as a direction vector in the observer's local frame, z up. Horizontal coordinates come out of
- * sternzeit as an altitude above the horizon and a compass azimuth measured from north through east.
+ * The Sun as a unit vector in the observer's local ENU frame (x east, y north, z up), from sternzeit's altitude
+ * above the horizon and compass azimuth.
  */
 function sunDirection() {
     const time = fromJulianDay(state.julianDay);
-    const { altitude, azimuth } = sun.horizontalPosition(time, state.latitude, state.longitude);
-
-    const a = altitude * DEG;
-    const z = azimuth * DEG;
-    return { vector: [Math.cos(a) * Math.cos(z), Math.cos(a) * Math.sin(z), Math.sin(a)], altitude, azimuth };
+    const position = sun.horizontalPosition(time, state.latitude, state.longitude);
+    return { vector: horizontalToDirection(position), ...position };
 }
 
 function currentModel() {
@@ -381,8 +378,8 @@ async function main() {
         const sunNow = sunDirection();
 
         const forward = [
-            Math.cos(state.pitch) * Math.cos(state.yaw),
             Math.cos(state.pitch) * Math.sin(state.yaw),
+            Math.cos(state.pitch) * Math.cos(state.yaw),
             Math.sin(state.pitch),
         ];
         const projection = perspective(60 * DEG, width / height, 0.1, 100);

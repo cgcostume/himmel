@@ -14,7 +14,7 @@ function formatSummary() {
     const when = toDate(state.jd).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "medium" });
     const lat = `${Math.abs(state.latitude).toFixed(2)}° ${state.latitude >= 0 ? "N" : "S"}`;
     const lon = `${Math.abs(state.longitude).toFixed(2)}° ${state.longitude >= 0 ? "E" : "W"}`;
-    return `${when}, ${lat} ${lon}${state.live ? ", live" : ""}`;
+    return `${when}, ${lat} ${lon}, ${state.heightM} m${state.live ? ", live" : ""}`;
 }
 
 // Snapping to an exact multiple of minStep (not just rounding the display) matters because the steps themselves are
@@ -64,6 +64,7 @@ for (const root of roots) {
     const jd = field("jd");
     const latitude = field("latitude");
     const longitude = field("longitude");
+    const height = field("height");
 
     const commitJd = () => {
         if (state.live) setLive(false, root);
@@ -74,9 +75,16 @@ for (const root of roots) {
     wireStepping(jd, field("jdStep"), commitJd);
     wireStepping(latitude, field("latitudeStep"), commitLatLong, LATLONG_DECIMALS);
     wireStepping(longitude, field("longitudeStep"), commitLatLong, LATLONG_DECIMALS);
+    // The formulas take heights within the atmosphere they model; the input keeps to that range.
+    const commitHeight = () => {
+        height.value = Math.min(8000, Math.max(0, Number(height.value) || 0));
+        update({ heightM: Number(height.value) }, root);
+    };
+    wireStepping(height, field("heightStep"), commitHeight, 0);
     jd.addEventListener("input", commitJd);
     latitude.addEventListener("input", commitLatLong);
     longitude.addEventListener("input", commitLatLong);
+    height.addEventListener("change", commitHeight);
 
     field("now").addEventListener("click", () => update({ jd: julianDayNow() }));
     field("live").addEventListener("change", (event) => setLive(event.target.checked, root));
@@ -114,6 +122,7 @@ function sync(source) {
         set(field("jd"), state.jd);
         set(field("latitude"), state.latitude);
         set(field("longitude"), state.longitude);
+        set(field("height"), state.heightM);
         field("live").checked = state.live;
         field("latitudeDms").textContent = formatDMS(state.latitude).trim();
         field("longitudeDms").textContent = formatDMS(state.longitude).trim();

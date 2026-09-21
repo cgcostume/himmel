@@ -102,3 +102,31 @@ test("both refraction fits take the same conditions scaling", () => {
             precise.earth.atmosphericRefractionFromApparent(10),
     ).toBeCloseTo(factor, 12);
 });
+
+test("earth.viewDistanceWithinAtmosphere: the shell thickness straight up, sqrt(2Rt + t²) at the horizon", () => {
+    const { MEAN_RADIUS_KM: R, ATMOSPHERE_THICKNESS_KM: t } = precise.earth;
+    for (const ns of [precise, approx]) {
+        expect(ns.earth.viewDistanceWithinAtmosphere(1)).toBeCloseTo(t, 6);
+        expect(ns.earth.viewDistanceWithinAtmosphere(0)).toBeCloseTo(Math.sqrt(2 * R * t + t * t), 6);
+    }
+});
+
+test("earth.viewDistanceWithinAtmosphere ends at the ground: 0 from sea level, some air from a mountain", () => {
+    const at = (degrees: number) => Math.sin((degrees * Math.PI) / 180);
+    for (const ns of [precise, approx]) {
+        expect(ns.earth.viewDistanceWithinAtmosphere(at(-0.5))).toBe(0);
+        // From 1000 m the horizon dips ~1°: a ray at -0.5° still clears the ground and leaves the shell further
+        // out than a sea-level horizon ray, one at -2° meets the ground ~30 km away.
+        const clearing = ns.earth.viewDistanceWithinAtmosphere(at(-0.5), { observerHeightM: 1000 });
+        expect(clearing).toBeGreaterThan(ns.earth.viewDistanceWithinAtmosphere(0));
+        const grounded = ns.earth.viewDistanceWithinAtmosphere(at(-2), { observerHeightM: 1000 });
+        expect(grounded).toBeGreaterThan(20);
+        expect(grounded).toBeLessThan(40);
+    }
+});
+
+test("earth.viewDistanceWithinAtmosphere with refraction lifts a horizon ray, shortening its path", () => {
+    expect(precise.earth.viewDistanceWithinAtmosphere(0, { refractionCorrected: true })).toBeLessThan(
+        precise.earth.viewDistanceWithinAtmosphere(0),
+    );
+});

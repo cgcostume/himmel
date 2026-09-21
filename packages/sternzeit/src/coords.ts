@@ -101,13 +101,16 @@ export function applyParallax(
     };
 }
 
-/** A unit direction in the observer's local frame: x north, y east, z up (right-handed, z towards the zenith). */
+/**
+ * A unit direction in the observer's local ENU frame: x east, y north, z up. Right-handed, the geodetic standard,
+ * so it drops into right-handed renderer math as is; a y-up engine (three.js, glTF) takes it as `(x, z, -y)`.
+ */
 export type Direction = readonly [x: number, y: number, z: number];
 
-/** Horizontal coordinates as a unit direction vector, the form a renderer's lighting and view rays are in. */
+/** Horizontal coordinates as a unit ENU direction vector, the form a renderer's lighting and view rays are in. */
 export function horizontalToDirection({ azimuth, altitude }: HorizontalCoords): Direction {
     const a = altitude * DEG_TO_RAD;
     const z = azimuth * DEG_TO_RAD;
 
-    return [Math.cos(a) * Math.cos(z), Math.cos(a) * Math.sin(z), Math.sin(a)];
+    return [Math.cos(a) * Math.sin(z), Math.cos(a) * Math.cos(z), Math.sin(a)];
 }

@@ -50,6 +50,10 @@ site.
 sun/moon direction vector + time as plain inputs. Whoever embeds it computes that vector however
 they like. Keep this decoupling for every future module too.
 
+**Directions are ENU** (x east, y north, z up, right-handed) in every package: sternzeit's
+`horizontalToDirection` and `moon.sunDirection`, dunstkreis' `sunDirection` input and view rays. Azimuths are
+compass azimuths (from north through east). A y-up engine converts with `(x, z, -y)`.
+
 **Dropped from the port:** the original's stateful OOP facade (`AbstractAstronomy` to
 `Astronomy`/`Astronomy2`, holding mutable time/lat/lon). Everything is plain functions instead,
 simpler, tree-shakeable, no hidden state. Don't reintroduce a class hierarchy when porting more of

@@ -51,8 +51,9 @@ sky turns.
 Every quantity on this page is a function of _when_ and, for some, _where_. Step through time with the arrow keys or
 the mouse wheel in the Julian Day field, in whatever unit the selector next to it says, or press _live_ and watch the
 sky move in real time. Latitude and longitude are in degrees, north and east positive; _use browser location_ fills
-them in for you. The same controls sit folded up below every table, so there is no need to scroll back up here: they
-all change the one moment and place this whole page shows.
+them in for you. The height above sea level only matters for the air: how thin it is, how much it bends light, and how
+far a ray travels through it. The same controls sit folded up below every table, so there is no need to scroll back up
+here: they all change the one moment and place this whole page shows.
 
 ## Counting time the astronomer's way
 
@@ -105,8 +106,10 @@ atmosphere <Cite id="nishita1993" /> <Cite id="bruneton2008" />, and the
 <Term of="Atmospheric refraction">refraction</Term> that makes the Sun linger visibly above the horizon for a few
 minutes after it has geometrically set. Refraction comes in two directions, from the true altitude
 <Cite id="saemundsson1986" /> and from the apparent one <Cite id="bennett1982" />, and a renderer bending its view rays
-wants the latter. Both rows, like the distance a ray travels through the atmosphere, are evaluated towards the Sun,
-or towards the horizon while it is down.
+wants the latter. Both rows, like the distance a ray travels through the atmosphere, are evaluated towards the Sun.
+Once the Sun is more than a degree below the horizon, refraction no longer means anything and shows as n/a, while
+the ray towards it simply ends in the ground: 0 km from sea level, a little more from a mountain, whose horizon lies
+lower.
 
 ## The Sun
 
@@ -155,7 +158,7 @@ The last four rows light it. The <Term of="Phase angle">phase angle</Term>, the 
 the lit half faces us, and the <Term of="Illuminated fraction">illuminated fraction</Term> turns that into what the
 phase looks like, from 0 at new moon to 1 at full moon <Cite id="meeus1998" />. For actual shading, a renderer wants
 the light direction itself: `sunDirection` points from the Moon's center to the Sun, in the same frame as every other
-direction here. It is not quite the Sun's direction as seen from Earth, since the Moon sits a few hundred thousand
+direction here: the observer's local east, north and up, a right-handed frame known as ENU. It is not quite the Sun's direction as seen from Earth, since the Moon sits a few hundred thousand
 kilometers off to the side, but it is close.
 
 The night side is not entirely dark either. The Earth reflects sunlight too, and around new moon, when the Moon sees
@@ -205,7 +208,7 @@ returns plain numbers, and it is up to you what to do with them. For example, th
 import { fromJulianDay, horizontalToDirection, moon, sun } from "@himmel/sternzeit";
 
 const time = fromJulianDay(jd);
-// Unit vectors in the observer's frame: x north, y east, z up.
+// Unit vectors in the observer's ENU frame: x east, y north, z up. A y-up engine takes them as (x, z, -y).
 const sunDirection = horizontalToDirection(sun.horizontalPosition(time, latitude, longitude));
 const moonLight = moon.sunDirection(time, latitude, longitude); // for shading the Moon's disc
 ```
