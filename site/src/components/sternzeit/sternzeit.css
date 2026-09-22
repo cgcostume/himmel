@@ -418,7 +418,7 @@ tbody tr:hover {
 .analemma-sun {
     fill: var(--text);
 }
-.analemma-grid {
+.figure-grid {
     stroke: var(--line);
     stroke-width: 1;
     stroke-dasharray: 1 3;

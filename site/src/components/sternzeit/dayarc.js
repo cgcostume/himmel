@@ -232,7 +232,7 @@ function renderAnalemma() {
     const [left, right] = [centerX - 1000, centerX + 1000];
     let svg = `<rect x="${f(left)}" y="0" width="${f(right - left)}" height="1090" class="figure-ground"/>`;
     for (const altitude of [-60, -30, 30, 60]) {
-        svg += `<line x1="${f(left)}" y1="${altitude}" x2="${f(right)}" y2="${altitude}" class="analemma-grid"/>`;
+        svg += `<line x1="${f(left)}" y1="${altitude}" x2="${f(right)}" y2="${altitude}" class="figure-grid"/>`;
     }
     svg += `<line x1="${f(left)}" y1="0" x2="${f(right)}" y2="0" class="figure-horizon"/>`;
     // The compass directions on the horizon, where the x axis is plain azimuth (cos 0 = 1), relative to today's; only

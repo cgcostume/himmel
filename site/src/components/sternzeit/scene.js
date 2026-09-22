@@ -269,6 +269,7 @@ function tangentPx(degreesFromCenter) {
 // and the compass labels sit (see updateAltAzPanel).
 const ALTAZ_HORIZON_Y = -tangentPx(-ALTAZ_LOOK_UP_DEG);
 const ALTAZ_DOT_RADIUS = 5;
+const ALTAZ_GRID_ALTITUDES = [30, 60];
 // Mini versions of the main scene's sunrays (see SUN_RAY_COUNT above): cheaper to read at a glance than an
 // "S"/"M" text label, and reuses a motif the viewer already knows means "this one's the sun" from the main
 // scene, rather than introducing a new convention.
@@ -339,6 +340,11 @@ function updateAltAzPanel(panel, anchorHorizontal, otherHorizontal) {
     const half = ALTAZ_PANEL_SIZE / 2;
     const y = ALTAZ_HORIZON_Y.toFixed(2);
     let svg = `<rect x="${-half}" y="${y}" width="${ALTAZ_PANEL_SIZE}" height="${(half - ALTAZ_HORIZON_Y).toFixed(2)}" class="figure-ground"/>`;
+    // Altitude lines as in the analemma: 30 degrees sits at the center, 60 well above the middle of the upper half.
+    for (const altitude of ALTAZ_GRID_ALTITUDES) {
+        const gridY = (-tangentPx(altitude - ALTAZ_LOOK_UP_DEG)).toFixed(2);
+        svg += `<line x1="${-half}" y1="${gridY}" x2="${half}" y2="${gridY}" class="figure-grid"/>`;
+    }
     svg += `<line x1="${-half}" y1="${y}" x2="${half}" y2="${y}" class="figure-horizon"/>`;
     // The compass directions on the horizon, placed by azimuth with the same tangent mapping as the bodies: as the
     // panel follows its body across the sky, the directions pass by along the horizon.
