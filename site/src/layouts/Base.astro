@@ -30,7 +30,11 @@ const current = Astro.url.pathname.replace(/\/$/, "");
     <body>
         <header class="site-header">
             <a class="brand" href={`${base}/`}>himmel / sternwarte</a>
-            <nav>
+            {/* Only shown where the chapters no longer fit on one line; see the script at the end of the body. */}
+            <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Chapters">
+                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4.5h12M2 8h12M2 11.5h12" /></svg>
+            </button>
+            <nav id="site-nav">
                 {
                     chapters.map((c) => (
                         <a href={`${base}/${c.id}/`} aria-current={current === `${base}/${c.id}` ? "page" : undefined}>
@@ -62,6 +66,25 @@ const current = Astro.url.pathname.replace(/\/$/, "");
             };
             document.addEventListener("pointerover", fit);
             document.addEventListener("focusin", fit);
+
+            // The chapter list folds behind the burger on a narrow screen (the CSS decides where); it opens on a
+            // press and closes again on the next one, on Escape, or on a press anywhere else.
+            const toggle = document.querySelector<HTMLButtonElement>(".nav-toggle");
+            const nav = document.getElementById("site-nav");
+            const setNav = (open: boolean) => {
+                nav?.toggleAttribute("data-open", open);
+                toggle?.setAttribute("aria-expanded", String(open));
+            };
+            toggle?.addEventListener("click", (event) => {
+                event.stopPropagation();
+                setNav(!nav?.hasAttribute("data-open"));
+            });
+            document.addEventListener("click", (event) => {
+                if (!nav?.contains(event.target as Node)) setNav(false);
+            });
+            document.addEventListener("keydown", (event) => {
+                if (event.key === "Escape") setNav(false);
+            });
         </script>
     </body>
 </html>

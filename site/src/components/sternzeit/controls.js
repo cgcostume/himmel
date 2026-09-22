@@ -1,5 +1,4 @@
 import { fromDate, fromJulianDay, julianDayUT, toDate } from "@himmel/sternzeit";
-import { formatDMS } from "./format.js";
 import { julianDayNow, onChange, state, update } from "./state.js";
 
 // Every set of controls on the page (see Controls.astro) is wired the same way: user input writes to the shared
@@ -33,6 +32,20 @@ function formatSummary() {
     return `${when}, ${lat} ${lon}, ${state.heightM} m${state.live ? ", live" : ""}`;
 }
 
+// The whole moment and place as JSON, under the names the library's own functions use, so it pastes straight into
+// code. The instant is there twice: the Julian Day everything here is computed from, and an ISO timestamp in UT to
+// read it by (a local time would not say which instant it was without naming the zone).
+function momentAndPlaceJson() {
+    const moment = {
+        julianDay: state.jd,
+        utc: `${dateOf(state.jd).toISOString().slice(0, 19)}Z`,
+        latitude: state.latitude,
+        longitude: state.longitude,
+        heightM: state.heightM,
+    };
+    return `${JSON.stringify(moment, null, 4)}\n`;
+}
+
 // Snapping to an exact multiple of minStep (not just rounding the display) matters because the steps themselves are
 // repeating decimals (1/86400, 1/3600, ...): a step landing a hair off a whole second would make the time jitter.
 function roundToStep(value, minStep, decimals = Math.max(0, Math.ceil(-Math.log10(minStep)) + 2)) {
@@ -40,20 +53,28 @@ function roundToStep(value, minStep, decimals = Math.max(0, Math.ceil(-Math.log1
 }
 
 const capDecimals = (value, decimals) => Number(value.toFixed(decimals));
-const minStepOf = (select) => Math.min(...[...select.options].map((option) => Number(option.value)));
+// A step size is picked from a group of radio buttons (see Controls.astro), one per granularity.
+const stepChoices = (steps) => [...steps.querySelectorAll('input[type="radio"]')];
+const chosenStep = (steps) => steps.querySelector('input[type="radio"]:checked');
+const minStepOf = (steps) => Math.min(...stepChoices(steps).map((choice) => Number(choice.value)));
 
-// Arrow keys and wheel step by the selected granularity, by hand rather than via input.step: the browser's
-// stepUp()/stepDown() silently no-ops on values that aren't exact multiples of `step`, which ours never are.
-function wireStepping(input, stepSelect, commit, decimals) {
+// Arrow keys, wheel and the two buttons beside the input step by the chosen granularity, by hand rather than via
+// input.step: the browser's stepUp()/stepDown() silently no-ops on values that aren't exact multiples of `step`,
+// which ours never are.
+function wireStepping(input, steps, commit, decimals) {
     input.step = "any";
-    const minStep = minStepOf(stepSelect);
+    const minStep = minStepOf(steps);
     const applyStep = (sign) => {
         const value = Number(input.value) || 0;
-        const unit = stepSelect.selectedOptions[0]?.dataset.calendar;
-        const next = unit ? stepCalendar(value, unit, sign) : value + sign * Number(stepSelect.value);
+        const choice = chosenStep(steps);
+        const unit = choice?.dataset.calendar;
+        const next = unit ? stepCalendar(value, unit, sign) : value + sign * Number(choice?.value ?? 0);
         input.value = roundToStep(next, minStep, decimals);
         commit();
     };
+    for (const button of input.closest(".stepper").querySelectorAll("[data-step]")) {
+        button.addEventListener("click", () => applyStep(Number(button.dataset.step)));
+    }
     input.addEventListener("keydown", (event) => {
         if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return;
         event.preventDefault();
@@ -68,6 +89,20 @@ function wireStepping(input, stepSelect, commit, decimals) {
         },
         { passive: false },
     );
+}
+
+// The browser knows where, not how high: coords.altitude is null on anything but a GPS fix, and ellipsoidal where it
+// is not. Open-Meteo's elevation endpoint answers with the Copernicus DEM (90 m grid) above sea level, no key needed;
+// it is asked only when the location button is pressed, and a failure just leaves the height as it was.
+async function lookupElevation(latitude, longitude) {
+    try {
+        const url = `https://api.open-meteo.com/v1/elevation?latitude=${latitude}&longitude=${longitude}`;
+        const answer = await (await fetch(url)).json();
+        const elevation = answer?.elevation?.[0];
+        return typeof elevation === "number" ? Math.max(0, Math.round(elevation)) : null;
+    } catch {
+        return null;
+    }
 }
 
 let liveIntervalId = null;
@@ -92,8 +127,9 @@ for (const root of roots) {
     const commitLatLong = () => update({ latitude: Number(latitude.value), longitude: Number(longitude.value) }, root);
 
     wireStepping(jd, field("jdStep"), commitJd);
-    wireStepping(latitude, field("latitudeStep"), commitLatLong, LATLONG_DECIMALS);
-    wireStepping(longitude, field("longitudeStep"), commitLatLong, LATLONG_DECIMALS);
+    // Both angles step by the same unit, from one group of buttons.
+    wireStepping(latitude, field("latlongStep"), commitLatLong, LATLONG_DECIMALS);
+    wireStepping(longitude, field("latlongStep"), commitLatLong, LATLONG_DECIMALS);
     // The formulas take heights within the atmosphere they model; the input keeps to that range.
     const commitHeight = () => {
         height.value = Math.min(8000, Math.max(0, Number(height.value) || 0));
@@ -105,8 +141,19 @@ for (const root of roots) {
     longitude.addEventListener("input", commitLatLong);
     height.addEventListener("change", commitHeight);
 
-    field("now").addEventListener("click", () => update({ jd: julianDayNow() }));
-    field("live").addEventListener("change", (event) => setLive(event.target.checked, root));
+    field("copy").addEventListener("click", async (event) => {
+        // It sits inside the summary line, where a click would otherwise fold the set open or shut.
+        event.preventDefault();
+        const status = field("location");
+        try {
+            await navigator.clipboard.writeText(momentAndPlaceJson());
+            status.textContent = "copied as JSON";
+        } catch {
+            status.textContent = "copying failed, this browser did not allow it";
+        }
+    });
+    // One button for both: while it is on the moment follows the clock, and switching it off leaves it at "now".
+    field("live").addEventListener("click", () => setLive(!state.live, root));
     field("geolocate").addEventListener("click", () => {
         const status = field("location");
         if (!navigator.geolocation) {
@@ -115,12 +162,14 @@ for (const root of roots) {
         }
         status.textContent = "requesting location...";
         navigator.geolocation.getCurrentPosition(
-            (position) => {
+            async (position) => {
                 status.textContent = "";
-                update({
-                    latitude: capDecimals(position.coords.latitude, LATLONG_DECIMALS),
-                    longitude: capDecimals(position.coords.longitude, LATLONG_DECIMALS),
-                });
+                const latitude = capDecimals(position.coords.latitude, LATLONG_DECIMALS);
+                const longitude = capDecimals(position.coords.longitude, LATLONG_DECIMALS);
+                update({ latitude, longitude });
+                const elevation = await lookupElevation(latitude, longitude);
+                if (elevation === null) status.textContent = "height lookup failed, set it by hand";
+                else update({ heightM: elevation });
             },
             (err) => {
                 status.textContent = `geolocation failed: ${err.message}`;
@@ -142,9 +191,12 @@ function sync(source) {
         set(field("latitude"), state.latitude);
         set(field("longitude"), state.longitude);
         set(field("height"), state.heightM);
-        field("live").checked = state.live;
-        field("latitudeDms").textContent = formatDMS(state.latitude).trim();
-        field("longitudeDms").textContent = formatDMS(state.longitude).trim();
+        field("live").setAttribute("aria-pressed", String(state.live));
+        // Nothing to set or step by hand while the clock is driving it.
+        field("jd").disabled = state.live;
+        for (const button of root.querySelectorAll('.stepper:has([data-field="jd"]) [data-step]')) {
+            button.disabled = state.live;
+        }
         field("summary").textContent = formatSummary();
     }
 }

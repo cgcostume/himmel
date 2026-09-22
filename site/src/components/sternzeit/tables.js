@@ -233,57 +233,55 @@ function formatDelta(delta, unit) {
 // so the value cells themselves stay plain numbers (not replaced by the delta), while the "how far off" is
 // still a hover away.
 function approxCell(value, present, unit, preciseValue, precisePresent) {
-    if (!present) return `<td class="value missing">n/a</td>`;
+    if (!present) return `<td class="value approx missing">n/a</td>`;
     const formatted = formatValue(value, unit);
     const hasDelta =
         precisePresent && typeof value === "number" && typeof preciseValue === "number" && value !== preciseValue;
-    if (!hasDelta) return `<td class="value">${formatted}</td>`;
+    if (!hasDelta) return `<td class="value approx">${formatted}</td>`;
     const tip = `<strong>${formatDelta(value - preciseValue, unit)}</strong> off the precise value.`;
-    return `<td class="value">${tooltip(formatted, tip)}</td>`;
+    return `<td class="value approx">${tooltip(formatted, tip)}</td>`;
 }
 
 function computeRows(names, preciseNs, approxNs, jd) {
-    return names
-        .flatMap((name) => {
-            let hasPrecise = name in preciseNs;
-            let hasApprox = name in approxNs;
-            const preciseValue = hasPrecise ? callExport(name, preciseNs[name], jd) : undefined;
-            const approxValue = hasApprox ? callExport(name, approxNs[name], jd) : undefined;
-            // An override returning null means "not meaningful right now", shown as n/a like a missing variant.
-            if (preciseValue === null) hasPrecise = false;
-            if (approxValue === null) hasApprox = false;
-            const unit = UNITS[name] ?? DEFAULT_UNIT;
+    return names.flatMap((name) => {
+        let hasPrecise = name in preciseNs;
+        let hasApprox = name in approxNs;
+        const preciseValue = hasPrecise ? callExport(name, preciseNs[name], jd) : undefined;
+        const approxValue = hasApprox ? callExport(name, approxNs[name], jd) : undefined;
+        // An override returning null means "not meaningful right now", shown as n/a like a missing variant.
+        if (preciseValue === null) hasPrecise = false;
+        if (approxValue === null) hasApprox = false;
+        const unit = UNITS[name] ?? DEFAULT_UNIT;
 
-            // Object results (apparentPosition, horizontalPosition, position, opticalLibrations, ...) get one row
-            // per field instead of one combined "key: value, key: value" row.
-            if (isPlainObject(preciseValue) || isPlainObject(approxValue)) {
-                const fields = [
-                    ...new Set([
-                        ...(isPlainObject(preciseValue) ? Object.keys(preciseValue) : []),
-                        ...(isPlainObject(approxValue) ? Object.keys(approxValue) : []),
-                    ]),
-                ];
-                return fields.map((field) => {
-                    const preciseHasField = isPlainObject(preciseValue) && field in preciseValue;
-                    const approxHasField = isPlainObject(approxValue) && field in approxValue;
-                    // Most object exports (apparentPosition, position, ...) have every field share one unit, but
-                    // eclipse states mix degrees/km/dimensionless/strings, so a "name.field" entry wins if present.
-                    const fieldUnit = UNITS[`${name}.${field}`] ?? unit;
-                    return `<tr>${nameCell(name, field)}<td>${fieldUnit}</td>${cell(preciseValue?.[field], preciseHasField, fieldUnit)}${approxCell(approxValue?.[field], approxHasField, fieldUnit, preciseValue?.[field], preciseHasField)}</tr>`;
-                });
-            }
-
-            return [
-                `<tr>${nameCell(name)}<td>${unit}</td>${cell(preciseValue, hasPrecise, unit)}${approxCell(approxValue, hasApprox, unit, preciseValue, hasPrecise)}</tr>`,
+        // Object results (apparentPosition, horizontalPosition, position, opticalLibrations, ...) get one row
+        // per field instead of one combined "key: value, key: value" row.
+        if (isPlainObject(preciseValue) || isPlainObject(approxValue)) {
+            const fields = [
+                ...new Set([
+                    ...(isPlainObject(preciseValue) ? Object.keys(preciseValue) : []),
+                    ...(isPlainObject(approxValue) ? Object.keys(approxValue) : []),
+                ]),
             ];
-        })
-        .join("");
+            return fields.map((field) => {
+                const preciseHasField = isPlainObject(preciseValue) && field in preciseValue;
+                const approxHasField = isPlainObject(approxValue) && field in approxValue;
+                // Most object exports (apparentPosition, position, ...) have every field share one unit, but
+                // eclipse states mix degrees/km/dimensionless/strings, so a "name.field" entry wins if present.
+                const fieldUnit = UNITS[`${name}.${field}`] ?? unit;
+                return `<tr>${nameCell(name, field)}<td class="unit">${fieldUnit}</td>${cell(preciseValue?.[field], preciseHasField, fieldUnit)}${approxCell(approxValue?.[field], approxHasField, fieldUnit, preciseValue?.[field], preciseHasField)}</tr>`;
+            });
+        }
+
+        return [
+            `<tr>${nameCell(name)}<td class="unit">${unit}</td>${cell(preciseValue, hasPrecise, unit)}${approxCell(approxValue, hasApprox, unit, preciseValue, hasPrecise)}</tr>`,
+        ];
+    });
 }
 
 // biome-ignore lint/performance/noDynamicNamespaceImportAccess: the tables list every export, so it needs the whole namespace anyway
 const namespacesOf = (domainName) => [precise[domainName], approx[domainName]];
 
-function renderDomain(domainName, jd) {
+function renderDomain(domainName, jd, open) {
     const [preciseNs, approxNs] = namespacesOf(domainName);
     // Not alphabetized: preserves each namespace's own hand-grouped declaration order (index.ts/approx.ts),
     // e.g. apparentPosition/equatorialHorizontalParallax/topocentricPosition/horizontalPosition stay adjacent
@@ -291,21 +289,58 @@ function renderDomain(domainName, jd) {
     const names = [...new Set([...Object.keys(preciseNs), ...Object.keys(approxNs)])];
     const rows = computeRows(names, preciseNs, approxNs, jd);
 
+    // Foldable, because on a phone a table of this length is a wall to scroll past; open unless the cards are showing.
     return `
-        <table>
-            <colgroup><col class="name" /><col class="unit" /><col class="value" /><col class="value" /></colgroup>
-            <thead><tr><th>${domainName}.*</th><th>unit</th><th class="value">precise</th><th class="value">approx</th></tr></thead>
-            <tbody>${rows}</tbody>
-        </table>
+        <details class="table-fold"${open ? " open" : ""}>
+            <summary>${domainName}.* <span class="note">${rows.length} values</span></summary>
+            <table>
+                <colgroup><col class="name" /><col class="unit" /><col class="value" /><col class="approx" /></colgroup>
+                <thead><tr><th>${domainName}.*</th><th>unit</th><th class="value">precise</th><th class="value approx">approx</th></tr></thead>
+                <tbody>${rows.join("")}</tbody>
+            </table>
+        </details>
     `;
 }
 
 // One container per domain, placed wherever the chapter text discusses it (see Table.astro).
 const tableContainers = document.querySelectorAll(".sternzeit-table[data-domain]");
+// Below this the rows are stacked as cards (see sternzeit.css), so the tables start folded.
+const cards = matchMedia("(max-width: 48rem)");
+
+// The set of controls the chapter places right after a table (see the .mdx); a script tag may sit in between.
+function controlsAfter(container) {
+    for (let node = container.nextElementSibling, hop = 0; node && hop < 2; node = node.nextElementSibling, hop++) {
+        if (node.classList.contains("moment")) return node;
+    }
+    return null;
+}
+
+// A folded-away table leaves nothing for its controls to act on, so they fold with it rather than standing alone.
+function syncControls(container) {
+    const controls = controlsAfter(container);
+    const fold = container.querySelector(".table-fold");
+    if (controls) controls.hidden = Boolean(fold && cards.matches && !fold.open);
+}
 
 function render() {
-    for (const container of tableContainers) container.innerHTML = renderDomain(container.dataset.domain, state.jd);
+    for (const container of tableContainers) {
+        // Rerendered on every change, so whether the reader folded it open is carried over by hand.
+        const fold = container.querySelector(".table-fold");
+        const open = fold ? fold.open : !cards.matches;
+        container.innerHTML = renderDomain(container.dataset.domain, state.jd, open);
+        syncControls(container);
+    }
+}
+
+// The details element's toggle event does not bubble, so it is caught on the way down instead.
+for (const container of tableContainers) {
+    container.addEventListener("toggle", () => syncControls(container), true);
 }
 
 onChange(render);
+// Crossing the breakpoint decides afresh: folded where the cards take over, open where the table fits.
+cards.addEventListener("change", () => {
+    for (const container of tableContainers) container.innerHTML = "";
+    render();
+});
 render();

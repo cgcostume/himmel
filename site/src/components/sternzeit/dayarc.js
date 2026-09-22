@@ -1,6 +1,6 @@
 import * as precise from "@himmel/sternzeit";
 import Zdog from "zdog";
-import { COMPASS, cssColor, labelAboveY, svgText } from "./figure.js";
+import { COMPASS, cssColor, gridLine, labelAboveY, svgText } from "./figure.js";
 import { aboveVisibleHorizon } from "./horizon.js";
 import { onChange, state } from "./state.js";
 import "./export.js";
@@ -20,6 +20,9 @@ const ANALEMMA_DAYS = 182;
 const ANALEMMA_TICK_DAYS = 14;
 // Half the analemma panel's width in degrees; its height always spans the full 180 degrees from zenith to nadir.
 const ANALEMMA_HALF_WIDTH = 35;
+// The dome sits below the frame's middle: seen from high up it reaches as far above the horizon plane as the sky
+// grid does, and centered it would be cut off at the top.
+const CENTER_SHIFT = 0.04;
 // The view is kept above the horizon plane (the ground layer only veils what is below it from above).
 const TILT_MIN = -85 * DEG;
 const TILT_MAX = -8 * DEG;
@@ -32,7 +35,8 @@ const ACCENT = cssColor("--accent", "#5aa9ff");
 
 const frameEl = document.querySelector(".dome-scene");
 const compassEl = frameEl.querySelector(".dome-compass");
-const analemmaSvg = frameEl.querySelector(".analemma-panel > svg");
+const analemmaPanel = frameEl.querySelector(".analemma-panel");
+const analemmaSvg = analemmaPanel.querySelector(":scope > svg");
 const analemmaNote = frameEl.querySelector('[data-field="analemmaNote"]');
 
 // Stroke widths and dash patterns in screen pixels; converted to scene units whenever the zoom changes.
@@ -42,6 +46,7 @@ const DASHED = [3, 3];
 let zoom = 1;
 let stageWidth = 0;
 let stageHeight = 0;
+let centerShiftPx = 0;
 // Seen from the southeast and a little above, so a day arc, a circle tilted towards the south, shows as an ellipse.
 const rotation = { x: -20 * DEG, y: 40 * DEG, z: 0 };
 
@@ -61,7 +66,9 @@ function layer(name) {
         onResize: function (width, height) {
             stageWidth = width;
             stageHeight = height;
-            zoom = Math.min(width / 2 / (R * 1.35), height / 2 / (R * 1.1));
+            zoom = Math.min(width / 2 / (R * 1.35), height / 2 / (R * 1.25));
+            centerShiftPx = height * CENTER_SHIFT;
+            this.translate.y = centerShiftPx / zoom;
             this.zoom = zoom;
             this.setSize(width, height);
             for (const [shape, { strokePx }] of styles) shape.stroke = strokePx / zoom;
@@ -111,13 +118,18 @@ styled(new Shape({ addTo: above, color: INK }), 4);
 // The day's paths and the two bodies, rebuilt whenever the moment or place changes.
 const dynamic = [new Anchor({ addTo: below }), new Anchor({ addTo: above })];
 
+// The labels sit this far outside the horizon ring, in screen pixels. Pushing them out in scene units instead would
+// space them unevenly: the ring projects to a flat ellipse, where a radial step moves east and west much further
+// from it than north and south.
+const COMPASS_LABEL_GAP_PX = 14;
+
 const compassLabels = COMPASS.map((text, i) => {
     const label = document.createElement("span");
     label.className = "dome-compass-label";
     label.dataset.exportText = "";
     label.textContent = text;
     compassEl.append(label);
-    return { label, point: skyPoint({ azimuth: i * 45, altitude: 0 }, R * 1.12) };
+    return { label, point: skyPoint({ azimuth: i * 45, altitude: 0 }, R) };
 });
 
 /** Julian Day of local mean solar noon on the moment's day: JDs are integers at noon UT, shifted by the longitude. */
@@ -184,6 +196,37 @@ function addDot(horizontal, color, strokePx) {
     styled(new Shape({ addTo: anchorFor(horizontal.altitude), translate: skyPoint(horizontal), color }), strokePx);
 }
 
+// The Sun and the Moon are the same size here; the Sun is told apart by the ring of short rays around it, the same
+// motif as in the locked views. The rays lie on the dome's surface around it, in scene units, so they turn with the
+// dome and sort with it rather than floating on top.
+const BODY_DOT_PX = 10;
+const SUN_RAY_COUNT = 8;
+const SUN_RAY_GAP = 1.5;
+const SUN_RAY_LENGTH = 2.5;
+
+function addSunRays(horizontal) {
+    const center = skyPoint(horizontal);
+    const up = new Vector(center).multiply(1 / R);
+    // Two directions along the dome at the Sun: one level with the horizon, one at right angles to it.
+    const side = new Vector({ x: -up.z, y: 0, z: up.x });
+    side.multiply(1 / (side.magnitude() || 1));
+    const over = new Vector({
+        x: up.y * side.z - up.z * side.y,
+        y: up.z * side.x - up.x * side.z,
+        z: up.x * side.y - up.y * side.x,
+    });
+    const anchor = anchorFor(horizontal.altitude);
+    for (let i = 0; i < SUN_RAY_COUNT; i++) {
+        const [c, s] = [Math.cos((i / SUN_RAY_COUNT) * 2 * Math.PI), Math.sin((i / SUN_RAY_COUNT) * 2 * Math.PI)];
+        const out = new Vector(side).multiply(c).add(new Vector(over).multiply(s));
+        const path = [
+            new Vector(center).add(new Vector(out).multiply(SUN_RAY_GAP)),
+            new Vector(center).add(new Vector(out).multiply(SUN_RAY_GAP + SUN_RAY_LENGTH)),
+        ];
+        styled(new Shape({ addTo: anchor, path, color: INK }), 1);
+    }
+}
+
 function rebuildPaths() {
     const { jd, latitude, longitude } = state;
     for (const anchor of dynamic) {
@@ -203,8 +246,10 @@ function rebuildPaths() {
         if (i % SAMPLES_PER_HOUR === 0 && sample.altitude >= 0) addDot(sample, INK, 4);
     });
     const time = precise.fromJulianDay(jd);
-    addDot(seen(precise.moon, time, latitude, longitude), MUTED, 9);
-    addDot(seen(precise.sun, time, latitude, longitude), INK, 12);
+    addDot(seen(precise.moon, time, latitude, longitude), MUTED, BODY_DOT_PX);
+    const sunNow = seen(precise.sun, time, latitude, longitude);
+    addDot(sunNow, INK, BODY_DOT_PX);
+    addSunRays(sunNow);
 }
 
 function renderAnalemma() {
@@ -231,8 +276,10 @@ function renderAnalemma() {
     // The panel may be wider than the viewBox's aspect ratio, so the ground and lines reach well past it.
     const [left, right] = [centerX - 1000, centerX + 1000];
     let svg = `<rect x="${f(left)}" y="0" width="${f(right - left)}" height="1090" class="figure-ground"/>`;
+    // The panel's own left edge, not the far end of the ground rectangle, is where the altitude labels belong.
+    const visibleLeft = centerX - ((analemmaSvg.clientWidth || 1) / 2) * unitsPerPx;
     for (const altitude of [-60, -30, 30, 60]) {
-        svg += `<line x1="${f(left)}" y1="${altitude}" x2="${f(right)}" y2="${altitude}" class="figure-grid"/>`;
+        svg += gridLine(altitude, visibleLeft, right, `${-altitude}°`, unitsPerPx);
     }
     svg += `<line x1="${f(left)}" y1="0" x2="${f(right)}" y2="0" class="figure-horizon"/>`;
     // The compass directions on the horizon, where the x axis is plain azimuth (cos 0 = 1), relative to today's; only
@@ -253,11 +300,33 @@ function renderAnalemma() {
     analemmaNote.textContent = points.every((p) => p.y > 0) ? ", below the horizon at this hour" : "";
 }
 
+// Where the analemma panel covers the scene, in scene coordinates: the compass labels that fall behind it are left
+// out, since the horizon they belong to is hidden there and they would read as floating free. Measured on resize
+// only, not per frame.
+let panelBox = null;
+function measurePanel() {
+    const scene = frameEl.getBoundingClientRect();
+    const box = analemmaPanel.getBoundingClientRect();
+    panelBox = {
+        left: box.left - scene.left,
+        top: box.top - scene.top,
+        right: box.right - scene.left,
+        bottom: box.bottom - scene.top,
+    };
+}
+
 function placeCompass() {
     for (const { label, point } of compassLabels) {
         const p = new Vector(point).rotate(rotation);
-        label.style.left = `${stageWidth / 2 + p.x * zoom}px`;
-        label.style.top = `${stageHeight / 2 + p.y * zoom}px`;
+        const reach = Math.hypot(p.x, p.y) || 1;
+        const [x, y] = [
+            stageWidth / 2 + p.x * zoom + (p.x / reach) * COMPASS_LABEL_GAP_PX,
+            stageHeight / 2 + centerShiftPx + p.y * zoom + (p.y / reach) * COMPASS_LABEL_GAP_PX,
+        ];
+        const covered = panelBox && x > panelBox.left && x < panelBox.right && y > panelBox.top && y < panelBox.bottom;
+        label.style.left = `${x}px`;
+        label.style.top = `${y}px`;
+        label.style.visibility = covered ? "hidden" : "visible";
         label.style.opacity = p.z < 0 ? 0.45 : 1;
     }
 }
@@ -300,7 +369,11 @@ function update() {
 }
 
 onChange(update);
-// The analemma's text keeps the page's small size in screen pixels, so a resized panel redraws it.
-new ResizeObserver(renderAnalemma).observe(analemmaSvg);
+// The analemma's text keeps the page's small size in screen pixels, so a resized panel redraws it, and the compass
+// labels find out where the panel now covers the scene.
+new ResizeObserver(() => {
+    renderAnalemma();
+    measurePanel();
+}).observe(analemmaSvg);
 update();
 requestAnimationFrame(frame);

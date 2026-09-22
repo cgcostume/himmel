@@ -30,6 +30,53 @@ export function labelAboveY(y, unitsPerPx) {
     return y - (2 + SMALL_TEXT_PX / 2) * unitsPerPx;
 }
 
+// The Sun wherever it appears as a symbol rather than a disc to scale (the locked views, the Moon's own view): a
+// filled disc with a ring of dotted rays around it, one motif the reader learns once.
+const SUN_RAY_COUNT = 8;
+
+/** The Sun as a symbol at (x, y): a disc of `radius`, its rays starting `gap` past it and `length` long. */
+export function sunSymbol(x, y, radius, gap, length) {
+    const [inner, outer] = [radius + gap, radius + gap + length];
+    let svg = `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${radius}" class="figure-sun"/>`;
+    for (let i = 0; i < SUN_RAY_COUNT; i++) {
+        const [c, s] = [Math.cos((i / SUN_RAY_COUNT) * 2 * Math.PI), Math.sin((i / SUN_RAY_COUNT) * 2 * Math.PI)];
+        const [x1, y1, x2, y2] = [x + inner * c, y + inner * s, x + outer * c, y + outer * s].map((n) => n.toFixed(2));
+        svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="figure-sun-ray"/>`;
+    }
+    return svg;
+}
+
+// An altitude line with its angle at the left end: the text sits on the line's own height, the line picks up after
+// it. The label is set flush against the line's start, so that -30° lines up with 30° digit for digit.
+const GRID_LABEL_PADDING_PX = 6;
+const GRID_LABEL_WIDTH_PX = 30;
+const GRID_LABEL_GAP_PX = 5;
+
+/** A dotted altitude line at `y`, from `left` to `right` in figure units, labeled with `label` at its left end. */
+export function gridLine(y, left, right, label, unitsPerPx) {
+    const start = left + (GRID_LABEL_PADDING_PX + GRID_LABEL_WIDTH_PX) * unitsPerPx;
+    const line = `<line x1="${start.toFixed(2)}" y1="${y.toFixed(2)}" x2="${right.toFixed(2)}" y2="${y.toFixed(2)}" class="figure-grid"/>`;
+    return svgText(start - GRID_LABEL_GAP_PX * unitsPerPx, y, label, "figure-grid-label", unitsPerPx) + line;
+}
+
+/**
+ * The Moon as a symbol at (x, y): a disc of `radius` with `lit` of it (0 to 1) shining towards (dx, dy), the way it
+ * would look to the eye. The terminator is the ellipse it really is, so the crescent bulges the right way.
+ */
+export function moonSymbol(x, y, radius, lit, dx, dy) {
+    const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
+    const waist = (radius * Math.abs(1 - 2 * lit)).toFixed(2);
+    // Counterclockwise back over the bright side for a crescent, clockwise around the dark one for a gibbous moon.
+    const sweep = lit < 0.5 ? 0 : 1;
+    const limb = `M 0 ${-radius} A ${radius} ${radius} 0 0 1 0 ${radius}`;
+    const terminator = `A ${waist} ${radius} 0 0 ${sweep} 0 ${-radius}`;
+    // Half the dotted outline's own width (see .figure-moon), so the stroke falls inside the disc: SVG centers it on
+    // the path, and the half sticking out would make the limb look ragged where the lit part covers it exactly.
+    const outline = (radius - 0.4).toFixed(2);
+    return `<g transform="translate(${x.toFixed(2)} ${y.toFixed(2)}) rotate(${angle.toFixed(2)})">
+        <circle r="${outline}" class="figure-moon"/><path d="${limb} ${terminator} Z" class="figure-moon-lit"/></g>`;
+}
+
 /**
  * The visible horizon at `y` across a square panel of half size `half`, the ground beneath veiling what it hides; or,
  * with the horizon above the panel, the whole panel veiled and a note saying so.

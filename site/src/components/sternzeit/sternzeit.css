@@ -1,38 +1,156 @@
 .scene-frame {
-    border-bottom: var(--border);
     margin-top: 0;
     margin-right: 0;
     margin-bottom: 1.5rem;
 }
+/* A scene that stays in the reading column starts at the text's left edge, not at the browser's figure margin. */
+.scene-frame:not(.wide) {
+    margin-left: 0;
+}
+/* Space above as well as below: the caption may follow the scene itself or, once the panels move below it, one of
+   their own captions, and it has to read as separate from either. */
 .scene-frame .figure-caption {
-    padding: 0 1.5rem 0.75rem;
+    padding: 0.75rem 0;
+}
+/* A figure that breaks out of the reading column keeps its own gutter, so its caption still lines up with the text. */
+.scene-frame.wide .figure-caption {
+    padding: 0.75rem 1.5rem;
 }
 .eclipse-figure {
     margin: 1.5rem 0;
 }
+/* At the top of the scene it belongs to, not the bottom, where it would read as a caption of whatever panel floats
+   over the scene's lower half. */
 .vis-credit {
     position: absolute;
-    bottom: 0;
+    top: 0.5rem;
     left: 0;
     margin: 0;
-    padding: 0.5rem 1.5rem;
+    padding: 0;
     color: var(--muted);
     pointer-events: none;
+}
+.wide .vis-credit {
+    left: 1.5rem;
 }
 .vis-credit a {
     color: inherit;
     pointer-events: auto;
 }
-/* Julian Day / Latitude / Longitude as a grid, so label/input/step columns line up regardless of label width. */
+/* Julian Day / Latitude / Longitude as a grid, so the label and input columns line up regardless of label width. */
 .input-grid {
     display: grid;
-    grid-template-columns: auto auto auto 1fr;
+    grid-template-columns: max-content max-content 1fr;
     gap: 0.5rem 0.75rem;
     align-items: baseline;
     margin-bottom: 1rem;
 }
+/* Placed by hand rather than by flow, since not every row fills all three columns. */
+.input-grid > label {
+    grid-column: 1;
+}
+/* A minus and a plus around the input, so a value can be stepped by finger as well as by arrow key or wheel. The
+   three are one control: no gaps, shared borders, rounded only on the outside. */
+.stepper {
+    grid-column: 2;
+    display: flex;
+    align-items: center;
+}
+.stepper button {
+    width: 1.9rem;
+    padding: 0;
+}
+.stepper > input {
+    border-radius: 0;
+    margin: 0 -1px;
+}
+.stepper > button[data-step="-1"] {
+    border-radius: var(--radius-small) 0 0 var(--radius-small);
+}
+.stepper > button[data-step="1"] {
+    border-radius: 0 var(--radius-small) var(--radius-small) 0;
+}
+/* "now" and the location pin act on their own, so they stand apart from the stepping group. */
+.stepper > button[data-field] {
+    margin-left: 0.4rem;
+}
+/* Whichever is hovered or focused draws its whole outline, over the neighbour it shares an edge with. */
+.stepper > :hover,
+.stepper > :focus-visible {
+    position: relative;
+    z-index: 1;
+}
+/* "now" is a toggle: on, the moment follows the clock and the field beside it is not to be touched; off, it stays
+   wherever the clock left it, as one click on it would have. */
+.stepper button[data-field="live"] {
+    width: auto;
+    padding: 0.15rem 0.5rem;
+}
+.stepper button[aria-pressed="true"] {
+    color: var(--accent);
+}
+/* The map pin that fills in latitude and longitude, and the height that goes with them. */
+.stepper button[data-field="geolocate"] {
+    display: grid;
+    place-items: center;
+}
+.stepper svg {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.2;
+    stroke-linejoin: round;
+}
+/* The step sizes as one segmented row of radio buttons, sharing their edges like the stepper does; it wraps rather
+   than overflowing on a narrow screen. */
+.steps {
+    display: flex;
+    flex-wrap: wrap;
+}
+.steps input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+.steps label span {
+    display: block;
+    margin-left: -1px;
+    padding: 0.15rem 0.45rem;
+    border: var(--border);
+    border-radius: 0;
+    background: var(--surface);
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: var(--text-small);
+    line-height: 1.4;
+    cursor: pointer;
+}
+.steps label:first-child span {
+    margin-left: 0;
+    border-radius: var(--radius-small) 0 0 var(--radius-small);
+}
+.steps label:last-child span {
+    border-radius: 0 var(--radius-small) var(--radius-small) 0;
+}
+/* Which one is chosen shows in the text, not in a second outline: the group already has enough lines in it. */
+.steps label:hover span {
+    color: var(--text);
+}
+.steps label:has(:checked) span {
+    color: var(--accent);
+}
+.steps label:has(:focus-visible) span {
+    position: relative;
+    z-index: 1;
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+}
 .input-grid-extra,
 .input-grid-subrow {
+    font-size: var(--text-meta);
     display: flex;
     gap: 0.75rem;
     align-items: baseline;
@@ -47,9 +165,8 @@
 .input-grid-subrow {
     grid-column: 2 / -1;
 }
-.moment input[data-field="jd"] {
-    width: 20ch;
-}
+/* One width for every field, so the columns of digits line up down the whole set. */
+.moment input[data-field="jd"],
 .moment input.latlong {
     width: 17ch;
 }
@@ -85,7 +202,8 @@ col.name {
 col.unit {
     width: 8%;
 }
-col.value {
+col.value,
+col.approx {
     width: 29%;
 }
 th.value,
@@ -103,13 +221,16 @@ tbody tr:nth-child(even) {
 tbody tr:hover {
     background: var(--line);
 }
+/* 4:3 on a phone or a narrow window, 16:9 where the page is wide enough for it (see the media query below). */
 #scene {
     position: relative;
     width: 100%;
-    aspect-ratio: 21 / 9;
+    aspect-ratio: 4 / 3;
     max-height: 80vh;
     overflow: hidden;
     touch-action: none;
+    /* Dragging the scene rotates it; it should not smear a selection across the labels drawn on top. */
+    user-select: none;
 }
 #stage {
     display: block;
@@ -171,39 +292,51 @@ tbody tr:hover {
     border-radius: var(--radius);
     background: var(--bg);
 }
-/* The locked views' bodies, in panel units: the Sun a white disc with dotted rays, the Moon a muted disc. */
-.altaz-sun {
+/* The Sun wherever it stands as a symbol (the locked views, the line off the Moon's bright limb): a white disc with
+   dotted rays. The Moon beside it in the locked views is a muted disc. */
+.figure-sun {
     fill: var(--text);
     stroke: var(--text);
     stroke-width: 1;
 }
-.altaz-sun-ray {
+.figure-sun-ray {
     stroke: var(--text);
     stroke-width: 1;
     stroke-linecap: round;
     stroke-dasharray: 0.1 3;
 }
-.altaz-moon {
-    fill: var(--muted);
+/* The Moon wherever it stands as a symbol: the disc in the night's own shade, outlined in the same dotted stroke the
+   armillary sphere draws its unlit sides with, and the lit part of it filled in the Sun's. */
+.figure-moon {
+    fill: var(--surface);
     stroke: var(--muted);
-    stroke-width: 1;
+    stroke-width: 0.8;
+    stroke-linecap: round;
+    stroke-dasharray: 0.1 1.6;
+}
+.figure-moon-lit {
+    fill: var(--muted);
 }
 /* Below its panel, small, like the analemma's. */
 .altaz-caption {
     position: absolute;
     top: calc(100% + 0.3em);
     left: 0;
+    background: var(--bg);
     white-space: nowrap;
     font-size: var(--text-small);
     line-height: 1.3;
     color: var(--muted);
 }
-/* A set of moment-and-place controls, foldable behind a one-line summary of the current values. */
+/* A set of moment-and-place controls, foldable behind a one-line summary of the current values. No box around it,
+   just a rule down its left saying how far it reaches, the same one a jumped-to reference gets. It sits in the
+   margin, so the controls still line up with the text. */
 .moment {
+    position: relative;
     margin: 1rem 0 1.5rem;
-    border: var(--border);
-    border-radius: var(--radius);
-    padding: 0.4rem 0.8rem;
+    border-left: 2px solid var(--accent);
+    margin-left: -0.9rem;
+    padding-left: 0.9rem;
 }
 .moment[open] .input-grid {
     margin: 0.75rem 0 0.25rem;
@@ -211,6 +344,8 @@ tbody tr:hover {
 .moment summary {
     cursor: pointer;
     list-style: none;
+    /* Clear of the copy button in the corner. */
+    padding-right: 2rem;
 }
 .moment summary::-webkit-details-marker {
     display: none;
@@ -227,10 +362,10 @@ tbody tr:hover {
 .moment-title {
     color: var(--accent);
 }
-/* The eclipse views: two square panels side by side within the reading column, stacked on narrow screens. */
+/* The eclipse views: two square panels side by side within the reading column, stacked below 40rem (see there). */
 .eclipse-views {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    grid-template-columns: 1fr 1fr;
     gap: 1.5rem;
     margin-bottom: 0.75rem;
 }
@@ -346,10 +481,11 @@ tbody tr:hover {
 .dome-scene {
     position: relative;
     width: 100%;
-    aspect-ratio: 21 / 9;
+    aspect-ratio: 4 / 3;
     max-height: 80vh;
     overflow: hidden;
     touch-action: none;
+    user-select: none;
     /* A size container, so the analemma panel can take the locked panels' width: 38% of the scene's height. */
     container-type: size;
 }
@@ -383,25 +519,31 @@ tbody tr:hover {
     line-height: 1;
     color: var(--muted);
 }
+/* As wide as the locked panels are, centered on the scene's height, with the caption hanging below it. Square while
+   the scene is, and twice as tall as wide once the scene turns wide itself (see the media query below), where the
+   analemma, a tall figure, has the room for it. */
 .analemma-panel {
     position: absolute;
     right: 1.5rem;
-    top: 4%;
-    height: 88%;
+    top: 50%;
+    transform: translateY(-50%);
     width: 38cqh;
     pointer-events: none;
 }
 .analemma-panel > svg {
     display: block;
     width: 100%;
-    height: calc(100% - 3.5em);
+    aspect-ratio: 1 / 1;
     border: var(--border);
     border-radius: var(--radius);
     background: var(--bg);
 }
+/* Over the scene, so it carries the page's own background: without it the dome's lines and compass labels show
+   through the lines of text. */
 .analemma-caption {
     display: block;
     margin-top: 0.4em;
+    background: var(--bg);
     font-size: var(--text-small);
     line-height: 1.3;
     color: var(--muted);
@@ -417,6 +559,11 @@ tbody tr:hover {
 }
 .analemma-sun {
     fill: var(--text);
+}
+.figure-grid-label {
+    fill: var(--muted);
+    text-anchor: end;
+    dominant-baseline: middle;
 }
 .figure-grid {
     stroke: var(--line);
@@ -517,7 +664,8 @@ tbody tr:hover {
 .moon-view {
     position: relative;
 }
-.svg-download {
+.svg-download,
+.icon-button {
     position: absolute;
     top: 6px;
     right: 6px;
@@ -530,10 +678,12 @@ tbody tr:hover {
     opacity: 0;
     transition: opacity 0.15s;
 }
-.svg-download:hover {
+.svg-download:hover,
+.icon-button:hover {
     color: var(--accent);
 }
-.svg-download svg {
+.svg-download svg,
+.icon-button svg {
     width: 14px;
     height: 14px;
     fill: none;
@@ -542,18 +692,277 @@ tbody tr:hover {
     stroke-linecap: round;
     stroke-linejoin: round;
 }
-/* The big scenes keep their right side for the panels floating over it. */
+/* No box around the controls any more, so their copy button sits in the corner of the summary line itself. It is
+   inside the summary element, not a child of the set, hence the descendant selector. */
+.moment .icon-button {
+    top: 0;
+    right: 0;
+}
+/* The big scenes have no panel frame to hang the button off, so it lines up with the figure's own content instead:
+   the same gutter the credit line and the caption use. Their right side is taken by the panels floating over it. */
 [data-export="armillary-sphere"] > .svg-download,
 [data-export="sun-path-diagram"] > .svg-download {
+    top: auto;
     right: auto;
-    left: 6px;
+    bottom: 0.5rem;
+    left: 1.5rem;
 }
 [data-export]:hover > .svg-download,
-.svg-download:focus-visible {
+.svg-download:focus-visible,
+.moment:hover .icon-button,
+.icon-button:focus-visible {
     opacity: 1;
 }
 @media (hover: none) {
-    .svg-download {
+    .svg-download,
+    .icon-button {
         opacity: 1;
+    }
+}
+/* Narrow screens: what floats over the two big scenes moves below them, the analemma to its own row. The scenes keep
+   their square-ish stage; the layers stay stacked and absolute, so a pseudo element reserves their height in the
+   column. Touch keeps rotating in both axes here (touch-action stays none), so a drag on a scene turns it rather
+   than scrolling the page away under the finger. */
+@media (max-width: 48rem) {
+    /* Every figure is the width of the text here, and square: one rule for all of them rather than each panel
+       keeping a size of its own, so the page reads as one column all the way down. */
+    .scene-frame.wide {
+        width: auto;
+        margin-left: 0;
+    }
+    .scene-frame .figure-caption {
+        padding: 0.75rem 0;
+    }
+    .vis-credit {
+        left: 0;
+    }
+    .moon-view {
+        max-width: none;
+    }
+    #scene,
+    .dome-scene {
+        display: flex;
+        flex-direction: column;
+        aspect-ratio: auto;
+        max-height: none;
+    }
+    #stage {
+        height: auto;
+        aspect-ratio: 1 / 1;
+    }
+    /* No size container here: it would take the scene's height from the box rather than from the stage inside it,
+       and the analemma below no longer sizes itself against the scene's height anyway. */
+    .dome-scene {
+        container-type: normal;
+    }
+    .dome-scene::before {
+        content: "";
+        display: block;
+        width: 100%;
+        aspect-ratio: 1 / 1;
+    }
+    .dome-layer {
+        inset: 0 0 auto 0;
+        height: auto;
+        aspect-ratio: 1 / 1;
+    }
+    .altaz-panels {
+        position: static;
+        display: grid;
+        /* minmax(0, 1fr), not 1fr: the panels' SVGs have an intrinsic size of their own that would widen the columns. */
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1.5rem;
+        margin: 0.75rem 0 0.5rem;
+    }
+    .altaz-panel {
+        position: relative;
+        right: auto;
+        height: auto;
+        /* On the square panel itself the caption below it would stick out; it belongs to the SVG instead. */
+        aspect-ratio: auto;
+    }
+    .altaz-panel-sun,
+    .altaz-panel-moon {
+        top: auto;
+    }
+    .altaz-panel > svg {
+        height: auto;
+        aspect-ratio: 1 / 1;
+    }
+    .altaz-caption {
+        position: static;
+        display: block;
+        margin-top: 0.3em;
+        white-space: normal;
+    }
+    .analemma-panel {
+        /* Relative, not static: its own download button would otherwise anchor itself to the scene above. Relative
+           also means the desktop offsets still count, so they are cleared. */
+        position: relative;
+        top: auto;
+        right: auto;
+        transform: none;
+        width: 100%;
+        margin: 0.75rem 0 0;
+    }
+    /* No panels floating over the scene here, so the button goes back over the stage's top right corner, where it
+       stays on the figure rather than sitting above it, in the same gutter as everything else. */
+    [data-export="armillary-sphere"] > .svg-download,
+    [data-export="sun-path-diagram"] > .svg-download {
+        top: 6px;
+        right: 6px;
+        bottom: auto;
+        left: auto;
+    }
+}
+/* Narrow screens: the controls drop to label plus input per row, with the step sizes and the notes on a row of their
+   own, and everything tappable gets a bigger target. */
+@media (max-width: 48rem) {
+    /* One column: the label goes above its field rather than beside it, which leaves the field its full width even
+       with a second button (now, the location pin) beside the two steppers. */
+    .input-grid {
+        grid-template-columns: 1fr;
+        gap: 0.3rem;
+    }
+    .input-grid > label,
+    .stepper {
+        grid-column: 1;
+    }
+    .input-grid > label {
+        margin-top: 0.4rem;
+    }
+    .input-grid-extra,
+    .input-grid-subrow {
+        grid-column: 1;
+    }
+
+    /* Bigger targets for a finger; the field between them grows with them, so the row stays one block. */
+    .stepper button {
+        width: 2.4rem;
+        height: 2rem;
+    }
+    .stepper input {
+        height: 2rem;
+    }
+    /* Taller for a finger, but narrow enough that the seven Julian Day steps stay one unbroken row. */
+    .steps label span {
+        padding: 0.3rem 0.45rem;
+    }
+}
+/* Narrower than the full site width: the tables come back into the reading column and drop the approx values, which
+   are the comparison, not the answer. The precise ones stay. */
+@media (max-width: 64rem) {
+    .sternzeit-table.wide {
+        width: auto;
+        margin-left: 0;
+    }
+    /* A notch below the page's meta size: three columns of numbers in the reading column are tight. */
+    .sternzeit-table table {
+        font-size: 0.8rem;
+    }
+    .sternzeit-table .approx {
+        display: none;
+    }
+    .sternzeit-table col.approx {
+        width: 0;
+    }
+    .sternzeit-table col.name {
+        width: 46%;
+    }
+    .sternzeit-table col.unit {
+        width: 10%;
+    }
+    .sternzeit-table col.value {
+        width: 44%;
+    }
+}
+/* Wide enough for the table itself: it is always open, so its summary line is not needed. */
+.table-fold > summary {
+    display: none;
+}
+/* The same width at which the figures rearrange: one card per row instead of columns, the approx value dropped (the
+   precise one is the point), and the whole table folded away behind its name, since a hundred cards would bury the
+   text around them. */
+@media (max-width: 48rem) {
+    /* The same size as the moment-and-place summary it sits next to, so both fold markers match. */
+    .table-fold > summary {
+        display: block;
+        margin-bottom: 0.5rem;
+        padding: 0.3rem 0;
+        font-family: var(--font-mono);
+        color: var(--accent);
+        cursor: pointer;
+        list-style: none;
+    }
+    .table-fold > summary::-webkit-details-marker {
+        display: none;
+    }
+    /* The same marker the moment-and-place box folds behind. */
+    .table-fold > summary::before {
+        content: "+";
+        display: inline-block;
+        width: 1.2em;
+        color: var(--muted);
+    }
+    .table-fold[open] > summary::before {
+        content: "\2212";
+    }
+    .sternzeit-table table {
+        table-layout: auto;
+        border: 0;
+        /* One value per card, so there is room for the page's usual size again. */
+        font-size: var(--text-meta);
+    }
+    .sternzeit-table thead {
+        display: none;
+    }
+    .sternzeit-table table,
+    .sternzeit-table tbody,
+    .sternzeit-table td {
+        display: block;
+    }
+    .sternzeit-table tr {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0 0.5rem;
+        align-items: baseline;
+        margin-bottom: 0.4rem;
+        padding: 0.3rem 0.5rem;
+        border: var(--border);
+        border-radius: var(--radius-small);
+    }
+    .sternzeit-table td {
+        border: 0;
+        padding: 0;
+    }
+    .sternzeit-table td:first-child {
+        flex: 1 1 100%;
+        color: var(--muted);
+    }
+    .sternzeit-table td.value {
+        text-align: left;
+        padding-right: 0;
+    }
+    /* Value first, its unit after it, as one reads it out. */
+    .sternzeit-table td.unit {
+        order: 2;
+        color: var(--muted);
+    }
+}
+/* Wide windows: the two big scenes get the flatter frame the reading column no longer constrains, the one for the
+   orbits reaching out to either side of Earth, the other for the tall analemma panel floating over its right. */
+@media (min-width: 64rem) {
+    #scene,
+    .dome-scene {
+        aspect-ratio: 16 / 9;
+    }
+    .analemma-panel > svg {
+        aspect-ratio: 1 / 2;
+    }
+}
+/* Too narrow for two panels side by side: the eclipses stack, and are then as wide as every other figure. */
+@media (max-width: 40rem) {
+    .eclipse-views {
+        grid-template-columns: 1fr;
     }
 }

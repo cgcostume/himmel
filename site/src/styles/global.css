@@ -84,11 +84,45 @@ h3 {
     display: flex;
     gap: 1.25rem;
 }
+/* The chapter list needs about 800px beside the brand; below that it folds behind the burger (see Base.astro). */
+.nav-toggle {
+    display: none;
+    place-items: center;
+    width: 2.2rem;
+    height: 2rem;
+    padding: 0;
+    color: var(--muted);
+}
+.nav-toggle:hover {
+    color: var(--accent);
+}
+.nav-toggle svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.4;
+    stroke-linecap: round;
+}
+@media (max-width: 50rem) {
+    .nav-toggle {
+        display: grid;
+    }
+    .site-header nav {
+        display: none;
+        flex-basis: 100%;
+        flex-direction: column;
+        gap: 0.75rem;
+        padding-top: 0.5rem;
+    }
+    .site-header nav[data-open] {
+        display: flex;
+    }
+}
 .site-header nav a[aria-current="page"] {
     color: var(--text);
 }
 .site-footer {
-    border-top: var(--border);
     color: var(--muted);
     font-size: var(--text-small);
     margin-top: 4rem;
@@ -175,6 +209,11 @@ input[type="checkbox"] {
 }
 button {
     cursor: pointer;
+}
+input:disabled,
+button:disabled {
+    opacity: 0.45;
+    cursor: default;
 }
 button:hover,
 select:hover {
@@ -300,15 +339,25 @@ h2 {
 }
 .references {
     margin-top: 3rem;
-    border-top: var(--border);
     font-size: var(--text-meta);
 }
+/* A known indent, so the rule marking a jumped-to reference can be placed exactly at the section's left edge. */
+.references ol {
+    padding-left: 2.2rem;
+}
 .references li {
+    position: relative;
     margin-bottom: 0.5rem;
     scroll-margin-top: 1rem;
 }
-.references li:target {
-    background: color-mix(in srgb, var(--accent) 20%, transparent);
+/* Jumped to from a citation: a rule down its left, left of the number, rather than a highlight behind the text. */
+.references li:target::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -2.2rem;
+    border-left: 2px solid var(--accent);
 }
 .reference-note {
     color: var(--muted);

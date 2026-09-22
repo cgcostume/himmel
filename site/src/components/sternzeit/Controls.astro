@@ -8,56 +8,119 @@ interface Props {
 const { open = false } = Astro.props;
 // Unique per instance, so every label still points at its own input when a page has several sets of controls.
 const uid = `moment-${Math.random().toString(36).slice(2, 8)}`;
+// The step sizes of each field, as a group of radio buttons: one tap on a touch screen, and the current one stays visible.
+const jdSteps = [
+    { label: "year", value: "365.25", calendar: "year" },
+    { label: "month", value: "30.436875", calendar: "month" },
+    { label: "week", value: "7", calendar: "week" },
+    { label: "day", value: "1", calendar: "day" },
+    { label: "hour", value: "0.0416666666667", checked: true },
+    { label: "min", value: "0.0006944444444" },
+    { label: "sec", value: "0.0000115740741" },
+];
+const angleSteps = [
+    { label: "deg", value: "1", checked: true },
+    { label: "min", value: "0.0166666666667" },
+    { label: "sec", value: "0.0002777777778" },
+];
+const heightSteps = [
+    { label: "1 m", value: "1" },
+    { label: "10 m", value: "10", checked: true },
+    { label: "100 m", value: "100" },
+    { label: "1 km", value: "1000" },
+];
 ---
 
 <details class="moment" open={open}>
-    <summary><span class="moment-title">Moment and place</span> <span class="note" data-field="summary"></span></summary>
+    <summary>
+        <span class="moment-title">Moment and place</span> <span class="note" data-field="summary"></span>
+        {/* Inside the summary, so it is there while the set is folded away too; the click does not toggle it. */}
+        <button type="button" data-field="copy" class="icon-button" title="Copy this moment and place as JSON" aria-label="Copy this moment and place as JSON">
+            <svg viewBox="0 0 16 16" aria-hidden="true"
+                ><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" /><path
+                    d="M10.5 3.5v-1a1 1 0 0 0-1-1h-7a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h1"
+                /></svg
+            >
+        </button>
+    </summary>
     <div class="input-grid">
         <label for={`${uid}-jd`}>Julian Day</label>
-        <input id={`${uid}-jd`} data-field="jd" type="number" />
-        <select data-field="jdStep" aria-label="Julian Day step">
-            <option data-calendar="year" value="365.25">± year</option>
-            <option data-calendar="month" value="30.436875">± month</option>
-            <option data-calendar="week" value="7">± week</option>
-            <option data-calendar="day" value="1">± day</option>
-            <option value="0.0416666666667" selected>± hour</option>
-            <option value="0.0006944444444">± minute</option>
-            <option value="0.0000115740741">± second</option>
-        </select>
-        <span class="input-grid-extra">
-            <button data-field="now" type="button">now</button>
-            <label><input data-field="live" type="checkbox" /> live</label>
+        <span class="stepper">
+            <button type="button" data-step="-1" aria-label="Julian Day, one step back">&#8722;</button>
+            <input id={`${uid}-jd`} data-field="jd" type="number" />
+            <button type="button" data-step="1" aria-label="Julian Day, one step forward">+</button>
+            <button type="button" data-field="live" aria-pressed="false">now</button>
+        </span>
+        <span class="input-grid-subrow">
+            <span class="steps" role="radiogroup" aria-label="Julian Day step" data-field="jdStep">
+                {
+                    jdSteps.map((step) => (
+                        <label>
+                            <input
+                                type="radio"
+                                name={`${uid}-jd-step`}
+                                value={step.value}
+                                data-calendar={step.calendar}
+                                checked={step.checked}
+                            />
+                            <span>{step.label}</span>
+                        </label>
+                    ))
+                }
+            </span>
         </span>
 
         <label for={`${uid}-latitude`}>Latitude</label>
-        <input id={`${uid}-latitude`} data-field="latitude" class="latlong" type="number" />
-        <select data-field="latitudeStep" aria-label="Latitude step">
-            <option value="1" selected>± degree</option>
-            <option value="0.0166666666667">± minute</option>
-            <option value="0.0002777777778">± second</option>
-        </select>
-        <span class="input-grid-extra"><span data-field="latitudeDms" class="note"></span></span>
+        <span class="stepper">
+            <button type="button" data-step="-1" aria-label="Latitude, one step back">&#8722;</button>
+            <input id={`${uid}-latitude`} data-field="latitude" class="latlong" type="number" />
+            <button type="button" data-step="1" aria-label="Latitude, one step forward">+</button>
+            <button type="button" data-field="geolocate" title="Use browser location" aria-label="Use browser location">
+                <svg viewBox="0 0 16 16" aria-hidden="true"
+                    ><path d="M8 14.5s5-4.6 5-8.2A5 5 0 0 0 3 6.3c0 3.6 5 8.2 5 8.2z" /><circle cx="8" cy="6.2" r="1.8"
+                    /></svg
+                >
+            </button>
+        </span>
 
         <label for={`${uid}-longitude`}>Longitude</label>
-        <input id={`${uid}-longitude`} data-field="longitude" class="latlong" type="number" />
-        <select data-field="longitudeStep" aria-label="Longitude step">
-            <option value="1" selected>± degree</option>
-            <option value="0.0166666666667">± minute</option>
-            <option value="0.0002777777778">± second</option>
-        </select>
-        <span class="input-grid-extra"><span data-field="longitudeDms" class="note"></span></span>
-        <label for={`${uid}-height`}>Height</label>
-        <input id={`${uid}-height`} data-field="height" class="latlong" type="number" min="0" max="8000" />
-        <select data-field="heightStep" aria-label="Height step">
-            <option value="1">± 1 m</option>
-            <option value="10" selected>± 10 m</option>
-            <option value="100">± 100 m</option>
-            <option value="1000">± 1000 m</option>
-        </select>
-        <span class="input-grid-extra"><span class="note">above sea level</span></span>
+        <span class="stepper">
+            <button type="button" data-step="-1" aria-label="Longitude, one step back">&#8722;</button>
+            <input id={`${uid}-longitude`} data-field="longitude" class="latlong" type="number" />
+            <button type="button" data-step="1" aria-label="Longitude, one step forward">+</button>
+        </span>
+
         <span class="input-grid-subrow">
-            <button data-field="geolocate" type="button">use browser location</button>
+            <span class="steps" role="radiogroup" aria-label="Latitude and longitude step" data-field="latlongStep">
+                {
+                    angleSteps.map((step) => (
+                        <label>
+                            <input type="radio" name={`${uid}-latlong-step`} value={step.value} checked={step.checked} />
+                            <span>{step.label}</span>
+                        </label>
+                    ))
+                }
+            </span>
             <span data-field="location" class="note"></span>
+        </span>
+
+        <label for={`${uid}-height`}>Height</label>
+        <span class="stepper">
+            <button type="button" data-step="-1" aria-label="Height, one step back">&#8722;</button>
+            <input id={`${uid}-height`} data-field="height" class="latlong" type="number" min="0" max="8000" />
+            <button type="button" data-step="1" aria-label="Height, one step forward">+</button>
+        </span>
+        <span class="input-grid-subrow">
+            <span class="steps" role="radiogroup" aria-label="Height step" data-field="heightStep">
+                {
+                    heightSteps.map((step) => (
+                        <label>
+                            <input type="radio" name={`${uid}-height-step`} value={step.value} checked={step.checked} />
+                            <span>{step.label}</span>
+                        </label>
+                    ))
+                }
+            </span>
         </span>
     </div>
 </details>

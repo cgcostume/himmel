@@ -1,6 +1,6 @@
 import * as precise from "@himmel/sternzeit";
 import Zdog from "zdog";
-import { COMPASS, cssColor, labelAboveY, svgText } from "./figure.js";
+import { COMPASS, cssColor, gridLine, labelAboveY, moonSymbol, sunSymbol, svgText } from "./figure.js";
 import { aboveVisibleHorizon } from "./horizon.js";
 import { offPanelArrow, offPanelArrowSvg } from "./offpanel.js";
 import { state } from "./state.js";
@@ -77,11 +77,11 @@ function billboardRotate(rotX, rotY) {
 
 // Mouse-wheel zoom, layered on top of the auto-fit zoom below rather than replacing it: baseZoom is
 // whatever onResize computes to fit the viewport, zoomFactor is the user's own multiplier on top of that
-// (1.0..8.0), and the two combine each frame (see frame()) into illustration.zoom. targetZoomFactor is set
+// (0.5..2.0), and the two combine each frame (see frame()) into illustration.zoom. targetZoomFactor is set
 // instantly by the wheel handler; zoomFactor eases toward it every frame for a soft, non-jumpy feel rather
 // than snapping straight to each wheel tick.
-const ZOOM_FACTOR_MIN = 1.0;
-const ZOOM_FACTOR_MAX = 8.0;
+const ZOOM_FACTOR_MIN = 0.5;
+const ZOOM_FACTOR_MAX = 2.0;
 let baseZoom = 1;
 let zoomFactor = 1;
 let targetZoomFactor = 1;
@@ -273,26 +273,15 @@ const ALTAZ_GRID_ALTITUDES = [30, 60];
 // Mini versions of the main scene's sunrays (see SUN_RAY_COUNT above): cheaper to read at a glance than an
 // "S"/"M" text label, and reuses a motif the viewer already knows means "this one's the sun" from the main
 // scene, rather than introducing a new convention.
-const ALTAZ_SUN_RAY_COUNT = 8;
 const ALTAZ_SUN_RAY_GAP = 3;
 const ALTAZ_SUN_RAY_LENGTH = 5;
 
-// A fixed per-species look, regardless of anchor/other role: the sun is a white disc plus rays, the moon a muted
-// disc. The anchor/other role is legible from position alone (the anchor always sits at dead-center horizontally).
-function altAzBody({ x, y }, isSun) {
-    if (!isSun) return `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${ALTAZ_DOT_RADIUS}" class="altaz-moon"/>`;
-    const inner = ALTAZ_DOT_RADIUS + ALTAZ_SUN_RAY_GAP;
-    const outer = inner + ALTAZ_SUN_RAY_LENGTH;
-    let svg = `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${ALTAZ_DOT_RADIUS}" class="altaz-sun"/>`;
-    for (let i = 0; i < ALTAZ_SUN_RAY_COUNT; i++) {
-        const [c, s] = [
-            Math.cos((i / ALTAZ_SUN_RAY_COUNT) * 2 * Math.PI),
-            Math.sin((i / ALTAZ_SUN_RAY_COUNT) * 2 * Math.PI),
-        ];
-        const [x1, y1, x2, y2] = [x + inner * c, y + inner * s, x + outer * c, y + outer * s].map((n) => n.toFixed(2));
-        svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="altaz-sun-ray"/>`;
-    }
-    return svg;
+// A fixed per-species look, regardless of anchor/other role: the sun is a white disc plus rays, the moon carries its
+// phase, lit towards wherever the sun stands in the same panel. The anchor/other role is legible from position alone
+// (the anchor always sits at dead-center horizontally).
+function altAzBody(point, isSun, towardsSun, lit) {
+    if (isSun) return sunSymbol(point.x, point.y, ALTAZ_DOT_RADIUS, ALTAZ_SUN_RAY_GAP, ALTAZ_SUN_RAY_LENGTH);
+    return moonSymbol(point.x, point.y, ALTAZ_DOT_RADIUS, lit, towardsSun.x, towardsSun.y);
 }
 
 function makeAltAzPanel(elementSelector, anchorIsSun) {
@@ -314,7 +303,7 @@ function azimuthDelta(fromAzimuth, toAzimuth) {
     return ((((toAzimuth - fromAzimuth) % 360) + 540) % 360) - 180;
 }
 
-function updateAltAzPanel(panel, anchorHorizontal, otherHorizontal) {
+function updateAltAzPanel(panel, anchorHorizontal, otherHorizontal, lit) {
     // The panel is drawn at whatever size the page gives it; arrows and labels keep their size in screen pixels.
     const unitsPerPx = ALTAZ_PANEL_SIZE / (panel.element.clientWidth || ALTAZ_PANEL_SIZE);
     // Redrawn only when something changed, not every frame of the main scene.
@@ -323,6 +312,7 @@ function updateAltAzPanel(panel, anchorHorizontal, otherHorizontal) {
         anchorHorizontal.azimuth,
         otherHorizontal.altitude,
         otherHorizontal.azimuth,
+        lit,
         unitsPerPx,
     ].join();
     if (key === panel.drawn) return;
@@ -342,8 +332,7 @@ function updateAltAzPanel(panel, anchorHorizontal, otherHorizontal) {
     let svg = `<rect x="${-half}" y="${y}" width="${ALTAZ_PANEL_SIZE}" height="${(half - ALTAZ_HORIZON_Y).toFixed(2)}" class="figure-ground"/>`;
     // Altitude lines as in the analemma: 30 degrees sits at the center, 60 well above the middle of the upper half.
     for (const altitude of ALTAZ_GRID_ALTITUDES) {
-        const gridY = (-tangentPx(altitude - ALTAZ_LOOK_UP_DEG)).toFixed(2);
-        svg += `<line x1="${-half}" y1="${gridY}" x2="${half}" y2="${gridY}" class="figure-grid"/>`;
+        svg += gridLine(-tangentPx(altitude - ALTAZ_LOOK_UP_DEG), -half, half, `${altitude}°`, unitsPerPx);
     }
     svg += `<line x1="${-half}" y1="${y}" x2="${half}" y2="${y}" class="figure-horizon"/>`;
     // The compass directions on the horizon, placed by azimuth with the same tangent mapping as the bodies: as the
@@ -353,8 +342,11 @@ function updateAltAzPanel(panel, anchorHorizontal, otherHorizontal) {
         if (Math.abs(d) > ALTAZ_FIELD_OF_VIEW_DEG / 2) return;
         svg += svgText(tangentPx(d), labelAboveY(ALTAZ_HORIZON_Y, unitsPerPx), label, "figure-label", unitsPerPx);
     });
+    // Which way the Moon's lit side faces: towards the Sun as this panel places it, off-panel Sun included.
+    const gap = Math.hypot(sunPoint.x - moonPoint.x, sunPoint.y - moonPoint.y) || 1;
+    const towardsSun = { x: (sunPoint.x - moonPoint.x) / gap, y: (sunPoint.y - moonPoint.y) / gap };
     // The sun before the moon, whichever is the anchor, so the moon renders in front whenever the two nearly overlap.
-    svg += altAzBody(sunPoint, true) + altAzBody(moonPoint, false);
+    svg += altAzBody(sunPoint, true) + altAzBody(moonPoint, false, towardsSun, lit);
     // A body outside the panel, usually far below the horizon, gets the shared off-panel arrow (see offpanel.js).
     for (const [point, isSun] of [
         [sunPoint, true],
@@ -459,8 +451,9 @@ function frame() {
     const overHorizon = (h) => ({ ...h, altitude: aboveVisibleHorizon(h.altitude, state.heightM) });
     const sunSeen = overHorizon(sunHorizontal);
     const moonSeen = overHorizon(moonHorizontal);
-    updateAltAzPanel(sunView, sunSeen, moonSeen);
-    updateAltAzPanel(moonView, moonSeen, sunSeen);
+    const lit = precise.moon.illuminatedFraction(jd);
+    updateAltAzPanel(sunView, sunSeen, moonSeen, lit);
+    updateAltAzPanel(moonView, moonSeen, sunSeen, lit);
 
     sunAnchor.translate = sunPos;
     sunDisc.rotate = billboardRotate(rotX, rotY);
