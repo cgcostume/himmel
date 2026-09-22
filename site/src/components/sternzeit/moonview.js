@@ -59,7 +59,10 @@ function visibleRuns(points, angle, radius) {
     let run = null;
     for (const p of points) {
         if (p[2] > 0) {
-            if (!run) runs.push((run = []));
+            if (!run) {
+                run = [];
+                runs.push(run);
+            }
             run.push(toScreen(p, angle, radius));
         } else run = null;
     }

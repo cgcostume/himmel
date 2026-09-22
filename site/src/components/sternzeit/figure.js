@@ -2,11 +2,11 @@
 // whatever size the SVG is drawn at: each figure passes how many of its own units one screen pixel is.
 const SMALL_TEXT_PX = 12;
 
-const escape = (text) => String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+const escapeText = (text) => String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;");
 
 export function svgText(x, y, text, cls, unitsPerPx) {
     const size = (SMALL_TEXT_PX * unitsPerPx).toFixed(2);
-    return `<text x="${x.toFixed(2)}" y="${y.toFixed(2)}" font-size="${size}" class="${cls}">${escape(text)}</text>`;
+    return `<text x="${x.toFixed(2)}" y="${y.toFixed(2)}" font-size="${size}" class="${cls}">${escapeText(text)}</text>`;
 }
 
 // A label at the top of a figure, as far below its upper edge as the panel captions sit below their panels (0.5rem).
