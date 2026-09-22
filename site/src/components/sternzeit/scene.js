@@ -126,10 +126,47 @@ const equatorRing = new Ellipse({
     stroke: 1,
     fill: false,
 });
+// The rotation axis reaches past the globe at both poles, the way a globe's spindle does: it is the one line here
+// that is a real axis rather than a circle drawn on Earth, and the overhang says so at a glance.
+const AXIS_OVERHANG = 1.5;
 const axisLine = new Shape({
     addTo: earthAnchor,
-    path: [v(0, -EARTH_R, 0), v(0, EARTH_R, 0)],
+    path: [v(0, -AXIS_OVERHANG * EARTH_R, 0), v(0, AXIS_OVERHANG * EARTH_R, 0)],
     stroke: 1,
+    color: INK,
+});
+// Which way Earth turns, as an arrow curving around the axis above the north pole, clear of the globe itself: west
+// to east, carrying every point on the surface towards increasing right ascension (+X towards +Z here). Built from
+// right ascension 0 and turned to the observer's meridian each frame (see frame), so it tracks the rotation itself. Solid, not
+// dotted like the references it circles: it is one mark to be read as a whole, and small enough that dots would
+// leave little of it.
+const SPIN_RING_RADIUS = 0.25 * EARTH_R;
+const SPIN_RING_Y = -1.3 * EARTH_R;
+const SPIN_ARC_DEG = 280;
+const SPIN_SEGMENTS = 28;
+const SPIN_HEAD_DEG = 16;
+const SPIN_HEAD_HALF_WIDTH = 0.05 * EARTH_R;
+const spinPoint = (deg, radius = SPIN_RING_RADIUS) =>
+    v(radius * Math.cos(deg * DEG), SPIN_RING_Y, radius * Math.sin(deg * DEG));
+const spinArc = new Shape({
+    addTo: earthAnchor,
+    path: Array.from({ length: SPIN_SEGMENTS + 1 }, (_, i) => spinPoint((i / SPIN_SEGMENTS) * SPIN_ARC_DEG)),
+    closed: false,
+    stroke: 1,
+    fill: false,
+    color: INK,
+});
+// The head sits at the end of the arc, its tip a little further along it, its base spanning the ring's width.
+const spinHead = new Shape({
+    addTo: earthAnchor,
+    path: [
+        spinPoint(SPIN_ARC_DEG + SPIN_HEAD_DEG),
+        spinPoint(SPIN_ARC_DEG, SPIN_RING_RADIUS + SPIN_HEAD_HALF_WIDTH),
+        spinPoint(SPIN_ARC_DEG, SPIN_RING_RADIUS - SPIN_HEAD_HALF_WIDTH),
+    ],
+    closed: true,
+    fill: true,
+    stroke: 0.5,
     color: INK,
 });
 // The observer's own latitude/meridian rings: where they are right now.
@@ -368,6 +405,8 @@ function updateAltAzPanel(panel, anchorHorizontal, otherHorizontal, lit, earthsh
 const ALL_SHAPES = [
     equatorRing,
     axisLine,
+    spinArc,
+    spinHead,
     latitudeRing,
     meridianRing,
     radiusLine,
@@ -485,6 +524,10 @@ function frame() {
     latitudeRing.translate = { y: -EARTH_R * Math.sin(latitude * DEG) };
     latitudeRing.updatePath();
     meridianRing.rotate = { y: observerRa * DEG };
+    // The turn arrow starts on the observer's own meridian, so it sweeps around with sidereal time: step the clock
+    // and it turns the way Earth does, one full round a day.
+    spinArc.rotate = { y: observerRa * DEG };
+    spinHead.rotate = { y: observerRa * DEG };
     radiusLine.path[1] = observerPos;
     radiusLine.updatePath();
 
