@@ -120,8 +120,17 @@ function renderLunar(jd) {
     if (onPanelLunar) {
         svg += `<clipPath id="${clip}">${circle(mx, my, moonRadius, "")}</clipPath>`;
         svg += circle(mx, my, moonRadius, "eclipse-moon-full");
-        // The shadow, only where it falls on the Moon: a dimming in the penumbra, the reddish dark of the umbra.
-        svg += `<g clip-path="url(#${clip})">${circle(0, 0, penumbra, "eclipse-penumbra-on-moon")}${circle(0, 0, umbra, "eclipse-umbra-on-moon")}</g>`;
+        // The shadow, only where it falls on the Moon: a dimming that deepens across the penumbra, then the umbra's
+        // red, darkest at its center, coppery towards its edge where more sunset light reaches in.
+        const [pid, uid] = [`eclipse-penumbra-shade-${idCount}`, `eclipse-umbra-red-${idCount}`];
+        const edge = (umbra / penumbra).toFixed(3);
+        svg += `<radialGradient id="${pid}" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="${penumbra}">`;
+        svg += `<stop offset="${edge}" class="eclipse-penumbra-inner"/><stop offset="1" class="eclipse-penumbra-outer"/></radialGradient>`;
+        svg += `<radialGradient id="${uid}" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="${umbra}">`;
+        svg += `<stop offset="0" class="eclipse-umbra-core"/><stop offset="0.7" class="eclipse-umbra-mid"/>`;
+        svg += `<stop offset="1" class="eclipse-umbra-rim"/></radialGradient>`;
+        svg += `<g clip-path="url(#${clip})"><circle r="${penumbra}" fill="url(#${pid})"/>`;
+        svg += `<circle r="${umbra}" fill="url(#${uid})"/></g>`;
     }
     const arrow = onPanelLunar ? "" : offPanelMoon(mx, my);
     svg += circle(0, 0, penumbra, "eclipse-edge") + circle(0, 0, umbra, "eclipse-edge");

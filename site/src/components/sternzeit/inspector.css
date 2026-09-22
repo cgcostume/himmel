@@ -274,12 +274,24 @@ tbody tr:hover {
 .eclipse-moon-full {
     fill: var(--text);
 }
-.eclipse-penumbra-on-moon {
-    fill: rgb(0 0 0 / 0.35);
+/* The penumbra dims the Moon gradually, from barely at its outer edge to about half at the umbra's. */
+.eclipse-penumbra-inner {
+    stop-color: #000;
+    stop-opacity: 0.55;
 }
-/* A totally eclipsed Moon is not black: Earth's atmosphere bends sunset-red light into the umbra. */
-.eclipse-umbra-on-moon {
-    fill: hsl(12 55% 28% / 0.92);
+.eclipse-penumbra-outer {
+    stop-color: #000;
+    stop-opacity: 0;
+}
+/* A totally eclipsed Moon is not black: Earth's atmosphere bends sunset-red light into the umbra, least into its center. */
+.eclipse-umbra-core {
+    stop-color: hsl(4 60% 13%);
+}
+.eclipse-umbra-mid {
+    stop-color: hsl(10 60% 24%);
+}
+.eclipse-umbra-rim {
+    stop-color: hsl(20 60% 38%);
 }
 /* Below the horizon: the ground, translucent. The lunar panel's frame is the sky's, not the observer's, so a Moon below
    the horizon veils all of it. */
@@ -323,6 +335,8 @@ tbody tr:hover {
     max-height: 80vh;
     overflow: hidden;
     touch-action: none;
+    /* A size container, so the analemma panel can take the locked panels' width: 38% of the scene's height. */
+    container-type: size;
 }
 /* Three stacked layers: what is below the horizon, the ground that veils it, and what is above. */
 .dome-layer {
@@ -359,7 +373,7 @@ tbody tr:hover {
     right: 1.5rem;
     top: 4%;
     height: 88%;
-    width: 9rem;
+    width: 38cqh;
     pointer-events: none;
 }
 .analemma-panel svg {

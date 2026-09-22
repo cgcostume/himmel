@@ -8,6 +8,21 @@ const LATLONG_DECIMALS = 7;
 
 // jd is UT; shown in the viewer's own timezone. JD 2451545 is 2000-01-01 12:00 UT.
 const toDate = (jd) => new Date(Date.UTC(2000, 0, 1, 12) + (jd - 2451545) * 86400000);
+const fromDate = (date) => 2451545 + (date.getTime() - Date.UTC(2000, 0, 1, 12)) / 86400000;
+
+// Days, weeks, months and years step on the viewer's calendar, keeping the clock time (across daylight saving time too);
+// a month from 31 January is the last of February.
+function stepCalendar(jd, unit, sign) {
+    const date = toDate(jd);
+    if (unit === "day" || unit === "week") date.setDate(date.getDate() + sign * (unit === "week" ? 7 : 1));
+    else {
+        const day = date.getDate();
+        date.setDate(1);
+        date.setMonth(date.getMonth() + sign * (unit === "year" ? 12 : 1));
+        date.setDate(Math.min(day, new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate()));
+    }
+    return fromDate(date);
+}
 
 // One-liner in every set's summary, so the current moment and place stay readable while it is folded.
 function formatSummary() {
@@ -32,7 +47,10 @@ function wireStepping(input, stepSelect, commit, decimals) {
     input.step = "any";
     const minStep = minStepOf(stepSelect);
     const applyStep = (sign) => {
-        input.value = roundToStep((Number(input.value) || 0) + sign * Number(stepSelect.value), minStep, decimals);
+        const value = Number(input.value) || 0;
+        const unit = stepSelect.selectedOptions[0]?.dataset.calendar;
+        const next = unit ? stepCalendar(value, unit, sign) : value + sign * Number(stepSelect.value);
+        input.value = roundToStep(next, minStep, decimals);
         commit();
     };
     input.addEventListener("keydown", (event) => {

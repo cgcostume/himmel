@@ -16,10 +16,10 @@ const uid = `moment-${Math.random().toString(36).slice(2, 8)}`;
         <label for={`${uid}-jd`}>Julian Day</label>
         <input id={`${uid}-jd`} data-field="jd" type="number" />
         <select data-field="jdStep" aria-label="Julian Day step">
-            <option value="365.25">± year</option>
-            <option value="30.436875">± month</option>
-            <option value="7">± week</option>
-            <option value="1">± day</option>
+            <option data-calendar="year" value="365.25">± year</option>
+            <option data-calendar="month" value="30.436875">± month</option>
+            <option data-calendar="week" value="7">± week</option>
+            <option data-calendar="day" value="1">± day</option>
             <option value="0.0416666666667" selected>± hour</option>
             <option value="0.0006944444444">± minute</option>
             <option value="0.0000115740741">± second</option>
