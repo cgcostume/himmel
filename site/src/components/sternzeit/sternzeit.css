@@ -2,6 +2,9 @@
     margin-top: 0;
     margin-right: 0;
     margin-bottom: 1.5rem;
+    /* How far the reading column is inset from this figure's edge: zero while the figure is as wide as the text,
+       and half the difference once it breaks out. Everything in the figure that is read as text lines up with it. */
+    --content-inset: max(0px, calc((100% - var(--measure) + 3rem) / 2));
 }
 /* A scene that stays in the reading column starts at the text's left edge, not at the browser's figure margin. */
 .scene-frame:not(.wide) {
@@ -9,12 +12,13 @@
 }
 /* Space above as well as below: the caption may follow the scene itself or, once the panels move below it, one of
    their own captions, and it has to read as separate from either. */
+/* Space above and below, none at the sides, and never wider than the text: a caption is read like a paragraph, so it
+   keeps the reading column's width and its place, centered, even under a figure that breaks out of it. */
 .scene-frame .figure-caption {
+    width: calc(var(--measure) - 3rem);
+    max-width: 100%;
+    margin-inline: auto;
     padding: 0.75rem 0;
-}
-/* A figure that breaks out of the reading column keeps its own gutter, so its caption still lines up with the text. */
-.scene-frame.wide .figure-caption {
-    padding: 0.75rem 1.5rem;
 }
 .eclipse-figure {
     margin: 1.5rem 0;
@@ -24,14 +28,11 @@
 .vis-credit {
     position: absolute;
     top: 0.5rem;
-    left: 0;
+    left: var(--content-inset);
     margin: 0;
     padding: 0;
     color: var(--muted);
     pointer-events: none;
-}
-.wide .vis-credit {
-    left: 1.5rem;
 }
 .vis-credit a {
     color: inherit;
@@ -384,7 +385,8 @@ tbody tr:hover {
     margin: 0.5rem 0 0;
     font-size: var(--text-meta);
 }
-.eclipse-title {
+/* The title of a sub-figure's caption: what that panel shows, named at its head, the words to read first. */
+.subfigure-title {
     color: var(--accent);
 }
 .eclipse-orientation {
@@ -705,7 +707,7 @@ tbody tr:hover {
     top: auto;
     right: auto;
     bottom: 0.5rem;
-    left: 1.5rem;
+    left: var(--content-inset);
 }
 [data-export]:hover > .svg-download,
 .svg-download:focus-visible,
@@ -729,9 +731,6 @@ tbody tr:hover {
     .scene-frame.wide {
         width: auto;
         margin-left: 0;
-    }
-    .scene-frame .figure-caption {
-        padding: 0.75rem 0;
     }
     .vis-credit {
         left: 0;
@@ -809,8 +808,8 @@ tbody tr:hover {
        stays on the figure rather than sitting above it, in the same gutter as everything else. */
     [data-export="armillary-sphere"] > .svg-download,
     [data-export="sun-path-diagram"] > .svg-download {
-        top: 6px;
-        right: 6px;
+        top: 0;
+        right: var(--content-inset);
         bottom: auto;
         left: auto;
     }

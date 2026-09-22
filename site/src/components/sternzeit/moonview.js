@@ -186,8 +186,8 @@ function render() {
     const minutes = (precise.moon.apparentAngularDiameter(jd) / DEG) * 60;
     const ew = l >= 0 ? "E" : "W";
     const ns = b >= 0 ? "N" : "S";
-    statusEl.textContent =
-        `libration ${Math.abs(l).toFixed(1)}° ${ew}, ${Math.abs(b).toFixed(1)}° ${ns}; ` +
+    statusEl.innerHTML =
+        `<span class="subfigure-title">lunar libration</span> ${Math.abs(l).toFixed(1)}° ${ew}, ${Math.abs(b).toFixed(1)}° ${ns}; ` +
         `tilt ${tiltDeg.toFixed(1)}° (axis ${axis.toFixed(1)}° − parallactic ${parallactic.toFixed(1)}°); ` +
         `${minutes.toFixed(1)}′ across; earthshine ${(earthshine * 100).toFixed(1)}%`;
 }

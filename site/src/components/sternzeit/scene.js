@@ -291,7 +291,8 @@ function makeAltAzPanel(elementSelector, anchorIsSun) {
     // Appended here (not hardcoded in the markup) so the caption can never drift out of sync with
     // ALTAZ_FIELD_OF_VIEW_DEG above.
     const caption = element.closest(".altaz-panel")?.querySelector(".altaz-caption");
-    if (caption) caption.textContent += `, ${ALTAZ_FIELD_OF_VIEW_DEG}° FOV, tilted ${ALTAZ_LOOK_UP_DEG}° up`;
+    // Appended as text, so the accented name already in the caption survives.
+    if (caption) caption.append(`, ${ALTAZ_FIELD_OF_VIEW_DEG}° FOV, tilted ${ALTAZ_LOOK_UP_DEG}° up`);
     return { element, anchorIsSun, drawn: "" };
 }
 const sunView = makeAltAzPanel("#sunView", true);
