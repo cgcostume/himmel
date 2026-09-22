@@ -24,12 +24,14 @@
 * {
     box-sizing: border-box;
 }
+/* Clip on the root, not on the body: the body's own value is not what the viewport scrolls by, so the tooltips
+   parked off to the right (see .term-tip, shifted into view only once they are opened) would widen the page. */
 html {
+    overflow-x: clip;
     background: var(--bg);
 }
 body {
     margin: 0;
-    /* Safety net against anything poking out sideways; clip, unlike hidden, creates no scroll container. */
     overflow-x: clip;
     background: var(--bg);
     color: var(--text);
