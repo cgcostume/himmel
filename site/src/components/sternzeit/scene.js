@@ -1,5 +1,7 @@
 import * as precise from "@himmel/sternzeit";
 import Zdog from "zdog";
+import { aboveVisibleHorizon } from "./horizon.js";
+import { offPanelArrow } from "./offpanel.js";
 import { state } from "./state.js";
 
 const { Illustration, Anchor, Shape, Ellipse, Vector } = Zdog;
@@ -329,15 +331,12 @@ function makeAltAzPanel(elementSelector, anchorIsSun) {
     const other = anchorIsSun ? moonDot : sunDot;
     anchor.arrow = makeOffPanelArrow(panelIllustration, anchorIsSun);
     other.arrow = makeOffPanelArrow(panelIllustration, !anchorIsSun);
-    return { illustration: panelIllustration, horizon, anchor, other, compass: makeCompass(elementSelector) };
+    const element = document.querySelector(elementSelector);
+    return { illustration: panelIllustration, element, horizon, anchor, other, compass: makeCompass(elementSelector) };
 }
 
-// A body outside the panel, usually far below the horizon, gets an arrow at the panel's edge pointing towards it,
-// its tail marked like the body: a ring for the Sun, a disc for the Moon. Above cannot happen, the view reaches the
-// zenith. Parked off-panel while the body is in view.
-const ALTAZ_ARROW_INSET = ALTAZ_PANEL_SIZE / 2 - 8;
-const ALTAZ_ARROW_LENGTH = 12;
-const ALTAZ_ARROW_HEAD = 4;
+// A body outside the panel, usually far below the horizon, gets the shared off-panel arrow (see offpanel.js). Above
+// cannot happen, the view reaches the zenith. Parked off-panel while the body is in view.
 const OFF_PANEL = v(1e5, 1e5, 0);
 
 function makeOffPanelArrow(panelIllustration, isSun) {
@@ -348,21 +347,19 @@ function makeOffPanelArrow(panelIllustration, isSun) {
     return { shaft, head, tail };
 }
 
-function updateOffPanelArrow(arrow, point) {
-    const half = ALTAZ_PANEL_SIZE / 2;
-    const inside = Math.abs(point.x) <= half && Math.abs(point.y) <= half;
-    const clamp = (value) => Math.max(-ALTAZ_ARROW_INSET, Math.min(ALTAZ_ARROW_INSET, value));
-    const tip = inside ? OFF_PANEL : v(clamp(point.x), clamp(point.y), 0);
-    const length = Math.hypot(point.x - tip.x, point.y - tip.y) || 1;
-    const [ux, uy] = [(point.x - tip.x) / length, (point.y - tip.y) / length];
-    const back = v(tip.x - ux * ALTAZ_ARROW_LENGTH, tip.y - uy * ALTAZ_ARROW_LENGTH, 0);
-    const base = v(tip.x - ux * ALTAZ_ARROW_HEAD, tip.y - uy * ALTAZ_ARROW_HEAD, 0);
-    const [sx, sy] = [-uy * ALTAZ_ARROW_HEAD * 0.6, ux * ALTAZ_ARROW_HEAD * 0.6];
-    arrow.shaft.path = [back, base];
-    arrow.head.path = [tip, v(base.x + sx, base.y + sy, 0), v(base.x - sx, base.y - sy, 0)];
-    arrow.tail.translate = inside ? OFF_PANEL : v(back.x - ux * 4, back.y - uy * 4, 0);
+function updateOffPanelArrow(arrow, point, unitsPerPx) {
+    const geometry = offPanelArrow(point, ALTAZ_PANEL_SIZE / 2, unitsPerPx);
+    const at = (p) => v(p.x, p.y, 0);
+    arrow.shaft.path = geometry ? geometry.shaft.map(at) : [OFF_PANEL, OFF_PANEL];
+    arrow.head.path = geometry ? geometry.head.map(at) : [OFF_PANEL];
+    arrow.tail.translate = geometry ? at(geometry.tail) : OFF_PANEL;
+    if (geometry) {
+        for (const shape of [arrow.shaft, arrow.head, arrow.tail]) shape.stroke = geometry.stroke;
+        arrow.tail.diameter = geometry.tailDiameter;
+    }
     arrow.shaft.updatePath();
     arrow.head.updatePath();
+    arrow.tail.updatePath();
 }
 
 // The eight compass directions as HTML labels sitting on the horizon line, placed by azimuth with the same tangent
@@ -417,8 +414,10 @@ function updateAltAzPanel(panel, anchorHorizontal, otherHorizontal) {
     panel.other.dot.translate = otherPoint;
     updateAltAzDotRays(panel.anchor, anchorPoint);
     updateAltAzDotRays(panel.other, otherPoint);
-    updateOffPanelArrow(panel.anchor.arrow, anchorPoint);
-    updateOffPanelArrow(panel.other.arrow, otherPoint);
+    // The panel's SVG is drawn at whatever size the page gives it; the arrows keep their size in screen pixels.
+    const unitsPerPx = ALTAZ_PANEL_SIZE / (panel.element.clientWidth || ALTAZ_PANEL_SIZE);
+    updateOffPanelArrow(panel.anchor.arrow, anchorPoint, unitsPerPx);
+    updateOffPanelArrow(panel.other.arrow, otherPoint, unitsPerPx);
     panel.illustration.updateRenderGraph();
     for (const { element, azimuth } of panel.compass) {
         const d = azimuthDelta(anchorHorizontal.azimuth, azimuth);
@@ -516,8 +515,13 @@ function frame() {
 
     const sunHorizontal = precise.sun.horizontalPosition(time, latitude, longitude);
     const moonHorizontal = precise.moon.horizontalPosition(time, latitude, longitude);
-    updateAltAzPanel(sunView, sunHorizontal, moonHorizontal);
-    updateAltAzPanel(moonView, moonHorizontal, sunHorizontal);
+    // The locked views show sunrise and sunset to the second, so their altitudes are over the visible horizon: lifted by
+    // refraction, the horizon lowered by the observer's height (see horizon.js). The horizon line stays where it is.
+    const overHorizon = (h) => ({ ...h, altitude: aboveVisibleHorizon(h.altitude, state.heightM) });
+    const sunSeen = overHorizon(sunHorizontal);
+    const moonSeen = overHorizon(moonHorizontal);
+    updateAltAzPanel(sunView, sunSeen, moonSeen);
+    updateAltAzPanel(moonView, moonSeen, sunSeen);
 
     sunAnchor.translate = sunPos;
     sunDisc.rotate = billboardRotate(rotX, rotY);

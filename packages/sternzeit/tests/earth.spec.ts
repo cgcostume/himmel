@@ -130,3 +130,9 @@ test("earth.viewDistanceWithinAtmosphere with refraction lifts a horizon ray, sh
         precise.earth.viewDistanceWithinAtmosphere(0),
     );
 });
+
+test("earth.horizonDip is zero at sea level and about a degree from a 1000 m mountain", () => {
+    expect(precise.earth.horizonDip(0)).toBe(0);
+    expect(precise.earth.horizonDip(1000)).toBeCloseTo(1.015, 2);
+    expect(approx.earth.horizonDip(1000)).toBeCloseTo(precise.earth.horizonDip(1000), 3);
+});

@@ -1,5 +1,7 @@
 import * as precise from "@himmel/sternzeit";
 import Zdog from "zdog";
+import { svgText } from "./figure.js";
+import { aboveVisibleHorizon } from "./horizon.js";
 import { onChange, state } from "./state.js";
 
 const { Illustration, Anchor, Shape, Ellipse, Vector } = Zdog;
@@ -72,6 +74,13 @@ const ground = layer("ground");
 const above = layer("above");
 const layers = [below, ground, above];
 
+// Every altitude here is over the visible horizon, as in the other figures: lifted by refraction, the horizon lowered by
+// the observer's height (see horizon.js). So rising and setting line up with the horizon ring and line to the second.
+function seen(body, time, latitude, longitude) {
+    const horizontal = body.horizontalPosition(time, latitude, longitude);
+    return { ...horizontal, altitude: aboveVisibleHorizon(horizontal.altitude, state.heightM) };
+}
+
 // ENU to Zdog, which is y down and z towards the viewer: x east, y up (negated), z north (negated, away from the viewer).
 function skyPoint(horizontal, radius = R) {
     const [e, n, u] = precise.horizontalToDirection(horizontal);
@@ -118,7 +127,7 @@ const localNoon = (jd, longitude) => Math.round(jd + longitude / 360) - longitud
 function samplePath(body, noon, latitude, longitude) {
     const count = HOURS * SAMPLES_PER_HOUR;
     return Array.from({ length: count + 1 }, (_, i) =>
-        body.horizontalPosition(precise.fromJulianDay(noon + (i - count / 2) / count), latitude, longitude),
+        seen(body, precise.fromJulianDay(noon + (i - count / 2) / count), latitude, longitude),
     );
 }
 
@@ -195,25 +204,26 @@ function rebuildPaths() {
         if (i % SAMPLES_PER_HOUR === 0 && sample.altitude >= 0) addDot(sample, INK, 4);
     });
     const time = precise.fromJulianDay(jd);
-    addDot(precise.moon.horizontalPosition(time, latitude, longitude), MUTED, 9);
-    addDot(precise.sun.horizontalPosition(time, latitude, longitude), INK, 12);
+    addDot(seen(precise.moon, time, latitude, longitude), MUTED, 9);
+    addDot(seen(precise.sun, time, latitude, longitude), INK, 12);
 }
 
 function renderAnalemma() {
     const { jd, latitude, longitude } = state;
-    const today = precise.sun.horizontalPosition(precise.fromJulianDay(jd), latitude, longitude);
+    const today = seen(precise.sun, precise.fromJulianDay(jd), latitude, longitude);
     // Azimuths relative to today's, unwrapped, and shrunk by cos(altitude) so both axes are true angles on the sky.
     const points = [];
     for (let day = -ANALEMMA_DAYS; day <= ANALEMMA_DAYS; day++) {
-        const { azimuth, altitude } = precise.sun.horizontalPosition(
-            precise.fromJulianDay(jd + day),
-            latitude,
-            longitude,
-        );
+        const { azimuth, altitude } = seen(precise.sun, precise.fromJulianDay(jd + day), latitude, longitude);
         const deltaAzimuth = ((azimuth - today.azimuth + 540) % 360) - 180;
         points.push({ day, x: deltaAzimuth * Math.cos(altitude * DEG), y: -altitude });
     }
     // A fixed scale, zenith to nadir with the horizon in the middle, so analemmas from different places compare directly.
+    // The viewBox is fitted into the panel keeping its aspect ratio, so the larger of the two scales applies.
+    const unitsPerPx = Math.max(
+        (2 * ANALEMMA_HALF_WIDTH) / (analemmaSvg.clientWidth || 1),
+        180 / (analemmaSvg.clientHeight || 1),
+    );
     const xs = points.map((p) => p.x);
     const centerX = (Math.min(...xs) + Math.max(...xs)) / 2;
     analemmaSvg.setAttribute("viewBox", `${centerX - ANALEMMA_HALF_WIDTH} -90 ${2 * ANALEMMA_HALF_WIDTH} 180`);
@@ -229,7 +239,7 @@ function renderAnalemma() {
     // The compass directions on the horizon, where the x axis is plain azimuth (cos 0 = 1), relative to today's.
     COMPASS.forEach((label, i) => {
         const x = ((i * 45 - today.azimuth + 540) % 360) - 180;
-        if (Math.abs(x - centerX) < 90) svg += `<text x="${f(x)}" y="-2" class="analemma-compass">${label}</text>`;
+        if (Math.abs(x - centerX) < 90) svg += svgText(x, -2, label, "analemma-compass", unitsPerPx);
     });
     svg += `<polyline points="${points.map((p) => `${f(p.x)},${f(p.y)}`).join(" ")}" class="analemma-line"/>`;
     for (const p of points) {
@@ -288,5 +298,7 @@ function update() {
 }
 
 onChange(update);
+// The analemma's text keeps the page's small size in screen pixels, so a resized panel redraws it.
+new ResizeObserver(renderAnalemma).observe(analemmaSvg);
 update();
 requestAnimationFrame(frame);

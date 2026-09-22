@@ -354,3 +354,18 @@ function rayThroughShell(y: number, observerHeightM: number): number {
     if (y < 0 && toGround >= 0) return Math.max(0, -b - Math.sqrt(toGround));
     return -b + Math.sqrt(b * b - ro * ro + top * top);
 }
+
+/**
+ * Dip of the horizon, in degrees: how far below the true horizontal the visible horizon lies for an observer
+ * `observerHeightM` meters above the ground, from the tangent to a spherical Earth, `acos(R / (R + h))`. Geometric only:
+ * terrestrial refraction, which lifts the visible horizon by roughly a tenth of that, is left out.
+ */
+export function horizonDip(observerHeightM: number): number {
+    const R = MEAN_RADIUS_KM * 1000;
+    return Math.acos(R / (R + Math.max(observerHeightM, 0))) * RAD_TO_DEG;
+}
+
+/** The small-angle form of `horizonDip`, `sqrt(2h / R)`: within 0.01% of it anywhere within the atmosphere. */
+export function horizonDipApprox(observerHeightM: number): number {
+    return Math.sqrt((2 * Math.max(observerHeightM, 0)) / (MEAN_RADIUS_KM * 1000)) * RAD_TO_DEG;
+}

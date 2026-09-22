@@ -56,6 +56,7 @@ export const earth = {
     meanObliquity: earthImpl.meanObliquityApprox,
     trueObliquity: earthImpl.trueObliquityApprox,
     viewDistanceWithinAtmosphere: earthImpl.viewDistanceWithinAtmosphereApprox,
+    horizonDip: earthImpl.horizonDipApprox,
 };
 
 // Sun. Same shape as the precise `sun` namespace in `index.ts`, minus `center`/`trueAnomaly`/`trueLongitude`

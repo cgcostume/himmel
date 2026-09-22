@@ -1,0 +1,24 @@
+---
+import Term from "../Term.astro";
+import "./inspector.css";
+---
+
+<figure class="moon-figure">
+    <div class="moon-view">
+        <svg viewBox="-100 -100 200 200" aria-hidden="true"></svg>
+        <p class="moon-status" data-field="status"></p>
+    </div>
+    <figcaption class="figure-caption">
+        The Moon as seen from the chosen place, zenith up: lit by the Sun (arrow), its night side in{" "}
+        <Term of="Earthshine">earthshine</Term> (blue rays, longer when stronger). The grid is the Moon's own, its
+        center shifted by the <Term of="Libration">libration</Term> (arrow, from its mean center to the point we
+        look at) and its north pole (N) turned, against the zenith (dashed), by the{" "}
+        <Term of="Position angle of axis">position angle of the axis</Term> and the{" "}
+        <Term of="Parallactic angle">parallactic angle</Term> (arc). The dashed circles are its size at apogee and perigee.
+        Magnified, with the horizon at the same scale.
+    </figcaption>
+</figure>
+
+<script>
+    import "./moonview.js";
+</script>

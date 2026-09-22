@@ -54,6 +54,7 @@ export const earth = {
     meanObliquity: earthImpl.meanObliquity,
     trueObliquity: earthImpl.trueObliquity,
     viewDistanceWithinAtmosphere: earthImpl.viewDistanceWithinAtmosphere,
+    horizonDip: earthImpl.horizonDip,
 };
 
 // Sun.

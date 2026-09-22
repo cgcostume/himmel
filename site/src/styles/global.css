@@ -10,6 +10,10 @@
     --cyanometer: hsl(207 62% 62%);
     --accent: var(--cyanometer);
     --measure: 46rem;
+    /* The page's text sizes besides body (1rem), lead, h2 and h1: meta for captions, tables, controls and tooltips,
+       small for labels inside figures and the fine print. */
+    --text-meta: 0.85rem;
+    --text-small: 0.75rem;
     --wide: 1140px;
 }
 * {
@@ -43,6 +47,9 @@ pre,
 strong {
     color: var(--accent);
     font-weight: 400;
+}
+h2 {
+    font-size: 1.5rem;
 }
 h1,
 h2,
@@ -78,7 +85,7 @@ h3 {
 .site-footer {
     border-top: 1px solid var(--line);
     color: var(--muted);
-    font-size: 0.8rem;
+    font-size: var(--text-small);
     margin-top: 4rem;
 }
 main {
@@ -114,18 +121,18 @@ main {
 .chapter-list .planned {
     margin-left: 0.6rem;
     color: var(--muted);
-    font-size: 0.8rem;
+    font-size: var(--text-small);
 }
 .chapter-list p {
     margin: 0.25rem 0 0;
     color: var(--muted);
 }
 .footnote {
-    font-size: 0.75em;
+    font-size: var(--text-small);
 }
 code,
 pre {
-    font-size: 85%;
+    font-size: var(--text-meta);
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: 4px;
@@ -148,7 +155,7 @@ input,
 button,
 select {
     font-family: "Roboto Mono", ui-monospace, monospace;
-    font-size: 85%;
+    font-size: var(--text-meta);
     line-height: 1.4;
     height: 1.65rem;
     background: var(--surface);
@@ -218,7 +225,7 @@ input[type="number"]::-webkit-outer-spin-button {
     border-radius: 6px;
     box-shadow: 0 8px 24px rgb(0 0 0 / 0.5);
     color: var(--text);
-    font-size: 0.85rem;
+    font-size: var(--text-meta);
     font-style: normal;
     font-weight: 300;
     line-height: 1.5;
@@ -242,7 +249,7 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 /* Every visualization is a numbered figure, counted through the page by CSS alone. */
 .figure-caption {
-    font-size: 0.85rem;
+    font-size: var(--text-meta);
     color: var(--muted);
 }
 .figure-caption::before {
@@ -256,7 +263,7 @@ input[type="number"]::-webkit-outer-spin-button {
     padding: 0.6rem 1rem;
     border: 1px solid var(--line);
     border-radius: 6px;
-    font-size: 0.9rem;
+    font-size: var(--text-meta);
 }
 .toc ol {
     margin: 0;
@@ -272,24 +279,24 @@ h2 {
 }
 .chapter-meta {
     color: var(--muted);
-    font-size: 0.85rem;
+    font-size: var(--text-meta);
 }
 /* Numbered citations share the glossary terms' tooltip. */
 .cite {
     position: relative;
-    font-size: 0.8em;
+    font-size: var(--text-small);
     vertical-align: super;
     line-height: 0;
 }
 .cite-tip {
     vertical-align: baseline;
     line-height: 1.5;
-    font-size: 0.8rem;
+    font-size: var(--text-small);
 }
 .references {
     margin-top: 3rem;
     border-top: 1px solid var(--line);
-    font-size: 0.9rem;
+    font-size: var(--text-meta);
 }
 .references li {
     margin-bottom: 0.5rem;

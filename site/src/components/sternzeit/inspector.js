@@ -85,6 +85,7 @@ const NOTES = {
         "Here: from the Sun's true altitude right now, at the observer's height; n/a once it is more than 1° below the horizon.",
     atmosphericRefractionFromApparent:
         "Here: from the Sun's apparent altitude, the direction a renderer's view ray already has.",
+    horizonDip: "Here: at the observer's height.",
 };
 
 const escapeAttribute = (text) => text.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
@@ -142,6 +143,7 @@ const CALL_OVERRIDES = {
     parallacticAngle: (fn, jd) => fn(precise.fromJulianDay(jd), state.latitude, state.longitude),
     sunDirection: (fn, jd) => fn(precise.fromJulianDay(jd), state.latitude, state.longitude),
     airPressureRatio: (fn) => fn(state.heightM),
+    horizonDip: (fn) => fn(state.heightM),
     // lunar takes just jd like the fn(jd) default already handles; only solar needs observer location too.
     solar: (fn, jd) => fn(precise.fromJulianDay(jd), state.latitude, state.longitude),
 };

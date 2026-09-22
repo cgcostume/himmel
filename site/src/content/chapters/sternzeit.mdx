@@ -23,6 +23,7 @@ import Cite from "../../components/Cite.astro";
 import Controls from "../../components/sternzeit/Controls.astro";
 import DayArc from "../../components/sternzeit/DayArc.astro";
 import Eclipse from "../../components/sternzeit/Eclipse.astro";
+import MoonView from "../../components/sternzeit/MoonView.astro";
 import Scene from "../../components/sternzeit/Scene.astro";
 import Table from "../../components/sternzeit/Table.astro";
 import Term from "../../components/Term.astro";
@@ -175,6 +176,9 @@ an almost full Earth, that <Term of="Earthshine">earthshine</Term> gives the unl
 ashen glow. How strong it is follows from the Earth's phase as seen from the Moon <Cite id="vandehulst1980" />, scaled
 by the Earth's albedo <Cite id="jensen2001" />.
 
+<MoonView />
+<Controls />
+
 ## Eclipses
 
 With both bodies located, eclipses come almost for free. A solar eclipse is a matter of perspective: the Moon passing
@@ -189,8 +193,8 @@ nothing to see. The fixed 0.5 boundary is what makes the phase usable as a textu
 
 Most of the time there is nothing to see, hence the two buttons. The total solar eclipse of August 12th, 2026 crossed
 northern Spain in the evening, low over the western horizon: step the Julian Day by minutes from its maximum over
-Burgos and watch the Moon slide across. The total lunar eclipse of March 3rd, 2026 happened for the whole night side of
-Earth at once; from Europe the Moon had already set, from Honolulu it stood high in the middle of the night. The Moon
+Burgos and watch the Moon slide across. The total lunar eclipse of September 28th, 2015 happened for the whole night side
+of Earth at once; over Potsdam, the Moon, close to perigee, stood well above the western horizon before dawn. The Moon
 darkens in the penumbra first, barely noticeable, then turns a dark red in the umbra, lit only by sunlight that Earth's
 atmosphere bends around the planet. The panel only hints at that color; rendering it properly, along with the Moon's
 surface, is the job of [nachtgestirn](../nachtgestirn/).

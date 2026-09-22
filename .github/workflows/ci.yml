@@ -18,8 +18,9 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
+      # Build first: packages typecheck against each other's dist (e.g. dunstkreis' tests import @himmel/sternzeit).
+      - run: pnpm build
       - run: pnpm typecheck
       - run: pnpm lint
-      - run: pnpm build
       - run: npx playwright install --with-deps chromium
       - run: pnpm test
