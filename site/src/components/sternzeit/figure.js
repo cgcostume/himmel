@@ -59,22 +59,25 @@ export function gridLine(y, left, right, label, unitsPerPx) {
     return svgText(start - GRID_LABEL_GAP_PX * unitsPerPx, y, label, "figure-grid-label", unitsPerPx) + line;
 }
 
+// Earthshine peaks at about this, relative to full sunlight (see moon.earthshine): the night side is at its bluest.
+export const EARTHSHINE_MAX = 0.095;
+
 /**
  * The Moon as a symbol at (x, y): a disc of `radius` with `lit` of it (0 to 1) shining towards (dx, dy), the way it
- * would look to the eye. The terminator is the ellipse it really is, so the crescent bulges the right way.
+ * would look to the eye. The terminator is the ellipse it really is, so the crescent bulges the right way, and the
+ * night side carries the earthshine, which is at its strongest with the least of the Moon lit.
  */
-export function moonSymbol(x, y, radius, lit, dx, dy) {
+export function moonSymbol(x, y, radius, lit, dx, dy, earthshine = 0) {
     const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
     const waist = (radius * Math.abs(1 - 2 * lit)).toFixed(2);
     // Counterclockwise back over the bright side for a crescent, clockwise around the dark one for a gibbous moon.
     const sweep = lit < 0.5 ? 0 : 1;
     const limb = `M 0 ${-radius} A ${radius} ${radius} 0 0 1 0 ${radius}`;
     const terminator = `A ${waist} ${radius} 0 0 ${sweep} 0 ${-radius}`;
-    // Half the dotted outline's own width (see .figure-moon), so the stroke falls inside the disc: SVG centers it on
-    // the path, and the half sticking out would make the limb look ragged where the lit part covers it exactly.
-    const outline = (radius - 0.4).toFixed(2);
+    const glow = (Math.min(earthshine, EARTHSHINE_MAX) / EARTHSHINE_MAX).toFixed(3);
     return `<g transform="translate(${x.toFixed(2)} ${y.toFixed(2)}) rotate(${angle.toFixed(2)})">
-        <circle r="${outline}" class="figure-moon"/><path d="${limb} ${terminator} Z" class="figure-moon-lit"/></g>`;
+        <circle r="${radius}" class="figure-moon" style="--earthshine: ${glow}"/>
+        <path d="${limb} ${terminator} Z" class="figure-moon-lit"/></g>`;
 }
 
 /**

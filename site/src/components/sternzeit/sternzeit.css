@@ -306,25 +306,22 @@ tbody tr:hover {
     stroke-linecap: round;
     stroke-dasharray: 0.1 3;
 }
-/* The Moon wherever it stands as a symbol: the disc in the night's own shade, outlined in the same dotted stroke the
-   armillary sphere draws its unlit sides with, and the lit part of it filled in the Sun's. */
+/* The Moon wherever it stands as a symbol: the lit part in the Sun's own shade, the night side in the earthshine it
+   is actually seen by, which is at its bluest around new moon and gone by full moon (--earthshine, 0 to 1). */
 .figure-moon {
-    fill: var(--surface);
-    stroke: var(--muted);
-    stroke-width: 0.8;
-    stroke-linecap: round;
-    stroke-dasharray: 0.1 1.6;
+    fill: color-mix(in srgb, var(--accent) calc(var(--earthshine, 0) * 45%), var(--surface));
 }
 .figure-moon-lit {
     fill: var(--muted);
 }
 /* Below its panel, small, like the analemma's. */
+/* No nowrap: absolutely positioned inside the panel, the caption takes the panel's width and wraps within it. */
 .altaz-caption {
     position: absolute;
     top: calc(100% + 0.3em);
     left: 0;
+    width: 100%;
     background: var(--bg);
-    white-space: nowrap;
     font-size: var(--text-small);
     line-height: 1.3;
     color: var(--muted);
@@ -792,7 +789,6 @@ tbody tr:hover {
         position: static;
         display: block;
         margin-top: 0.3em;
-        white-space: normal;
     }
     .analemma-panel {
         /* Relative, not static: its own download button would otherwise anchor itself to the scene above. Relative
