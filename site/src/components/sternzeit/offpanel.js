@@ -7,7 +7,6 @@ const HEAD_LENGTH_PX = 4;
 const HEAD_HALF_WIDTH_PX = 2.4;
 const TAIL_DIAMETER_PX = 5;
 const TAIL_GAP_PX = 1.5;
-export const OFF_PANEL_STROKE_PX = 1;
 
 /**
  * The arrow towards `point` (x right, y down, relative to the panel's center) on a square panel of half size `half`, in
@@ -39,6 +38,15 @@ function arrow(tip, ux, uy, unitsPerPx) {
         head: [tip, { x: base.x + sx, y: base.y + sy }, { x: base.x - sx, y: base.y - sy }],
         tail: along(LENGTH_PX + TAIL_GAP_PX + TAIL_DIAMETER_PX / 2),
         tailDiameter: TAIL_DIAMETER_PX * unitsPerPx,
-        stroke: OFF_PANEL_STROKE_PX * unitsPerPx,
     };
+}
+
+/** The arrow as SVG markup, drawn in the body's own look (see .off-panel in sternzeit.css). */
+export function offPanelArrowSvg(arrow, isSun) {
+    const f = (n) => n.toFixed(2);
+    const [a, b] = arrow.shaft;
+    return `<g class="off-panel ${isSun ? "off-panel-sun" : "off-panel-moon"}">
+        <line x1="${f(a.x)}" y1="${f(a.y)}" x2="${f(b.x)}" y2="${f(b.y)}"/>
+        <polygon points="${arrow.head.map((p) => `${f(p.x)},${f(p.y)}`).join(" ")}"/>
+        <circle cx="${f(arrow.tail.x)}" cy="${f(arrow.tail.y)}" r="${f(arrow.tailDiameter / 2)}"/></g>`;
 }

@@ -1,11 +1,11 @@
 ---
 import Term from "../Term.astro";
-import "./inspector.css";
+import "./sternzeit.css";
 ---
 
 <figure class="eclipse-figure">
 <div class="eclipse-views">
-    <figure class="eclipse-view" data-kind="solar">
+    <figure class="eclipse-view" data-kind="solar" data-export="solar-eclipse">
         <svg viewBox="-100 -100 200 200" aria-hidden="true"></svg>
         <figcaption>
             <span class="eclipse-title">solar</span>, as seen from the chosen place: <span data-field="status"></span>
@@ -13,7 +13,7 @@ import "./inspector.css";
             <button type="button" data-jump="solar">jump to Burgos, 2026-08-12</button>
         </figcaption>
     </figure>
-    <figure class="eclipse-view" data-kind="lunar">
+    <figure class="eclipse-view" data-kind="lunar" data-export="lunar-eclipse">
         <svg viewBox="-100 -100 200 200" aria-hidden="true"></svg>
         <figcaption>
             <span class="eclipse-title">lunar</span>, the same from anywhere: <span data-field="status"></span>

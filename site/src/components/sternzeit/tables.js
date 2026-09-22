@@ -1,8 +1,10 @@
 import * as precise from "@himmel/sternzeit";
 import * as approx from "@himmel/sternzeit/approx";
 import { lookupEntry } from "../../lib/glossary";
+import { escapeText } from "./figure.js";
 import { formatDMS } from "./format.js";
 import { GLOSSARY_TERMS } from "./glossary-map.js";
+import { REFRACTION_FLOOR_DEG } from "./horizon.js";
 import { onChange, state } from "./state.js";
 
 // Unit of each export's return value (or of an object return's fields, which all share one unit here).
@@ -88,8 +90,6 @@ const NOTES = {
     horizonDip: "Here: at the observer's height.",
 };
 
-const escapeAttribute = (text) => text.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
-
 // Same markup and styling as the Term component in the text: a dotted underline with a tooltip.
 function tooltip(label, tipHtml) {
     return `<span class="term" tabindex="0">${label}<span class="term-tip" role="tooltip">${tipHtml}</span></span>`;
@@ -103,14 +103,12 @@ function nameCell(name, field) {
     const own = DESCRIPTIONS[key] ?? (field ? undefined : DESCRIPTIONS[name]);
     const note = NOTES[key] ?? NOTES[name];
     if (!entry && !own) return `<td>${label}</td>`;
-    const [title, text] = entry ? [entry.term, entry.html] : [own[0], escapeAttribute(own[1])];
-    const context = note ? `<span class="tip-note">${escapeAttribute(note)}</span>` : "";
-    const definition = `<strong>${escapeAttribute(title)}</strong> ${text}${context}`;
+    const [title, text] = entry ? [entry.term, entry.html] : [own[0], escapeText(own[1])];
+    const context = note ? `<span class="tip-note">${escapeText(note)}</span>` : "";
+    const definition = `<strong>${escapeText(title)}</strong> ${text}${context}`;
     return `<td>${tooltip(label, definition)}</td>`;
 }
 
-// How to call an export that isn't just fn(julianDay). Anything not listed here falls back to
-// fn.length === 0 ? fn() : fn(jd).
 // The Sun's current true altitude: what the refraction and view-distance rows are evaluated for, since they need a
 // direction and the Sun's is the one a sky renderer cares about most.
 function sunAltitude(jd) {
@@ -118,7 +116,6 @@ function sunAltitude(jd) {
 }
 
 // Refraction is only meaningful for a body at or near the horizon, not for one well below it: null reads as n/a.
-const REFRACTION_FLOOR_DEG = -1;
 function refractionTowardsSun(fn, jd, apparent) {
     const altitude = sunAltitude(jd);
     if (altitude < REFRACTION_FLOOR_DEG) return null;
@@ -134,7 +131,7 @@ const CALL_OVERRIDES = {
     atmosphericRefractionFromApparent: (fn, jd) => refractionTowardsSun(fn, jd, true),
     // y = sin(altitude), the vertical component of a unit view direction vector.
     viewDistanceWithinAtmosphere: (fn, jd) =>
-        fn(Math.sin(sunAltitude(jd) * DEG_TO_RAD), { observerHeightM: state.heightM }),
+        fn(Math.sin(sunAltitude(jd) * precise.DEG_TO_RAD), { observerHeightM: state.heightM }),
     // jd is already an absolute instant; fromJulianDay(jd) (offset 0) round-trips it as a UT AstronomicalTime,
     // which is what julianDayUT() inside horizontalPosition/parallacticAngle expects. A nonzero offset here
     // would double-shift the instant, since jd carries no timezone to begin with.
@@ -178,15 +175,12 @@ function formatDegreesLike(rawValue, rawSuffix, degreesValue) {
     return `${paren}  ${formatDMS(degreesValue)}`;
 }
 
-const RAD_TO_DEG = 180 / Math.PI;
-const DEG_TO_RAD = Math.PI / 180;
-
 function formatNumber(n, unit) {
     if (!Number.isFinite(n)) return String(n);
     if (unit === "deg") return formatDegreesLike(n, "°", n);
     // The unit column still says "rad" (that's genuinely what the export returns); only the DMS half
     // converts to degrees; the parenthetical stays the actual raw radian value, not a converted one.
-    if (unit === "rad") return formatDegreesLike(n, "", n * RAD_TO_DEG);
+    if (unit === "rad") return formatDegreesLike(n, "", n * precise.RAD_TO_DEG);
     return formatDecimal(n, unit);
 }
 
@@ -286,7 +280,7 @@ function computeRows(names, preciseNs, approxNs, jd) {
         .join("");
 }
 
-// biome-ignore lint/performance/noDynamicNamespaceImportAccess: the inspector lists every export, so it needs the whole namespace anyway
+// biome-ignore lint/performance/noDynamicNamespaceImportAccess: the tables list every export, so it needs the whole namespace anyway
 const namespacesOf = (domainName) => [precise[domainName], approx[domainName]];
 
 function renderDomain(domainName, jd) {

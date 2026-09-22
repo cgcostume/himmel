@@ -1,7 +1,7 @@
 import * as precise from "@himmel/sternzeit";
 
 // The refraction fit holds down to about a degree below the horizon; lower, it is taken as constant.
-const REFRACTION_FLOOR_DEG = -1;
+export const REFRACTION_FLOOR_DEG = -1;
 
 /**
  * How far a body at `trueAltitude` (degrees) stands above the visible horizon of an observer `heightM` above the ground:

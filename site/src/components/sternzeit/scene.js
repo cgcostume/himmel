@@ -1,11 +1,13 @@
 import * as precise from "@himmel/sternzeit";
 import Zdog from "zdog";
+import { COMPASS, cssColor, labelAboveY, svgText } from "./figure.js";
 import { aboveVisibleHorizon } from "./horizon.js";
-import { offPanelArrow } from "./offpanel.js";
+import { offPanelArrow, offPanelArrowSvg } from "./offpanel.js";
 import { state } from "./state.js";
+import "./export.js";
 
 const { Illustration, Anchor, Shape, Ellipse, Vector } = Zdog;
-const DEG = Math.PI / 180;
+const DEG = precise.DEG_TO_RAD;
 
 // Schematic, not to scale: sizes/distances chosen for visibility, not physical proportion. MOON_DIST/
 // SUN_DIST aren't simply EARTH_R*2 scaled: the whole scene auto-zooms to fit the viewport (see
@@ -29,14 +31,11 @@ const APPARENT_SIZE_SCALE = (SUN_R * 2) / (precise.sun.apparentAngularDiameter(p
 
 const KM_TO_SCENE = EARTH_R / precise.earth.MEAN_RADIUS_KM;
 const ATMOSPHERE_SHELL_DIAMETER = 2 * (EARTH_R + precise.earth.ATMOSPHERE_THICKNESS_KM * KM_TO_SCENE);
-const cssColor = (name, fallback) =>
-    getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
 const PAGE_ACCENT = cssColor("--accent", "#5aa9ff");
 // Every stroke that was plain black on the old light page: the site's text color, so the scene follows the theme.
 const INK = cssColor("--text", "#d6dae3");
 // The Moon's color in every figure except the eclipse panels (which show how it really looks): muted grey.
 const MOON_INK = cssColor("--muted", "#8a92a3");
-const SURFACE = cssColor("--surface", "#12151c");
 
 function v(x, y, z) {
     return { x, y, z };
@@ -266,10 +265,10 @@ function tangentPx(degreesFromCenter) {
     if (Math.abs(degreesFromCenter) >= 90) return Math.sign(degreesFromCenter || 1) * 1e5;
     return Math.tan(degreesFromCenter * DEG) * ALTAZ_FOCAL_PX;
 }
-// The horizon's fixed screen height, in panel-local pixels (0 = panel center, positive = downward): reused
-// to draw the horizon line itself and to place the compass labels on it (see makeCompass).
+// The horizon's fixed height, in panel units (0 = panel center, positive = downward): where the horizon line is drawn
+// and the compass labels sit (see updateAltAzPanel).
 const ALTAZ_HORIZON_Y = -tangentPx(-ALTAZ_LOOK_UP_DEG);
-const ALTAZ_DOT_DIAMETER = 10;
+const ALTAZ_DOT_RADIUS = 5;
 // Mini versions of the main scene's sunrays (see SUN_RAY_COUNT above): cheaper to read at a glance than an
 // "S"/"M" text label, and reuses a motif the viewer already knows means "this one's the sun" from the main
 // scene, rather than introducing a new convention.
@@ -277,106 +276,33 @@ const ALTAZ_SUN_RAY_COUNT = 8;
 const ALTAZ_SUN_RAY_GAP = 3;
 const ALTAZ_SUN_RAY_LENGTH = 5;
 
-// A fixed per-species look, regardless of anchor/other role: the sun is a solid-outlined, unfilled ring plus
-// rays (below); the moon is a plain solid MOON_INK disc. The anchor/other role is instead legible from position
-// alone (the anchor always sits at dead-center, see updateAltAzPanel), so it doesn't need its own styling too.
-function makeAltAzDot(panelIllustration, isSun) {
-    const dot = new Ellipse({
-        addTo: panelIllustration,
-        diameter: ALTAZ_DOT_DIAMETER,
-        color: isSun ? INK : MOON_INK,
-        stroke: 1,
-        fill: !isSun,
-    });
-    const rays = isSun
-        ? Array.from(
-              { length: ALTAZ_SUN_RAY_COUNT },
-              () => new Shape({ addTo: panelIllustration, path: [v(0, 0, 0), v(0, 0, 0)], stroke: 1, color: INK }),
-          )
-        : [];
-    return { dot, rays, isSun };
+// A fixed per-species look, regardless of anchor/other role: the sun is a white disc plus rays, the moon a muted
+// disc. The anchor/other role is legible from position alone (the anchor always sits at dead-center horizontally).
+function altAzBody({ x, y }, isSun) {
+    if (!isSun) return `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${ALTAZ_DOT_RADIUS}" class="altaz-moon"/>`;
+    const inner = ALTAZ_DOT_RADIUS + ALTAZ_SUN_RAY_GAP;
+    const outer = inner + ALTAZ_SUN_RAY_LENGTH;
+    let svg = `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${ALTAZ_DOT_RADIUS}" class="altaz-sun"/>`;
+    for (let i = 0; i < ALTAZ_SUN_RAY_COUNT; i++) {
+        const [c, s] = [
+            Math.cos((i / ALTAZ_SUN_RAY_COUNT) * 2 * Math.PI),
+            Math.sin((i / ALTAZ_SUN_RAY_COUNT) * 2 * Math.PI),
+        ];
+        const [x1, y1, x2, y2] = [x + inner * c, y + inner * s, x + outer * c, y + outer * s].map((n) => n.toFixed(2));
+        svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="altaz-sun-ray"/>`;
+    }
+    return svg;
 }
 
 function makeAltAzPanel(elementSelector, anchorIsSun) {
+    const element = document.querySelector(elementSelector);
+    const half = ALTAZ_PANEL_SIZE / 2;
+    element.setAttribute("viewBox", `${-half} ${-half} ${ALTAZ_PANEL_SIZE} ${ALTAZ_PANEL_SIZE}`);
     // Appended here (not hardcoded in the markup) so the caption can never drift out of sync with
     // ALTAZ_FIELD_OF_VIEW_DEG above.
-    const caption = document.querySelector(elementSelector).closest(".altaz-panel")?.querySelector(".altaz-caption");
+    const caption = element.closest(".altaz-panel")?.querySelector(".altaz-caption");
     if (caption) caption.textContent += `, ${ALTAZ_FIELD_OF_VIEW_DEG}° FOV, tilted ${ALTAZ_LOOK_UP_DEG}° up`;
-    const panelIllustration = new Illustration({ element: elementSelector, zoom: 1 });
-    panelIllustration.setSize(ALTAZ_PANEL_SIZE, ALTAZ_PANEL_SIZE);
-    // Fixed forever at this height (see ALTAZ_LOOK_UP_DEG above): unlike the two dots, never touched in
-    // updateAltAzPanel. PAGE_ACCENT rather than black: the one line in these panels worth calling out as
-    // "the ground", distinct from the two bodies.
-    // The ground below the horizon, added first so everything else draws on top of it.
-    const half = ALTAZ_PANEL_SIZE / 2;
-    new Shape({
-        addTo: panelIllustration,
-        path: [v(-half, ALTAZ_HORIZON_Y, 0), v(half, ALTAZ_HORIZON_Y, 0), v(half, half, 0), v(-half, half, 0)],
-        stroke: false,
-        fill: true,
-        color: SURFACE,
-    });
-    const horizon = new Shape({
-        addTo: panelIllustration,
-        path: [v(-1e5, ALTAZ_HORIZON_Y, 0), v(1e5, ALTAZ_HORIZON_Y, 0)],
-        stroke: 1,
-        color: PAGE_ACCENT,
-    });
-    // The sun's shapes are always added before the moon's, regardless of which one plays anchor/other in
-    // this panel, so the moon renders on top whenever the two nearly overlap (an occultation/eclipse should
-    // show the moon in front), not whichever body happens to be this panel's anchor.
-    const sunDot = makeAltAzDot(panelIllustration, true);
-    const moonDot = makeAltAzDot(panelIllustration, false);
-    const anchor = anchorIsSun ? sunDot : moonDot;
-    const other = anchorIsSun ? moonDot : sunDot;
-    anchor.arrow = makeOffPanelArrow(panelIllustration, anchorIsSun);
-    other.arrow = makeOffPanelArrow(panelIllustration, !anchorIsSun);
-    const element = document.querySelector(elementSelector);
-    return { illustration: panelIllustration, element, horizon, anchor, other, compass: makeCompass(elementSelector) };
-}
-
-// A body outside the panel, usually far below the horizon, gets the shared off-panel arrow (see offpanel.js). Above
-// cannot happen, the view reaches the zenith. Parked off-panel while the body is in view.
-const OFF_PANEL = v(1e5, 1e5, 0);
-
-function makeOffPanelArrow(panelIllustration, isSun) {
-    const color = isSun ? INK : MOON_INK;
-    const shaft = new Shape({ addTo: panelIllustration, path: [OFF_PANEL, OFF_PANEL], stroke: 1, color });
-    const head = new Shape({ addTo: panelIllustration, path: [OFF_PANEL], stroke: 1, color, fill: true });
-    const tail = new Ellipse({ addTo: panelIllustration, diameter: 5, stroke: 1, color, fill: !isSun });
-    return { shaft, head, tail };
-}
-
-function updateOffPanelArrow(arrow, point, unitsPerPx) {
-    const geometry = offPanelArrow(point, ALTAZ_PANEL_SIZE / 2, unitsPerPx);
-    const at = (p) => v(p.x, p.y, 0);
-    arrow.shaft.path = geometry ? geometry.shaft.map(at) : [OFF_PANEL, OFF_PANEL];
-    arrow.head.path = geometry ? geometry.head.map(at) : [OFF_PANEL];
-    arrow.tail.translate = geometry ? at(geometry.tail) : OFF_PANEL;
-    if (geometry) {
-        for (const shape of [arrow.shaft, arrow.head, arrow.tail]) shape.stroke = geometry.stroke;
-        arrow.tail.diameter = geometry.tailDiameter;
-    }
-    arrow.shaft.updatePath();
-    arrow.head.updatePath();
-    arrow.tail.updatePath();
-}
-
-// The eight compass directions as HTML labels sitting on the horizon line, placed by azimuth with the same tangent
-// mapping as the bodies: as the panel follows its body across the sky, the directions pass by along the horizon.
-const COMPASS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"].map((label, i) => ({ label, azimuth: i * 45 }));
-
-function makeCompass(elementSelector) {
-    const panel = document.querySelector(elementSelector).closest(".altaz-panel");
-    const horizonTopPercent = ((ALTAZ_PANEL_SIZE / 2 + ALTAZ_HORIZON_Y) / ALTAZ_PANEL_SIZE) * 100;
-    return COMPASS.map(({ label, azimuth }) => {
-        const element = document.createElement("span");
-        element.className = "altaz-compass";
-        element.textContent = label;
-        element.style.top = `calc(${horizonTopPercent}% - 0.3rem)`;
-        panel?.append(element);
-        return { element, azimuth };
-    });
+    return { element, anchorIsSun, drawn: "" };
 }
 const sunView = makeAltAzPanel("#sunView", true);
 const moonView = makeAltAzPanel("#moonView", false);
@@ -387,44 +313,51 @@ function azimuthDelta(fromAzimuth, toAzimuth) {
     return ((((toAzimuth - fromAzimuth) % 360) + 540) % 360) - 180;
 }
 
-function updateAltAzDotRays(dotEntry, center) {
-    if (dotEntry.rays.length === 0) return;
-    const inner = ALTAZ_DOT_DIAMETER / 2 + ALTAZ_SUN_RAY_GAP;
-    const outer = inner + ALTAZ_SUN_RAY_LENGTH;
-    dotEntry.rays.forEach((ray, i) => {
-        const angle = (i / dotEntry.rays.length) * 2 * Math.PI;
-        const cosA = Math.cos(angle);
-        const sinA = Math.sin(angle);
-        ray.path = [
-            v(center.x + inner * cosA, center.y + inner * sinA, 0),
-            v(center.x + outer * cosA, center.y + outer * sinA, 0),
-        ];
-        ray.updatePath();
-    });
-}
-
 function updateAltAzPanel(panel, anchorHorizontal, otherHorizontal) {
+    // The panel is drawn at whatever size the page gives it; arrows and labels keep their size in screen pixels.
+    const unitsPerPx = ALTAZ_PANEL_SIZE / (panel.element.clientWidth || ALTAZ_PANEL_SIZE);
+    // Redrawn only when something changed, not every frame of the main scene.
+    const key = [
+        anchorHorizontal.altitude,
+        anchorHorizontal.azimuth,
+        otherHorizontal.altitude,
+        otherHorizontal.azimuth,
+        unitsPerPx,
+    ].join();
+    if (key === panel.drawn) return;
+    panel.drawn = key;
+
     // Anchor: x=0 by construction (it defines this panel's azimuth origin); y from its own true altitude
     // (shifted by ALTAZ_LOOK_UP_DEG, same as the horizon), tangent-mapped like everything else, so it moves
     // like any other point, not locked to panel center.
     const anchorPoint = { x: 0, y: -tangentPx(anchorHorizontal.altitude - ALTAZ_LOOK_UP_DEG) };
     const dAz = azimuthDelta(anchorHorizontal.azimuth, otherHorizontal.azimuth);
     const otherPoint = { x: tangentPx(dAz), y: -tangentPx(otherHorizontal.altitude - ALTAZ_LOOK_UP_DEG) };
-    panel.anchor.dot.translate = anchorPoint;
-    panel.other.dot.translate = otherPoint;
-    updateAltAzDotRays(panel.anchor, anchorPoint);
-    updateAltAzDotRays(panel.other, otherPoint);
-    // The panel's SVG is drawn at whatever size the page gives it; the arrows keep their size in screen pixels.
-    const unitsPerPx = ALTAZ_PANEL_SIZE / (panel.element.clientWidth || ALTAZ_PANEL_SIZE);
-    updateOffPanelArrow(panel.anchor.arrow, anchorPoint, unitsPerPx);
-    updateOffPanelArrow(panel.other.arrow, otherPoint, unitsPerPx);
-    panel.illustration.updateRenderGraph();
-    for (const { element, azimuth } of panel.compass) {
-        const d = azimuthDelta(anchorHorizontal.azimuth, azimuth);
-        const visible = Math.abs(d) <= ALTAZ_FIELD_OF_VIEW_DEG / 2;
-        element.style.visibility = visible ? "visible" : "hidden";
-        if (visible) element.style.left = `${50 + (tangentPx(d) / ALTAZ_PANEL_SIZE) * 100}%`;
+    const [sunPoint, moonPoint] = panel.anchorIsSun ? [anchorPoint, otherPoint] : [otherPoint, anchorPoint];
+
+    // The ground below the fixed horizon (see ALTAZ_LOOK_UP_DEG above), first, so everything else draws on top of it.
+    const half = ALTAZ_PANEL_SIZE / 2;
+    const y = ALTAZ_HORIZON_Y.toFixed(2);
+    let svg = `<rect x="${-half}" y="${y}" width="${ALTAZ_PANEL_SIZE}" height="${(half - ALTAZ_HORIZON_Y).toFixed(2)}" class="figure-ground"/>`;
+    svg += `<line x1="${-half}" y1="${y}" x2="${half}" y2="${y}" class="figure-horizon"/>`;
+    // The compass directions on the horizon, placed by azimuth with the same tangent mapping as the bodies: as the
+    // panel follows its body across the sky, the directions pass by along the horizon.
+    COMPASS.forEach((label, i) => {
+        const d = azimuthDelta(anchorHorizontal.azimuth, i * 45);
+        if (Math.abs(d) > ALTAZ_FIELD_OF_VIEW_DEG / 2) return;
+        svg += svgText(tangentPx(d), labelAboveY(ALTAZ_HORIZON_Y, unitsPerPx), label, "figure-label", unitsPerPx);
+    });
+    // The sun before the moon, whichever is the anchor, so the moon renders in front whenever the two nearly overlap.
+    svg += altAzBody(sunPoint, true) + altAzBody(moonPoint, false);
+    // A body outside the panel, usually far below the horizon, gets the shared off-panel arrow (see offpanel.js).
+    for (const [point, isSun] of [
+        [sunPoint, true],
+        [moonPoint, false],
+    ]) {
+        const arrow = offPanelArrow(point, half, unitsPerPx);
+        if (arrow) svg += offPanelArrowSvg(arrow, isSun);
     }
+    panel.element.innerHTML = svg;
 }
 
 // Zdog's SVG renderer scales stroke-width along with everything else in the viewBox (see the zoom comment
@@ -624,14 +557,6 @@ function frame() {
     orbitEllipse.svgElement?.setAttribute("stroke-linecap", "round");
     latitudeRing.svgElement?.setAttribute("stroke-dasharray", lineDash);
     meridianRing.svgElement?.setAttribute("stroke-dasharray", lineDash);
-
-    // The alt-az panels have their own fixed zoom (never changes, see makeAltAzPanel), so their dash lengths
-    // need no zoom-compensation the way the main scene's dotDash/lineDash above do. Only the sun's rays are
-    // dashed; both dots are always solid outlines now (see makeAltAzDot).
-    for (const panel of [sunView, moonView]) {
-        for (const ray of panel.anchor.rays) ray.svgElement?.setAttribute("stroke-dasharray", "0.1,3");
-        for (const ray of panel.other.rays) ray.svgElement?.setAttribute("stroke-dasharray", "0.1,3");
-    }
 
     requestAnimationFrame(frame);
 }

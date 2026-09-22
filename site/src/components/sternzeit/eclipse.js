@@ -1,8 +1,9 @@
 import * as precise from "@himmel/sternzeit";
-import { svgText, topLabelY } from "./figure.js";
+import { svgText, veiledHorizon } from "./figure.js";
 import { aboveVisibleHorizon } from "./horizon.js";
-import { offPanelArrowFromCenter } from "./offpanel.js";
+import { offPanelArrowFromCenter, offPanelArrowSvg } from "./offpanel.js";
 import { onChange, state, update } from "./state.js";
+import "./export.js";
 
 // Both panels share a 200 x 200 viewBox centered on the origin: the Sun, or the axis of Earth's shadow, sits in the middle.
 const HALF = 100;
@@ -46,12 +47,7 @@ const circle = (x, y, r, cls, extra = "") => `<circle cx="${f(x)}" cy="${f(y)}" 
 /** A body outside the panel: an arrow along the rim pointing towards it, its distance labeled at the bottom (top, if the arrow points down). */
 function offPanelMoon(dx, dy) {
     // Along the direction from the panel's center (the Sun, or the shadow's axis) to the Moon, at the panel's edge.
-    const arrow = offPanelArrowFromCenter({ x: dx, y: dy }, HALF, unitsPerPx);
-    const points = (list) => list.map((p) => `${f(p.x)},${f(p.y)}`).join(" ");
-    const [a, b] = arrow.shaft;
-    return `<line x1="${f(a.x)}" y1="${f(a.y)}" x2="${f(b.x)}" y2="${f(b.y)}" class="eclipse-arrow"/>
-        <polygon points="${points(arrow.head)}" class="eclipse-arrowhead"/>
-        ${circle(arrow.tail.x, arrow.tail.y, arrow.tailDiameter / 2, "eclipse-arrowhead")}`;
+    return offPanelArrowSvg(offPanelArrowFromCenter({ x: dx, y: dy }, HALF, unitsPerPx), false);
 }
 
 function renderSolar(jd) {
@@ -84,13 +80,7 @@ function renderSolar(jd) {
     // the Sun, the observer's height lowers the horizon. The ground veils whatever is beneath.
     const sunAbove = aboveVisibleHorizon(sunAltitude, state.heightM);
     const horizon = sunAbove * scale;
-    if (horizon < HALF) {
-        const top = Math.max(horizon, -HALF);
-        svg += `<rect x="${-HALF}" y="${f(top)}" width="${2 * HALF}" height="${f(HALF - top)}" class="eclipse-veil"/>`;
-        if (horizon > -HALF)
-            svg += `<line x1="${-HALF}" y1="${f(horizon)}" x2="${HALF}" y2="${f(horizon)}" class="eclipse-horizon"/>`;
-        else svg += svgText(0, topLabelY(HALF, unitsPerPx), "below the horizon", "eclipse-veil-label", unitsPerPx);
-    }
+    svg += veiledHorizon(horizon, HALF, unitsPerPx);
     if (!onPanel) svg += offPanelMoon(mx, my);
 
     let status;
@@ -134,8 +124,8 @@ function renderLunar(jd) {
     }
     const arrow = onPanelLunar ? "" : offPanelMoon(mx, my);
     svg += circle(0, 0, penumbra, "eclipse-edge") + circle(0, 0, umbra, "eclipse-edge");
-    svg += svgText(0, -umbra + 9, "umbra", "eclipse-label", unitsPerPx);
-    svg += svgText(0, -penumbra + 9, "penumbra", "eclipse-label", unitsPerPx);
+    svg += svgText(0, -umbra + 9, "umbra", "figure-label", unitsPerPx);
+    svg += svgText(0, -penumbra + 9, "penumbra", "figure-label", unitsPerPx);
 
     const km = eclipse.axisOffsetKm;
     const moonKm = precise.moon.MEAN_RADIUS_KM;
@@ -154,8 +144,8 @@ function renderLunar(jd) {
         state.longitude,
     ).altitude;
     if (aboveVisibleHorizon(moonAltitude, state.heightM) < 0) {
-        svg += `<rect x="${-HALF}" y="${-HALF}" width="${2 * HALF}" height="${2 * HALF}" class="eclipse-veil"/>`;
-        svg += svgText(0, topLabelY(HALF, unitsPerPx), "below the horizon", "eclipse-veil-label", unitsPerPx);
+        // The panel's frame is the sky's, not the observer's, so a Moon below the horizon veils all of it.
+        svg += veiledHorizon(-HALF, HALF, unitsPerPx);
         status += " (the Moon is below the horizon at the chosen place)";
     }
     return { svg: svg + arrow, status };
@@ -166,9 +156,9 @@ const views = document.querySelectorAll(".eclipse-view[data-kind]");
 
 function render() {
     for (const view of views) {
-        unitsPerPx = (2 * HALF) / (view.querySelector("svg").clientWidth || 2 * HALF);
+        unitsPerPx = (2 * HALF) / (view.querySelector(":scope > svg").clientWidth || 2 * HALF);
         const { svg, status } = RENDERERS[view.dataset.kind](state.jd);
-        view.querySelector("svg").innerHTML = svg;
+        view.querySelector(":scope > svg").innerHTML = svg;
         view.querySelector('[data-field="status"]').textContent = status;
     }
 }

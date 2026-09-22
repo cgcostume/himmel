@@ -1,4 +1,4 @@
-// Shared by the tables (inspector.js) and the controls (controls.js).
+// Shared by the tables (tables.js) and the controls (controls.js).
 
 // Degrees/minutes/seconds, the conventional astronomical notation. Every field is fixed-width (sign always
 // present, degrees padded to 3 digits, minutes/seconds zero-padded) so the whole string is constant-width,

@@ -1,9 +1,10 @@
 import * as precise from "@himmel/sternzeit";
-import { svgText, topLabelY } from "./figure.js";
+import { svgText, veiledHorizon } from "./figure.js";
 import { aboveVisibleHorizon } from "./horizon.js";
 import { onChange, state } from "./state.js";
+import "./export.js";
 
-const DEG = Math.PI / 180;
+const DEG = precise.DEG_TO_RAD;
 // The Moon's disc at perigee gets this radius in the 200 x 200 viewBox; smaller at any other distance.
 const PERIGEE_RADIUS = 72;
 const PERIGEE_KM = 356500;
@@ -21,7 +22,7 @@ const SUN_ARROW_GAP = 5;
 const SUN_ARROW_LENGTH = 14;
 
 const view = document.querySelector(".moon-view");
-const svgEl = view.querySelector("svg");
+const svgEl = view.querySelector(":scope > svg");
 const statusEl = view.querySelector('[data-field="status"]');
 
 const f = (n) => n.toFixed(2);
@@ -134,7 +135,7 @@ function render() {
     const outside = PERIGEE_RADIUS + 3;
     const [nx, ny] = toScreen([0, 1], tilt, 1);
     svg += `<line x1="${f(nx * radius)}" y1="${f(ny * radius)}" x2="${f(nx * (outside + 7))}" y2="${f(ny * (outside + 7))}" class="moon-axis"/>`;
-    svg += svgText(nx * (outside + 13), ny * (outside + 13), "N", "moon-label", unitsPerPx);
+    svg += svgText(nx * (outside + 13), ny * (outside + 13), "N", "figure-note", unitsPerPx);
     const tiltDeg = ((((tilt + 180) % 360) + 360) % 360) - 180;
     svg += `<line x1="0" y1="${f(-outside)}" x2="0" y2="${f(-(outside + 7))}" class="moon-zenith"/>`;
     const arc = Array.from({ length: 25 }, (_, i) => toScreen([0, 1], (tiltDeg * i) / 24, outside + 4));
@@ -179,13 +180,7 @@ function render() {
     // The visible horizon, below the Moon by its apparent altitude over it, at the disc's own scale (so it only shows
     // within a few tenths of a degree); the ground beneath veils what it hides.
     const horizon = aboveVisibleHorizon(horizontal.altitude, state.heightM) * DEG * UNITS_PER_RADIAN;
-    if (horizon < 100) {
-        const top = Math.max(horizon, -100);
-        svg += `<rect x="-100" y="${f(top)}" width="200" height="${f(100 - top)}" class="eclipse-veil"/>`;
-        if (horizon > -100)
-            svg += `<line x1="-100" y1="${f(horizon)}" x2="100" y2="${f(horizon)}" class="eclipse-horizon"/>`;
-        else svg += svgText(0, topLabelY(100, unitsPerPx), "below the horizon", "eclipse-veil-label", unitsPerPx);
-    }
+    svg += veiledHorizon(horizon, 100, unitsPerPx);
     svgEl.innerHTML = svg;
 
     const minutes = (precise.moon.apparentAngularDiameter(jd) / DEG) * 60;

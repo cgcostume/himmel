@@ -13,7 +13,7 @@ export interface GlossaryEntry {
 const escapeHtml = (text: string) => text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 /** Just the inline markdown the glossary uses: code spans, bold and italics. */
-export function inlineMarkdown(text: string): string {
+function inlineMarkdown(text: string): string {
     return escapeHtml(text)
         .replace(/`([^`]+)`/g, "<code>$1</code>")
         .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")

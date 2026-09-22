@@ -1,11 +1,12 @@
 import * as precise from "@himmel/sternzeit";
 import Zdog from "zdog";
-import { svgText } from "./figure.js";
+import { COMPASS, cssColor, labelAboveY, svgText } from "./figure.js";
 import { aboveVisibleHorizon } from "./horizon.js";
 import { onChange, state } from "./state.js";
+import "./export.js";
 
 const { Illustration, Anchor, Shape, Ellipse, Vector } = Zdog;
-const DEG = Math.PI / 180;
+const DEG = precise.DEG_TO_RAD;
 
 // The sky dome's radius in scene units; the whole scene is zoomed to fit its frame.
 const R = 100;
@@ -24,8 +25,6 @@ const TILT_MIN = -85 * DEG;
 const TILT_MAX = -8 * DEG;
 const DRAG_RADIANS_PER_PX = 0.008;
 
-const cssColor = (name, fallback) =>
-    getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
 const INK = cssColor("--text", "#d6dae3");
 const MUTED = cssColor("--muted", "#8a92a3");
 const SURFACE = cssColor("--surface", "#12151c");
@@ -33,7 +32,7 @@ const ACCENT = cssColor("--accent", "#5aa9ff");
 
 const frameEl = document.querySelector(".dome-scene");
 const compassEl = frameEl.querySelector(".dome-compass");
-const analemmaSvg = frameEl.querySelector(".analemma-panel svg");
+const analemmaSvg = frameEl.querySelector(".analemma-panel > svg");
 const analemmaNote = frameEl.querySelector('[data-field="analemmaNote"]');
 
 // Stroke widths and dash patterns in screen pixels; converted to scene units whenever the zoom changes.
@@ -112,10 +111,10 @@ styled(new Shape({ addTo: above, color: INK }), 4);
 // The day's paths and the two bodies, rebuilt whenever the moment or place changes.
 const dynamic = [new Anchor({ addTo: below }), new Anchor({ addTo: above })];
 
-const COMPASS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
 const compassLabels = COMPASS.map((text, i) => {
     const label = document.createElement("span");
     label.className = "dome-compass-label";
+    label.dataset.exportText = "";
     label.textContent = text;
     compassEl.append(label);
     return { label, point: skyPoint({ azimuth: i * 45, altitude: 0 }, R * 1.12) };
@@ -231,15 +230,18 @@ function renderAnalemma() {
     const f = (n) => n.toFixed(3);
     // The panel may be wider than the viewBox's aspect ratio, so the ground and lines reach well past it.
     const [left, right] = [centerX - 1000, centerX + 1000];
-    let svg = `<rect x="${f(left)}" y="0" width="${f(right - left)}" height="1090" class="analemma-ground"/>`;
+    let svg = `<rect x="${f(left)}" y="0" width="${f(right - left)}" height="1090" class="figure-ground"/>`;
     for (const altitude of [-60, -30, 30, 60]) {
         svg += `<line x1="${f(left)}" y1="${altitude}" x2="${f(right)}" y2="${altitude}" class="analemma-grid"/>`;
     }
-    svg += `<line x1="${f(left)}" y1="0" x2="${f(right)}" y2="0" class="analemma-horizon"/>`;
-    // The compass directions on the horizon, where the x axis is plain azimuth (cos 0 = 1), relative to today's.
+    svg += `<line x1="${f(left)}" y1="0" x2="${f(right)}" y2="0" class="figure-horizon"/>`;
+    // The compass directions on the horizon, where the x axis is plain azimuth (cos 0 = 1), relative to today's; only
+    // those that fit whole into the panel, which shows its width in pixels times unitsPerPx.
+    const labelReach = ((analemmaSvg.clientWidth || 1) / 2 - 12) * unitsPerPx;
     COMPASS.forEach((label, i) => {
         const x = ((i * 45 - today.azimuth + 540) % 360) - 180;
-        if (Math.abs(x - centerX) < 90) svg += svgText(x, -2, label, "analemma-compass", unitsPerPx);
+        if (Math.abs(x - centerX) < labelReach)
+            svg += svgText(x, labelAboveY(0, unitsPerPx), label, "figure-label", unitsPerPx);
     });
     svg += `<polyline points="${points.map((p) => `${f(p.x)},${f(p.y)}`).join(" ")}" class="analemma-line"/>`;
     for (const p of points) {

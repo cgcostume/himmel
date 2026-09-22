@@ -1,22 +1,22 @@
 ---
 import Term from "../Term.astro";
-import "./inspector.css";
+import "./sternzeit.css";
 ---
 
 <figure class="scene-frame wide">
-    <div id="scene">
+    <div id="scene" data-export="armillary-sphere">
         <svg id="stage" aria-hidden="true"></svg>
         <svg class="scene-annotations" aria-hidden="true">
             <path class="annotation-arrow" data-annotation="observer"></path>
             <polygon class="annotation-arrowhead" data-annotation="observer"></polygon>
         </svg>
-        <span class="scene-annotation" data-annotation="observer">observer</span>
+        <span class="scene-annotation" data-annotation="observer" data-export-text>observer</span>
         <div class="altaz-panels">
-            <div class="altaz-panel altaz-panel-sun">
+            <div class="altaz-panel altaz-panel-sun" data-export="sun-locked">
                 <svg id="sunView" aria-hidden="true"></svg>
                 <span class="altaz-caption">sun-locked</span>
             </div>
-            <div class="altaz-panel altaz-panel-moon">
+            <div class="altaz-panel altaz-panel-moon" data-export="moon-locked">
                 <svg id="moonView" aria-hidden="true"></svg>
                 <span class="altaz-caption">moon-locked</span>
             </div>

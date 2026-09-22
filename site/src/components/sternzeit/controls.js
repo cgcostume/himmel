@@ -1,3 +1,4 @@
+import { fromDate, fromJulianDay, julianDayUT, toDate } from "@himmel/sternzeit";
 import { formatDMS } from "./format.js";
 import { julianDayNow, onChange, state, update } from "./state.js";
 
@@ -6,14 +7,14 @@ import { julianDayNow, onChange, state, update } from "./state.js";
 const roots = [...document.querySelectorAll(".moment")];
 const LATLONG_DECIMALS = 7;
 
-// jd is UT; shown in the viewer's own timezone. JD 2451545 is 2000-01-01 12:00 UT.
-const toDate = (jd) => new Date(Date.UTC(2000, 0, 1, 12) + (jd - 2451545) * 86400000);
-const fromDate = (date) => 2451545 + (date.getTime() - Date.UTC(2000, 0, 1, 12)) / 86400000;
+// jd is UT; shown in the viewer's own timezone.
+const dateOf = (jd) => toDate(fromJulianDay(jd));
+const julianDayOf = (date) => julianDayUT(fromDate(date));
 
 // Days, weeks, months and years step on the viewer's calendar, keeping the clock time (across daylight saving time too);
 // a month from 31 January is the last of February.
 function stepCalendar(jd, unit, sign) {
-    const date = toDate(jd);
+    const date = dateOf(jd);
     if (unit === "day" || unit === "week") date.setDate(date.getDate() + sign * (unit === "week" ? 7 : 1));
     else {
         const day = date.getDate();
@@ -21,12 +22,12 @@ function stepCalendar(jd, unit, sign) {
         date.setMonth(date.getMonth() + sign * (unit === "year" ? 12 : 1));
         date.setDate(Math.min(day, new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate()));
     }
-    return fromDate(date);
+    return julianDayOf(date);
 }
 
 // One-liner in every set's summary, so the current moment and place stay readable while it is folded.
 function formatSummary() {
-    const when = toDate(state.jd).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "medium" });
+    const when = dateOf(state.jd).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "medium" });
     const lat = `${Math.abs(state.latitude).toFixed(2)}° ${state.latitude >= 0 ? "N" : "S"}`;
     const lon = `${Math.abs(state.longitude).toFixed(2)}° ${state.longitude >= 0 ? "E" : "W"}`;
     return `${when}, ${lat} ${lon}, ${state.heightM} m${state.live ? ", live" : ""}`;
