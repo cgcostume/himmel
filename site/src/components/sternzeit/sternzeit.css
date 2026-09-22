@@ -101,7 +101,7 @@ tbody tr:nth-child(even) {
     background: var(--surface);
 }
 tbody tr:hover {
-    background: color-mix(in srgb, var(--accent) 12%, var(--bg));
+    background: var(--line);
 }
 #scene {
     position: relative;
