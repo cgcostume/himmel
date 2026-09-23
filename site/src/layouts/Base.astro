@@ -30,6 +30,7 @@ const current = Astro.url.pathname.replace(/\/$/, "");
     <body>
         <header class="site-header">
             <a class="brand" href={`${base}/`}>himmel / sternwarte</a>
+            <span class="beta" title="Pre-1.0: the APIs can still change">beta</span>
             {/* Only shown where the chapters no longer fit on one line; see the script at the end of the body. */}
             <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Chapters">
                 <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4.5h12M2 8h12M2 11.5h12" /></svg>
@@ -51,9 +52,16 @@ const current = Astro.url.pathname.replace(/\/$/, "");
         <footer class="site-footer">
             <span>
                 A TypeScript + WebGPU port of{" "}
-                <a href="https://github.com/cgcostume/osghimmel" target="_blank" rel="noopener">osgHimmel</a>{" "}
-                by Daniel Limberger. MIT licensed. The accent blue is a step of Saussure's cyanometer.
+                <a href="https://github.com/cgcostume/osghimmel" target="_blank" rel="noopener">osgHimmel</a>, by{" "}
+                <a href="https://daniellimberger.de" target="_blank" rel="noopener">Daniel Limberger</a>.
             </span>
+            <span>
+                &copy; {new Date().getFullYear()} Daniel Limberger. Code under the{" "}
+                <a href="https://github.com/cgcostume/himmel/blob/main/LICENSE" target="_blank" rel="noopener">MIT
+                license</a>, text and figures under{" "}
+                <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>.
+            </span>
+            <span>The accent blue is a step of Saussure's cyanometer.</span>
         </footer>
         <script>
             // Keeps glossary and citation tooltips inside the viewport: shifted left by however far they would overflow.

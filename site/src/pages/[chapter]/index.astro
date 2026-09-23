@@ -1,7 +1,9 @@
 ---
 import { getCollection, render } from "astro:content";
+import About from "../../components/About.astro";
 import References from "../../components/References.astro";
 import Base from "../../layouts/Base.astro";
+import { formatUpdated, lastUpdated } from "../../lib/updated";
 
 export async function getStaticPaths() {
     const chapters = await getCollection("chapters");
@@ -12,11 +14,13 @@ const { Content, headings } = await render(chapter);
 // A table of contents from the chapter's sections, for chapters long enough to need one.
 const sections = headings.filter((heading) => heading.depth === 2);
 const hasReferences = chapter.data.references.length > 0;
+const updated = formatUpdated(lastUpdated(chapter.filePath ?? ""));
 ---
 
 <Base title={`${chapter.data.package}: ${chapter.data.summary}`} description={chapter.data.summary}>
     <h1 class="mono">{chapter.data.package}</h1>
     <p class="lead">{chapter.data.summary}</p>
+    <About />
     <p class="chapter-meta">Unfamiliar term? Hover or tap it.</p>
     {
         sections.length >= 3 && (
@@ -38,4 +42,5 @@ const hasReferences = chapter.data.references.length > 0;
     }
     <Content />
     <References chapter={chapter.id} body={chapter.body ?? ""} />
+    <p class="page-updated">Last updated {updated}.</p>
 </Base>

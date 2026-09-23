@@ -1,9 +1,11 @@
 ---
 import { getCollection } from "astro:content";
 import Base from "../layouts/Base.astro";
+import { formatUpdated, lastUpdated } from "../lib/updated";
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const chapters = (await getCollection("chapters")).sort((a, b) => a.data.order - b.data.order);
+const updated = formatUpdated(lastUpdated("src/pages/index.astro"));
 ---
 
 <Base title="himmel: sky rendering for WebGPU" description="Small, composable TypeScript + WebGPU libraries for rendering the sky.">
@@ -11,6 +13,24 @@ const chapters = (await getCollection("chapters")).sort((a, b) => a.data.order -
     <p class="lead">
         A family of small, independent, composable TypeScript + WebGPU libraries for rendering the sky. Each one drops
         into an existing renderer without pulling in the rest.
+    </p>
+    <p id="about">
+        The libraries compute what a sky renderer needs and generate the assets that feed it: Sun and Moon positions,
+        atmospheric scattering look-up tables, star and Moon rendering, clouds, HDR environment maps in several
+        projections, and the image-based lighting derived from them. Everything is compute-first WGSL, plain
+        functions, no scene graph, and each package stands alone.
+    </p>
+    <p>
+        himmel succeeds{" "}
+        <a href="https://github.com/cgcostume/osghimmel" target="_blank" rel="noopener">osgHimmel</a>, a C++ sky
+        renderer from a 2012 master's thesis (videos:{" "}
+        <a href="https://www.youtube.com/watch?v=t8ibsEl0kAI" target="_blank" rel="noopener">computed sky</a>,{" "}
+        <a href="https://www.youtube.com/watch?v=y8UMaM_Wj-o" target="_blank" rel="noopener">texture mapped skies</a>).
+        Everything is being ported thoroughly rather than approximated: fast, accurate, agnostic of the engine and the
+        use case, and comprehensive down to the computation of every asset the sky needs.
+    </p>
+    <p class="status">
+        <span class="beta">beta</span> Work in progress. The packages are usable but their APIs can still change.
     </p>
     <ul class="chapter-list">
         {
@@ -25,4 +45,5 @@ const chapters = (await getCollection("chapters")).sort((a, b) => a.data.order -
             ))
         }
     </ul>
+    <p class="page-updated">Last updated {updated}.</p>
 </Base>

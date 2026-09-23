@@ -80,7 +80,25 @@ h3 {
 .site-header .brand {
     font-family: var(--font-mono);
     color: var(--text);
+}
+/* Pre-1.0 marker, next to the brand and once on the home page. */
+.beta {
+    font-family: var(--font-mono);
+    font-size: var(--text-small);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-small);
+    padding: 0 0.35rem;
+}
+.site-header .beta {
     margin-right: auto;
+}
+.status {
+    color: var(--muted);
+    font-size: var(--text-meta);
+}
+.status .beta {
+    margin-right: 0.4rem;
 }
 .site-header nav {
     display: flex;
@@ -124,7 +142,12 @@ h3 {
 .site-header nav a[aria-current="page"] {
     color: var(--text);
 }
+/* One centred line per statement, rather than the header's row. */
 .site-footer {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    text-align: center;
     color: var(--muted);
     font-size: var(--text-small);
     margin-top: 4rem;
@@ -167,6 +190,27 @@ main {
 .chapter-list p {
     margin: 0.25rem 0 0;
     color: var(--muted);
+}
+/* The same introduction to himmel on every chapter: set apart from the chapter's own voice, but not boxed in. */
+.about {
+    margin: 2rem 0;
+    border-left: 2px solid var(--accent);
+    margin-left: -0.9rem;
+    padding-left: 0.9rem;
+    color: var(--muted);
+    font-size: var(--text-meta);
+}
+.about p:first-child {
+    margin-top: 0;
+}
+.about p:last-child {
+    margin-bottom: 0;
+}
+/* When a page's content last changed, from the last commit that touched it. */
+.page-updated {
+    margin-top: 3rem;
+    color: var(--muted);
+    font-size: var(--text-small);
 }
 .footnote {
     font-size: var(--text-small);
@@ -327,7 +371,8 @@ input[type="number"]::-webkit-outer-spin-button {
     color: var(--muted);
 }
 h2,
-figure[id] {
+figure[id],
+#about {
     scroll-margin-top: 1rem;
 }
 .chapter-meta {
