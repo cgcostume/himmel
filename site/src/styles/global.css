@@ -28,6 +28,7 @@
    parked off to the right (see .term-tip, shifted into view only once they are opened) would widen the page. */
 html {
     overflow-x: clip;
+    overflow-y: scroll;
     background: var(--bg);
 }
 body {
