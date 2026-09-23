@@ -1,5 +1,5 @@
 {
-    "name": "@himmel/sternzeit",
+    "name": "@himmelszelt/sternzeit",
     "version": "0.1.0",
     "description": "Sidereal time and astronomical position math (sun, moon, stars) for sky rendering, a TypeScript port of osgHimmel's astronomy core, with no rendering dependencies.",
     "type": "module",
@@ -8,10 +8,10 @@
     "author": "Daniel Limberger <cgdaniel@outlook.com> (https://github.com/cgcostume)",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/cgcostume/himmel.git",
+        "url": "git+https://github.com/cgcostume/himmelszelt.git",
         "directory": "packages/sternzeit"
     },
-    "homepage": "https://github.com/cgcostume/himmel/tree/main/packages/sternzeit#readme",
+    "homepage": "https://github.com/cgcostume/himmelszelt/tree/main/packages/sternzeit#readme",
     "keywords": [
         "astronomy",
         "sidereal-time",

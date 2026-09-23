@@ -1,5 +1,5 @@
 // The precise variant: Bruneton & Neyret, "Precomputed Atmospheric Scattering" (2008), the model osgHimmel's
-// atmosphere is built on. Use `@himmel/dunstkreis/approx` for the cheaper Hillaire 2020 decomposition; the
+// atmosphere is built on. Use `@himmelszelt/dunstkreis/approx` for the cheaper Hillaire 2020 decomposition; the
 // two share everything below and differ only in how they integrate it.
 //
 // The precompute pipeline (transmittance, irradiance, 4D inscatter, N scattering orders) is not implemented

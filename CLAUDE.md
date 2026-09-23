@@ -1,4 +1,4 @@
-# himmel workspace
+# himmelszelt workspace
 
 Porting [osgHimmel](https://github.com/cgcostume/osghimmel) (a C++/OpenSceneGraph sky-rendering
 library the user, Daniel Limberger, github: cgcostume, wrote as his own HPI master's thesis,
@@ -12,27 +12,27 @@ algorithm from memory.
 
 ## Repo topology
 
-**Monorepo** at `cgcostume/himmel` (this directory is the repo root), pnpm workspace. What stays
+**Monorepo** at `cgcostume/himmelszelt` (this directory is the repo root), pnpm workspace. What stays
 independent are the **npm packages**, not the repos: each library under `packages/*` is its own
-published `@himmel/*` package with its own `package.json`, `dist`, README and version. The earlier
+published `@himmelszelt/*` package (the `@himmel` npm scope was taken, hence the name) with its own `package.json`, `dist`, README and version. The earlier
 polyrepo (`cgcostume/himmel-sternzeit`, `cgcostume/himmel-dunstkreis`) was dropped without history
 and is to be deleted by the user.
 
 ```
-packages/<name>/   one directory per published @himmel/* package
+packages/<name>/   one directory per published @himmelszelt/* package
 site/              sternwarte: the single website (Astro), private, never published to npm
 osghimmel/         read-only reference clone, gitignored
 ```
 
 | npm package | Directory | Status |
 |---|---|---|
-| `@himmel/sternzeit` (astronomy/sidereal time math) | `packages/sternzeit` | Julian Day, sidereal time, sun/moon/earth positions, moon phase, sun direction from the moon and earthshine done (precise + approx); stars stubbed |
-| `@himmel/dunstkreis` (WebGPU atmosphere, Bruneton precise + Hillaire fast) | `packages/dunstkreis` | Hillaire pipeline + dev page working; Bruneton, IBL, performance pending |
-| `@himmel/sternwarte` (the website, `private: true`) | `site/` | sternzeit chapter done (figures, glossary tooltips, references, TOC); dunstkreis placeholder, and `planned: true` placeholders for nachtgestirn, sternenzelt, gewoelk, rundbild; deployed to GitHub Pages by CI from main |
-| `@himmel/gewoelk` (clouds) | not created yet | later |
-| `@himmel/sternenzelt` (star rendering) | not created yet | later |
-| `@himmel/nachtgestirn` (moon rendering) | not created yet | later |
-| `@himmel/rundbild` (texture mapped skies) | not created yet | later; sky projections, HDR environment maps, IBL computed from them, and the horizon band from the thesis. Named after the Rundgemaelde, the 19th century panorama: a 360 degree image of the surroundings, which is what an environment map is |
+| `@himmelszelt/sternzeit` (astronomy/sidereal time math) | `packages/sternzeit` | Julian Day, sidereal time, sun/moon/earth positions, moon phase, sun direction from the moon and earthshine done (precise + approx); stars stubbed |
+| `@himmelszelt/dunstkreis` (WebGPU atmosphere, Bruneton precise + Hillaire fast) | `packages/dunstkreis` | Hillaire pipeline + dev page working; Bruneton, IBL, performance pending |
+| `@himmelszelt/sternwarte` (the website, `private: true`) | `site/` | sternzeit chapter done (figures, glossary tooltips, references, TOC); dunstkreis placeholder, and `planned: true` placeholders for nachtgestirn, sternenzelt, gewoelk, rundbild; deployed to GitHub Pages by CI from main |
+| `@himmelszelt/gewoelk` (clouds) | not created yet | later |
+| `@himmelszelt/sternenzelt` (star rendering) | not created yet | later |
+| `@himmelszelt/nachtgestirn` (moon rendering) | not created yet | later |
+| `@himmelszelt/rundbild` (texture mapped skies) | not created yet | later; sky projections, HDR environment maps, IBL computed from them, and the horizon band from the thesis. Named after the Rundgemaelde, the 19th century panorama: a 360 degree image of the surroundings, which is what an environment map is |
 
 **sternwarte** is one site for all libraries, structured like a blog with one chapter per library:
 explains the techniques, showcases them, makes them explorable (WebGPU canvases, zdog
@@ -41,7 +41,7 @@ Markdown). Terms are explained only as hover tooltips, in the text (`<Term>`) an
 site-wide glossary (`site/src/data/glossary.json`); no glossary pages, no per-package GLOSSARY.md.
 Sources are cited with `<Cite>` and listed at the end of each chapter (`site/src/data/references.ts`).
 
-**sternzeit is the blueprint for every chapter.** The layout adds lead (the `summary`), the short himmel note, a meta
+**sternzeit is the blueprint for every chapter.** The layout adds lead (the `summary`), the short himmelszelt note, a meta
 line (last updated, term hint, "Jump to code" when a `## Code examples` exists) and a TOC from three sections on. The body
 follows: an interactive scene first ("Pick a moment and a place"), then the concepts building on each other, "Precise
 or approximate?" wherever both variants exist, `## Code examples` with code, and the references. Leads are short and
@@ -80,9 +80,9 @@ everything; one `pnpm-lock.yaml`, one `biome.json`, one `tsconfig.base.json` (ea
 `tsconfig.json` extends it). Cross-package dependencies use `workspace:*` (e.g. dunstkreis' dev page
 uses sternzeit), which pnpm rewrites to real version ranges on publish.
 
-Root scripts: `pnpm dev` (site at http://localhost:4321/himmel/), `pnpm build`, `pnpm typecheck`, `pnpm test` (recursive), `pnpm lint`, `pnpm format`, `pnpm clean` (removes everything generated, including `node_modules`).
+Root scripts: `pnpm dev` (site at http://localhost:4321/himmelszelt/), `pnpm build`, `pnpm typecheck`, `pnpm test` (recursive), `pnpm lint`, `pnpm format`, `pnpm clean` (removes everything generated, including `node_modules`).
 
-## Tooling (same across every `@himmel/*` package)
+## Tooling (same across every `@himmelszelt/*` package)
 
 - **TypeScript**, strict, ESM-only (`type: module`, no CJS output).
 - **pnpm** as the only package manager (no npm/yarn).

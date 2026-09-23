@@ -1,5 +1,5 @@
 // The atmosphere's physical parameters as a uniform block, so a consumer can bind one buffer and compose
-// these functions into their own shader. `@himmel/dunstkreis` fills it via `atmosphereUniformData()`.
+// these functions into their own shader. `@himmelszelt/dunstkreis` fills it via `atmosphereUniformData()`.
 //
 // Nothing here declares a binding: the struct is passed to every function by value instead. That keeps the
 // snippet free of any assumption about group or binding indices, which is what makes it droppable into an

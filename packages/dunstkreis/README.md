@@ -1,4 +1,4 @@
-# @himmel/dunstkreis
+# @himmelszelt/dunstkreis
 
 WebGPU atmospheric scattering for sky rendering, a TypeScript port of the
 atmosphere rendering of [osgHimmel](https://github.com/cgcostume/osghimmel),
@@ -11,20 +11,20 @@ into your own pass, or take the WGSL and the bind group layouts and inline
 them yourself.
 
 Takes a sun/moon direction vector and time as plain inputs, no hard
-dependency on [`@himmel/sternzeit`](https://github.com/cgcostume/himmel/tree/main/packages/sternzeit)
-or any other `@himmel/*` package, so it drops into any existing WebGPU
+dependency on [`@himmelszelt/sternzeit`](https://github.com/cgcostume/himmelszelt/tree/main/packages/sternzeit)
+or any other `@himmelszelt/*` package, so it drops into any existing WebGPU
 renderer.
 
-New to terms like inscatter, optical depth, or scale height? The [himmel site](https://github.com/cgcostume/himmel) explains every one of them, right where it is used.
+New to terms like inscatter, optical depth, or scale height? The [himmelszelt site](https://github.com/cgcostume/himmelszelt) explains every one of them, right where it is used.
 
 ## Two variants
 
-Both are provided, in the same spirit as `@himmel/sternzeit`'s precise/approximate pairs.
+Both are provided, in the same spirit as `@himmelszelt/sternzeit`'s precise/approximate pairs.
 
 | export | technique | LUTs |
 |---|---|---|
-| `@himmel/dunstkreis` | Bruneton & Neyret 2008, the faithful osgHimmel port | transmittance 256x64, irradiance 64x16, 4D inscatter 32x128x32x8, N scattering orders |
-| `@himmel/dunstkreis/approx` | Hillaire 2020 | transmittance 256x64, multiscattering 32x32, sky-view 192x108 per frame |
+| `@himmelszelt/dunstkreis` | Bruneton & Neyret 2008, the faithful osgHimmel port | transmittance 256x64, irradiance 64x16, 4D inscatter 32x128x32x8, N scattering orders |
+| `@himmelszelt/dunstkreis/approx` | Hillaire 2020 | transmittance 256x64, multiscattering 32x32, sky-view 192x108 per frame |
 
 `approx` is a slight misnomer, kept for consistency with `sternzeit`'s naming: Hillaire is not a cheaper
 approximation *of* Bruneton but a different decomposition, and its multiple-scattering term is infinite-order
@@ -47,7 +47,7 @@ naturally falls off with height and vanishes at the top of the atmosphere.
 
 The implementation is exported from the shared WGSL layer so that the moon, star, and cloud modules can warp
 their rays with the same function. Because a camera ray is an *apparent* direction, it uses Bennett's fit
-(Meeus AA.15.3, apparent to true), the WGSL twin of `@himmel/sternzeit`'s
+(Meeus AA.15.3, apparent to true), the WGSL twin of `@himmelszelt/sternzeit`'s
 `earth.atmosphericRefractionFromApparent`. Its companion `earth.atmosphericRefraction` is AA.15.4, running
 true to apparent, for consumers correcting a computed body position instead. The two differ by ~5' at the
 horizon and are not interchangeable; a test pins them to each other as inverses so they cannot drift.
@@ -80,7 +80,7 @@ pasted into a shader of yours instead of going through this package's passes:
 
 ```js
 import { wgsl, atmosphereUniformData, pipelineConstants, DEFAULT_ATMOSPHERE_MODEL, DEFAULT_TEXTURE_CONFIG }
-    from "@himmel/dunstkreis";
+    from "@himmelszelt/dunstkreis";
 
 const module = device.createShaderModule({ code: `
 ${wgsl.scattering}                                        // DkAtmosphere + the functions that take it
@@ -115,7 +115,7 @@ them, and a disabled feature leaves no code behind rather than branching per pix
 `pipelineConstants(config, { refraction: false })` produces a pipeline with no refraction in it, which is
 what a consumer already feeding refracted sun and moon directions wants.
 
-Every identifier is prefixed `dk`/`DK_` so several `@himmel/*` fragments can share one shader module.
+Every identifier is prefixed `dk`/`DK_` so several `@himmelszelt/*` fragments can share one shader module.
 Rolldown inlines the `.wgsl` files at build time, so `dist` reads nothing from disk and stays browser-safe.
 
 ### A note on testing shaders
@@ -153,7 +153,7 @@ Echtzeit"](https://daniellimberger.de/resources/2012%20%E2%80%93%20Mueller%20%28
 
 ## Development
 
-Part of the [himmel monorepo](https://github.com/cgcostume/himmel); run these from the repository root.
+Part of the [himmelszelt monorepo](https://github.com/cgcostume/himmelszelt); run these from the repository root.
 
 ```sh
 pnpm install     # everything, once

@@ -3,7 +3,7 @@ import { wgsl } from "./rolldown.config.js";
 
 /**
  * Bundles the dev page into a single self-contained module: this package straight from `src/` (so editing a
- * shader needs no separate library build) plus `@himmel/sternzeit`, a workspace dependency that could not be
+ * shader needs no separate library build) plus `@himmelszelt/sternzeit`, a workspace dependency that could not be
  * served from this package's directory otherwise.
  *
  * The result is a page of three files with no `node_modules`, which is also what a static host needs.

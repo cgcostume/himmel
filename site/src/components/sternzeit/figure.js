@@ -1,4 +1,4 @@
-import * as precise from "@himmel/sternzeit";
+import * as precise from "@himmelszelt/sternzeit";
 
 // Text inside the figures' SVGs, at the page's small text size (--text-small, 0.75rem, like the compass labels)
 // whatever size the SVG is drawn at: each figure passes how many of its own units one screen pixel is.

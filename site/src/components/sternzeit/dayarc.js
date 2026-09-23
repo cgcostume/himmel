@@ -1,4 +1,4 @@
-import * as precise from "@himmel/sternzeit";
+import * as precise from "@himmelszelt/sternzeit";
 import Zdog from "zdog";
 import { COMPASS, cssColor, gridLine, labelAboveY, svgText } from "./figure.js";
 import { aboveVisibleHorizon } from "./horizon.js";

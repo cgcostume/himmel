@@ -1,11 +1,11 @@
 {
-    "name": "himmel",
+    "name": "himmelszelt",
     "private": true,
-    "description": "Monorepo of the @himmel/* sky-rendering libraries and their site, sternwarte.",
+    "description": "Monorepo of the @himmelszelt/* sky-rendering libraries and their site, sternwarte.",
     "type": "module",
     "license": "MIT",
     "scripts": {
-        "dev": "pnpm --filter @himmel/sternwarte dev",
+        "dev": "pnpm --filter @himmelszelt/sternwarte dev",
         "build": "pnpm -r build",
         "typecheck": "pnpm -r typecheck",
         "test": "pnpm -r test",

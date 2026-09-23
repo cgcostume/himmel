@@ -1,4 +1,4 @@
-import { fromDate, julianDayUT } from "@himmel/sternzeit";
+import { fromDate, julianDayUT } from "@himmelszelt/sternzeit";
 
 /**
  * The one moment and place the whole page shows. Every set of controls writes here, and the tables and the scene

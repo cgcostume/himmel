@@ -1,4 +1,4 @@
-import { fromDate, fromJulianDay, julianDayUT, toDate } from "@himmel/sternzeit";
+import { fromDate, fromJulianDay, julianDayUT, toDate } from "@himmelszelt/sternzeit";
 import { julianDayNow, onChange, state, update } from "./state.js";
 
 // Every set of controls on the page (see Controls.astro) is wired the same way: user input writes to the shared

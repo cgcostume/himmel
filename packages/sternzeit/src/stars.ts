@@ -16,14 +16,14 @@
 //    Olson, "The Colors of the Stars" (1998).
 //  - Apparent magnitude to radiance, the piece a renderer actually needs: the catalog's `vmag` is a
 //    logarithmic, inverted, historical scale, and turning it into a linear radiance that composes with
-//    `@himmel/dunstkreis`' physical units is the whole point of having it here rather than in the renderer.
+//    `@himmelszelt/dunstkreis`' physical units is the whole point of having it here rather than in the renderer.
 //    Pairs with `earth.APPARENT_MAGNITUDE_LIMIT`.
 //  - A loader for `data/brightstars.bin` (flat little-endian Float32Array, 8 fields per star, see
 //    `data/README.md`). Has to stay optional and separately importable: it is ~290 KB, and a consumer who
 //    only wants sun and moon math must not pay for it.
 //
 // Atmospheric refraction applies to stars too, and osgHimmel never did it (only the sun and moon got the
-// `sunr`/`moonr` treatment). Whatever renders these should warp its rays with `@himmel/dunstkreis`' per-ray
+// `sunr`/`moonr` treatment). Whatever renders these should warp its rays with `@himmelszelt/dunstkreis`' per-ray
 // refraction, or apply `earth.atmosphericRefraction` here, but not both. See that package's README.
 
 /**

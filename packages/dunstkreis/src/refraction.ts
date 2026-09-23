@@ -37,7 +37,7 @@ export interface RefractionConditions {
  *
  * This is the direction a renderer needs, since a camera ray is by definition an apparent direction:
  * subtracting this from a ray's apparent altitude gives the true altitude to sample the sky at.
- * `@himmel/sternzeit`'s `earth.atmosphericRefraction` is the inverse relation (15.4, true to apparent), for
+ * `@himmelszelt/sternzeit`'s `earth.atmosphericRefraction` is the inverse relation (15.4, true to apparent), for
  * correcting a computed body position instead. Apply one or the other, never both.
  *
  * The fit is stated for apparent altitudes of 0 and up and has a pole at -4.4°, so the input is clamped at 0.

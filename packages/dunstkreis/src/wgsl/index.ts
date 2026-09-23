@@ -9,7 +9,7 @@
  * WGSL `override` declarations, set at pipeline creation via `pipelineConstants()`, so that loop bounds stay
  * compile-time constants and an unused feature compiles out rather than branching.
  *
- * Every identifier is prefixed `dk` (or `DK_` for constants) so several `@himmel/*` fragments can share one
+ * Every identifier is prefixed `dk` (or `DK_` for constants) so several `@himmelszelt/*` fragments can share one
  * shader module.
  */
 import atmosphere from "./atmosphere.wgsl";

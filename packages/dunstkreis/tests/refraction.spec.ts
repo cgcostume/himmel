@@ -1,4 +1,4 @@
-import { earth } from "@himmel/sternzeit";
+import { earth } from "@himmelszelt/sternzeit";
 import { expect, test } from "@playwright/test";
 import { atmosphericRefractionFromApparent, refractViewDirection } from "../src/refraction.js";
 import { evaluateWgsl, gpuDevice, wgslSource } from "./gpu.js";

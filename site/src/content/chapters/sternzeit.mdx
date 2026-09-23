@@ -1,6 +1,6 @@
 ---
 title: sternzeit
-package: "@himmel/sternzeit"
+package: "@himmelszelt/sternzeit"
 summary: "Astronomy for sky renderers: the Sun and the Moon, accurate, anywhere, any time."
 order: 1
 references:
@@ -73,7 +73,7 @@ your location rotates with it.
 ```ts
 import {
     fromDate, fromJulianDay, julianDayUT, siderealTime, toDate,
-} from "@himmel/sternzeit";
+} from "@himmelszelt/sternzeit";
 
 // Any JavaScript Date, e.g. new Date() for now; its time zone
 // offset comes along.
@@ -232,13 +232,13 @@ of its diameter: fine for a sky dome, not for an eclipse. That is what the preci
 moment of sunset or a telescope view. Both live behind the same names, so switching is a change of import path.
 
 ```ts
-import { sun } from "@himmel/sternzeit"; // precise
-import { sun as fast } from "@himmel/sternzeit/approx"; // approximate
+import { sun } from "@himmelszelt/sternzeit"; // precise
+import { sun as fast } from "@himmelszelt/sternzeit/approx"; // approximate
 ```
 
 ## Code examples
 
-`@himmel/sternzeit` has no dependencies, touches neither the DOM nor the GPU, and runs anywhere JavaScript runs. It
+`@himmelszelt/sternzeit` has no dependencies, touches neither the DOM nor the GPU, and runs anywhere JavaScript runs. It
 returns plain numbers, and it is up to you what to do with them. A CAD or architecture viewer with the correct
 light and shadows for a real site and hour. A sun study for a solar roof. A game whose day follows the player's real
 clock. A photo planner that knows when the full Moon rises behind a landmark. A moon calendar. An augmented reality
@@ -252,7 +252,7 @@ them: moonlight is sunlight, so the lit fraction of the disc is roughly how much
 ```ts
 import {
     fromJulianDay, horizontalToDirection, moon, sun,
-} from "@himmel/sternzeit";
+} from "@himmelszelt/sternzeit";
 
 const time = fromJulianDay(jd);
 // Unit vectors in the observer's ENU frame: x east, y north, z up.
@@ -277,7 +277,7 @@ hour or any other threshold you care to render.
 ```ts
 import {
     fromDate, fromJulianDay, julianDayUT, sun, toDate,
-} from "@himmel/sternzeit";
+} from "@himmelszelt/sternzeit";
 
 // The Sun is up once its refracted upper limb clears the horizon,
 // the -0.833 degrees every almanac uses.
@@ -309,7 +309,7 @@ the crescent by, measured on the sky from north through east.
 ```ts
 import {
     fromDate, julianDayUT, moon, positionAngle, sun,
-} from "@himmel/sternzeit";
+} from "@himmelszelt/sternzeit";
 
 const jd = julianDayUT(fromDate(new Date()));
 const lit = moon.illuminatedFraction(jd); // 0 new, 1 full
@@ -341,7 +341,7 @@ night side, so a scan ahead finds the next one, no ephemeris table needed. This 
 what the buttons under [figure 4](#eclipses) above do:
 
 ```ts
-import { eclipse, fromJulianDay, moon, toDate } from "@himmel/sternzeit";
+import { eclipse, fromJulianDay, moon, toDate } from "@himmelszelt/sternzeit";
 
 // Only a full moon can be eclipsed, so step by lunations rather than
 // by days. Full moons sit half a lunation after the counted new ones.

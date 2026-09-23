@@ -1,5 +1,5 @@
-import * as precise from "@himmel/sternzeit";
-import * as approx from "@himmel/sternzeit/approx";
+import * as precise from "@himmelszelt/sternzeit";
+import * as approx from "@himmelszelt/sternzeit/approx";
 import { lookupEntry } from "../../lib/glossary";
 import { escapeText } from "./figure.js";
 import { formatDMS } from "./format.js";

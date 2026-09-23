@@ -16,7 +16,7 @@ export const references: Record<string, Reference> = {
         venue: "Master's thesis, Hasso Plattner Institute, Potsdam (German)",
         year: 2012,
         url: "https://daniellimberger.de/resources/2012%20%E2%80%93%20Mueller%20%28now%20Limberger%29%20%E2%80%93%20Photorealistisches%20Rendering%20atmosphaerischer%20Effekte%20in%20geovirtuellen%203D-Umgebungen%20in%20Echtzeit.pdf",
-        note: "osgHimmel, the original C++ implementation all himmel libraries are ported from.",
+        note: "osgHimmel, the original C++ implementation all himmelszelt libraries are ported from.",
     },
     mueller2012vmv: {
         authors: "Daniel Müller (now Limberger), Juri Engel, Jürgen Döllner",

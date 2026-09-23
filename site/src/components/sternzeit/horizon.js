@@ -1,4 +1,4 @@
-import * as precise from "@himmel/sternzeit";
+import * as precise from "@himmelszelt/sternzeit";
 
 // The refraction fit holds down to about a degree below the horizon; lower, it is taken as constant.
 export const REFRACTION_FLOOR_DEG = -1;

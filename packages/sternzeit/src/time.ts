@@ -1,4 +1,4 @@
-// Terms used here are explained in the himmel site's glossary (site/src/data/glossary.json).
+// Terms used here are explained in the himmelszelt site's glossary (site/src/data/glossary.json).
 import { dayFraction, frac, toInt } from "./math.js";
 
 /** A calendar date/time used for astronomical calculations. */

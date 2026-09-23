@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>@himmel/dunstkreis - WebGPU atmospheric scattering</title>
+<title>@himmelszelt/dunstkreis - WebGPU atmospheric scattering</title>
 <meta
     name="description"
     content="A physically based sky, computed on the GPU. A WebGPU atmospheric scattering library in TypeScript, ported from osgHimmel, that drops into an existing renderer as a single pass."
@@ -22,8 +22,8 @@
 <div id="sky">
     <canvas id="canvas"></canvas>
     <div class="title-row over-sky">
-        <h1>@himmel/<strong>dunstkreis</strong></h1>
-        <a href="https://github.com/cgcostume/himmel/tree/main/packages/dunstkreis" target="_blank" rel="noopener">GitHub ↗</a>
+        <h1>@himmelszelt/<strong>dunstkreis</strong></h1>
+        <a href="https://github.com/cgcostume/himmelszelt/tree/main/packages/dunstkreis" target="_blank" rel="noopener">GitHub ↗</a>
     </div>
     <p class="sky-status footnote"><span id="status">starting WebGPU…</span></p>
     <button id="fullscreen" class="sky-button footnote" type="button">fullscreen</button>
@@ -49,7 +49,7 @@
 <h2>Time and place</h2>
 <p class="note">
     The Sun's position is computed by
-    <a href="https://github.com/cgcostume/himmel/tree/main/packages/sternzeit" target="_blank" rel="noopener">@himmel/sternzeit</a>,
+    <a href="https://github.com/cgcostume/himmelszelt/tree/main/packages/sternzeit" target="_blank" rel="noopener">@himmelszelt/sternzeit</a>,
     a separate library, and handed to this one as a plain direction vector. The two share no code and neither
     depends on the other: whoever embeds this can compute that vector however they like.
 </p>
@@ -207,11 +207,11 @@
 
 <footer class="family">
     <p class="footnote">
-        Part of <strong>himmel</strong>, a family of small, independent, composable libraries for rendering the
+        Part of <strong>himmelszelt</strong>, a family of small, independent, composable libraries for rendering the
         sky, each usable on its own:
     </p>
     <ul class="footnote">
-        <li><a href="https://github.com/cgcostume/himmel/tree/main/packages/sternzeit" target="_blank" rel="noopener">sternzeit</a>,
+        <li><a href="https://github.com/cgcostume/himmelszelt/tree/main/packages/sternzeit" target="_blank" rel="noopener">sternzeit</a>,
             astronomical position math</li>
         <li><strong>dunstkreis</strong>, WebGPU atmospheric scattering (this one)</li>
         <li>gewoelk, clouds <span class="planned">planned</span></li>
@@ -229,7 +229,7 @@
 
 </div>
 
-<!-- Bundled from index.js by `pnpm build:page`, with @himmel/sternzeit and this package inlined,
+<!-- Bundled from index.js by `pnpm build:page`, with @himmelszelt/sternzeit and this package inlined,
      so the page is three files and needs no node_modules. -->
 <script type="module" src="bundle.js"></script>
 </body>

@@ -154,7 +154,7 @@ async function download(root) {
     const blob = new Blob([await compose(root)], { type: "image/svg+xml" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `himmel-${root.dataset.export}.svg`;
+    link.download = `himmelszelt-${root.dataset.export}.svg`;
     link.click();
     setTimeout(() => URL.revokeObjectURL(link.href), 1000);
 }

@@ -1,4 +1,4 @@
-// Terms used here are explained in the himmel site's glossary (site/src/data/glossary.json).
+// Terms used here are explained in the himmelszelt site's glossary (site/src/data/glossary.json).
 import { DEG_TO_RAD, normalizeDegrees, RAD_TO_DEG } from "./math.js";
 import type { JulianDay } from "./time.js";
 

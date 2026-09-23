@@ -1,8 +1,8 @@
 {
-    "name": "@himmel/sternwarte",
+    "name": "@himmelszelt/sternwarte",
     "version": "0.0.0",
     "private": true,
-    "description": "The himmel website: one chapter per @himmel/* library, explaining, showcasing and making it explorable.",
+    "description": "The himmelszelt website: one chapter per @himmelszelt/* library, explaining, showcasing and making it explorable.",
     "type": "module",
     "license": "MIT",
     "scripts": {
@@ -14,7 +14,7 @@
     },
     "dependencies": {
         "@astrojs/mdx": "^8.0.1",
-        "@himmel/sternzeit": "workspace:*",
+        "@himmelszelt/sternzeit": "workspace:*",
         "astro": "^7.3.3",
         "zdog": "^1.1.3"
     },

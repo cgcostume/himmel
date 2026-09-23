@@ -1,16 +1,16 @@
-# @himmel/sternzeit
+# @himmelszelt/sternzeit
 
 Sidereal time and astronomical position math (sun, moon, stars) for sky
 rendering. A TypeScript port of the astronomy core of
 [osgHimmel](https://github.com/cgcostume/osghimmel), with no rendering or
 DOM dependencies, usable from Node, a worker, or any renderer.
 
-Part of the `@himmel/*` family (see [dunstkreis](https://github.com/cgcostume/himmel/tree/main/packages/dunstkreis)
+Part of the `@himmelszelt/*` family (see [dunstkreis](https://github.com/cgcostume/himmelszelt/tree/main/packages/dunstkreis)
 for atmosphere rendering). Modules are intentionally decoupled: consumers
 compute positions here and pass plain vectors/angles into the rendering
 packages themselves.
 
-New to terms like nutation, obliquity, or libration? The [himmel site](https://github.com/cgcostume/himmel) explains every one of them, right where it is used.
+New to terms like nutation, obliquity, or libration? The [himmelszelt site](https://github.com/cgcostume/himmelszelt) explains every one of them, right where it is used.
 
 ## Status
 
@@ -58,7 +58,7 @@ The primary sources cited throughout the code (see individual function docstring
 
 ## Development
 
-Part of the [himmel monorepo](https://github.com/cgcostume/himmel); run these from the repository root.
+Part of the [himmelszelt monorepo](https://github.com/cgcostume/himmelszelt); run these from the repository root.
 
 ```sh
 pnpm install     # everything, once
@@ -66,7 +66,7 @@ pnpm build       # rolldown -> dist/*.js + dist/*.d.ts, for every package
 pnpm typecheck
 pnpm lint        # biome, repo-wide
 pnpm test        # playwright
-pnpm dev         # the site, where this library's chapter lives: http://localhost:4321/himmel/sternzeit/
+pnpm dev         # the site, where this library's chapter lives: http://localhost:4321/himmelszelt/sternzeit/
 ```
 
 `pnpm generate:catalog` (inside `packages/sternzeit`) regenerates the binary star catalog from its CSV.

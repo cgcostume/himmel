@@ -1,4 +1,4 @@
-import * as precise from "@himmel/sternzeit";
+import * as precise from "@himmelszelt/sternzeit";
 import { svgText, veiledHorizon } from "./figure.js";
 import { aboveVisibleHorizon } from "./horizon.js";
 import { offPanelArrowFromCenter, offPanelArrowSvg } from "./offpanel.js";

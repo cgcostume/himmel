@@ -1,5 +1,5 @@
 {
-    "name": "@himmel/dunstkreis",
+    "name": "@himmelszelt/dunstkreis",
     "version": "0.1.0",
     "description": "WebGPU compute-based atmospheric scattering (Bruneton precomputed model) for sky rendering, a TypeScript port of osgHimmel's atmosphere rendering.",
     "type": "module",
@@ -8,10 +8,10 @@
     "author": "Daniel Limberger <cgdaniel@outlook.com> (https://github.com/cgcostume)",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/cgcostume/himmel.git",
+        "url": "git+https://github.com/cgcostume/himmelszelt.git",
         "directory": "packages/dunstkreis"
     },
-    "homepage": "https://github.com/cgcostume/himmel/tree/main/packages/dunstkreis#readme",
+    "homepage": "https://github.com/cgcostume/himmelszelt/tree/main/packages/dunstkreis#readme",
     "keywords": [
         "atmosphere",
         "atmospheric-scattering",
@@ -44,7 +44,7 @@
         "test:gpu": "pnpm build && DUNSTKREIS_GPU=1 playwright test"
     },
     "devDependencies": {
-        "@himmel/sternzeit": "workspace:*",
+        "@himmelszelt/sternzeit": "workspace:*",
         "@playwright/test": "^1.62.1",
         "@types/node": "^26.6.2",
         "@webgpu/types": "^0.1.71",

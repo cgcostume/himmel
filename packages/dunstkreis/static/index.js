@@ -1,6 +1,6 @@
 // A separate package with no relationship to this one: it computes where the Sun is, this one renders what
 // the air does to its light. The vector handed over below is the entire interface between them.
-import { fromJulianDay, horizontalToDirection, julianDay, sun } from "@himmel/sternzeit";
+import { fromJulianDay, horizontalToDirection, julianDay, sun } from "@himmelszelt/sternzeit";
 import {
     createSkyPassApprox,
     DEFAULT_ATMOSPHERE_MODEL,

@@ -4,10 +4,10 @@ import { defineConfig } from "astro/config";
 
 const source = (path) => fileURLToPath(new URL(`../packages/${path}`, import.meta.url));
 
-// Static output only: served locally by `pnpm dev` and deployed as plain files to GitHub Pages under /himmel.
+// Static output only: served locally by `pnpm dev` and deployed as plain files to GitHub Pages under /himmelszelt.
 export default defineConfig({
     site: "https://cgcostume.github.io",
-    base: "/himmel",
+    base: "/himmelszelt",
     output: "static",
     integrations: [mdx()],
     markdown: {
@@ -29,8 +29,8 @@ export default defineConfig({
         // The site always shows the libraries' current source, no package build needed in between.
         resolve: {
             alias: [
-                { find: /^@himmel\/sternzeit$/, replacement: source("sternzeit/src/index.ts") },
-                { find: /^@himmel\/sternzeit\/approx$/, replacement: source("sternzeit/src/approx.ts") },
+                { find: /^@himmelszelt\/sternzeit$/, replacement: source("sternzeit/src/index.ts") },
+                { find: /^@himmelszelt\/sternzeit\/approx$/, replacement: source("sternzeit/src/approx.ts") },
             ],
         },
     },
