@@ -83,8 +83,10 @@ h3 {
 }
 /* Pre-1.0 marker, next to the brand and once on the home page. */
 .beta {
+    display: inline-block;
     font-family: var(--font-mono);
     font-size: var(--text-small);
+    line-height: 1.4;
     color: var(--accent);
     border: 1px solid var(--accent);
     border-radius: var(--radius-small);
