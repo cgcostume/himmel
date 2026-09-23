@@ -40,6 +40,13 @@ visualizations, sliders/buttons, code examples). Plus a generated API reference 
 Markdown). Terms are explained only as hover tooltips, in the text (`<Term>`) and in tables, from one
 site-wide glossary (`site/src/data/glossary.json`); no glossary pages, no per-package GLOSSARY.md.
 Sources are cited with `<Cite>` and listed at the end of each chapter (`site/src/data/references.ts`).
+
+**sternzeit is the blueprint for every chapter.** The layout adds lead (the `summary`), the short himmel note, a meta
+line (last updated, term hint, "Jump to code" when a `## Code examples` exists) and a TOC from three sections on. The body
+follows: an interactive scene first ("Pick a moment and a place"), then the concepts building on each other, "Precise
+or approximate?" wherever both variants exist, `## Code examples` with code, and the references. Leads are short and
+curious rather than feature lists, and never promise what a planned chapter does not have yet.
+
 Final showpiece: one comprehensive demo
 combining sun, moon, atmosphere, stars, clouds. Audience: developers who want to use the
 libraries; should be a joy to read, educational, and nerdy. Hard requirements, non-negotiable:

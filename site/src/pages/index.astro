@@ -8,35 +8,24 @@ const chapters = (await getCollection("chapters")).sort((a, b) => a.data.order -
 const updated = formatUpdated(lastUpdated("src/pages/index.astro"));
 ---
 
-<Base title="himmel: sky rendering for WebGPU" description="Small, composable TypeScript + WebGPU libraries for rendering the sky.">
+<Base title="himmel · WebGPU sky" description="Small, composable TypeScript + WebGPU libraries for rendering the sky.">
     <h1>himmel</h1>
     <p class="lead">
-        A family of small, independent, composable TypeScript + WebGPU libraries for rendering the sky. Each one drops
-        into an existing renderer without pulling in the rest.
+        A family of composable libraries for rendering the sky in real time with WebGPU.
     </p>
     <p id="about">
-        What for: a sky that is correct for a given place, date and hour, solar and lunar eclipses, stars, the Moon
-        with its phase and libration, clouds, and physically based atmospheric scattering, including the refraction
-        that lifts a low Sun above the horizon and the aerial perspective that fades distant geometry into haze. The
-        same code precomputes what real-time rendering needs to stay fast: scattering look-up tables you can tune and
-        recompute yourself, and environment maps for image-based lighting, recomputed live as the Sun moves. Where a
-        computed sky is not wanted, the classic image based route stays open, with HDR sources and several
-        projections. Everything is compute-first WGSL, plain functions, no scene graph.
+        The goal is a sky that is correct for any place, date and hour. Sun, Moon and stars in their true positions,
+        the Moon with its phase and libration, solar and lunar eclipses, and physically based atmospheric scattering,
+        down to the refraction that lifts a low Sun and the aerial perspective that fades distant geometry into haze.
+        Clouds follow later.
     </p>
     <p>
-        himmel succeeds{" "}
-        <a href="https://github.com/cgcostume/osghimmel" target="_blank" rel="noopener">osgHimmel</a>, the C++ sky
-        renderer behind a 2012{" "}
-        <a
-            href="https://daniellimberger.de/resources/2012%20%E2%80%93%20Mueller%20%28now%20Limberger%29%20%E2%80%93%20Photorealistisches%20Rendering%20atmosphaerischer%20Effekte%20in%20geovirtuellen%203D-Umgebungen%20in%20Echtzeit.pdf"
-            target="_blank"
-            rel="noopener">master's thesis, Photorealistic Real-Time Rendering of Atmospheric Effects in Geovirtual
-            3D Environments</a>, written in German, and the paper{" "}
-        <a href="https://daniellimberger.de/publications.html#abstract-2012-vmv-sky-phenomena" target="_blank" rel="noopener">
-            Single-Pass Rendering of Day and Night Sky Phenomena</a> (videos:{" "}
-        <a href="https://www.youtube.com/watch?v=t8ibsEl0kAI" target="_blank" rel="noopener">computed sky</a>,{" "}
-        <a href="https://www.youtube.com/watch?v=y8UMaM_Wj-o" target="_blank" rel="noopener">texture mapped skies</a>).
+        The same code precomputes what real-time rendering needs to stay fast: scattering look-up tables you can tune
+        and recompute, and environment maps for image-based lighting that update as the Sun moves. Where a computed
+        sky is not wanted, the classic image-based route stays open, with HDR sources and several projections. All of
+        it is plain functions and compute-first WGSL, with no scene graph to adopt.
     </p>
+    <p class="page-meta">Last updated {updated}.</p>
     <p class="status">
         <span class="beta">beta</span> Work in progress. The packages are usable but their APIs can still change.
     </p>
@@ -53,29 +42,47 @@ const updated = formatUpdated(lastUpdated("src/pages/index.astro"));
             ))
         }
     </ul>
+
     <p>
-        Götz Hoeppe's{" "}
+        It started with a book. Götz Hoeppe's{" "}
         <a href="https://press.princeton.edu/books/hardcover/9780691124537/why-the-sky-is-blue" target="_blank" rel="noopener">
-            Why the Sky Is Blue</a> (the original is German:{" "}
-        <a href="https://d-nb.info/956368794" target="_blank" rel="noopener">Blau, die Farbe des Himmels</a>, Spektrum
-        Akademischer Verlag, 1999) follows two and a half thousand years of asking why the sky looks the way it does,
-        from myth to atmospheric physics. It is what brought this subject close in the first place, and a good
-        reminder of how much of what we understand began with a lot of people looking up and refusing to let the
-        question go.
+            Why the Sky Is Blue</a> (German original:{" "}
+        <a href="https://d-nb.info/956368794" target="_blank" rel="noopener">Blau, die Farbe des Himmels</a>, 1999)
+        follows two and a half thousand years of asking why the sky looks the way it does, from myth to atmospheric
+        physics. It pulled me into the subject, and it is a good reminder of how much of what we understand began with
+        people looking up and refusing to let the question go.
     </p>
     <p>
-        The other half of that came from the work of{" "}
-        <a href="http://www-evasion.imag.fr/Membres/Eric.Bruneton/" target="_blank" rel="noopener">Eric Bruneton</a>,
-        with Fabrice Neyret, on precomputed atmospheric scattering, from the same years as the thesis. Less a basis for
-        the original than the reason to take the subject apart and arrive at an own implementation of it. Both shaped
-        osgHimmel back then rather than this port, and both are still worth the time.
+        Then came the work of{" "}
+        <a href="http://www-evasion.imag.fr/Membres/Eric.Bruneton/" target="_blank" rel="noopener">Eric Bruneton</a> and
+        Fabrice Neyret on precomputed atmospheric scattering. It was less a template than a challenge: I wanted to
+        understand it well enough to take it apart and build my own and incorporate it into a real-time visualizations.
     </p>
     <p>
-        What finally started this port was Maxime Heckel's{" "}
+        Years later, three things came together. Maxime Heckel's{" "}
         <a href="https://blog.maximeheckel.com/posts/on-rendering-the-sky-sunsets-and-planets/" target="_blank" rel="noopener">
-            On Rendering the Sky, Sunsets, and Planets</a> from May 2026, which builds atmospheric scattering up from
-        raymarching to look-up tables in WebGL, with a widget for every step. Excellent, and proof that all of this
-        now fits in a browser.
+            On Rendering the Sky, Sunsets, and Planets</a> from May 2026 builds atmospheric scattering up from
+        raymarching to look-up tables in WebGL, with a widget for every step. It is excellent, and proof that all of
+        this now belongs in the browser. Agentic coding, part of my daily work by now, made a port of this size feel
+        within reach. And then I watched the solar eclipse of 12 August 2026, and that settled it.
     </p>
-    <p class="page-updated">Last updated {updated}.</p>
+    <p>
+        So himmel is the successor of{" "}
+        <a href="https://github.com/cgcostume/osghimmel" target="_blank" rel="noopener">osgHimmel</a>, the C++ sky
+        renderer behind my 2012{" "}
+        <a
+            href="https://daniellimberger.de/resources/2012%20%E2%80%93%20Mueller%20%28now%20Limberger%29%20%E2%80%93%20Photorealistisches%20Rendering%20atmosphaerischer%20Effekte%20in%20geovirtuellen%203D-Umgebungen%20in%20Echtzeit.pdf"
+            target="_blank"
+            rel="noopener">master's thesis, Photorealistic Real-Time Rendering of Atmospheric Effects in Geovirtual
+            3D Environments</a>, written in German, and the paper{" "}
+        <a href="https://daniellimberger.de/publications.html#abstract-2012-vmv-sky-phenomena" target="_blank" rel="noopener">
+            Single-Pass Rendering of Day and Night Sky Phenomena</a> (videos:{" "}
+        <a href="https://www.youtube.com/watch?v=t8ibsEl0kAI" target="_blank" rel="noopener">computed sky</a>,{" "}
+        <a href="https://www.youtube.com/watch?v=y8UMaM_Wj-o" target="_blank" rel="noopener">texture mapped skies</a>).
+        Everything from back then gets carried over, reviewed, tested and explained here, one chapter at a time, and
+        modernized to compute-first WebGPU.
+    </p>
+    <p>
+        The best way into all of this is still the oldest one: go outside and look up.
+    </p>
 </Base>

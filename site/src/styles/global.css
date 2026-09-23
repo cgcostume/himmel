@@ -168,6 +168,7 @@ main {
     padding: 0;
     display: grid;
     gap: 1rem;
+    margin: 2.5rem 0 3rem;
 }
 .chapter-list a {
     display: block;
@@ -209,11 +210,6 @@ main {
     margin-bottom: 0;
 }
 /* When a page's content last changed, from the last commit that touched it. */
-.page-updated {
-    margin-top: 3rem;
-    color: var(--muted);
-    font-size: var(--text-small);
-}
 .footnote {
     font-size: var(--text-small);
 }
@@ -377,7 +373,7 @@ figure[id],
 #about {
     scroll-margin-top: 1rem;
 }
-.chapter-meta {
+.page-meta {
     color: var(--muted);
     font-size: var(--text-meta);
 }

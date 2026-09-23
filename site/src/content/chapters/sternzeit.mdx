@@ -1,9 +1,7 @@
 ---
 title: sternzeit
 package: "@himmel/sternzeit"
-summary: >-
-    Astronomy for sky renderers: where the Sun and the Moon are, for any moment and any place on Earth, in a precise and
-    a fast variant.
+summary: "Astronomy for sky renderers: the Sun and the Moon, accurate, anywhere, any time."
 order: 1
 references:
     - mueller2012thesis
@@ -238,10 +236,14 @@ import { sun } from "@himmel/sternzeit"; // precise
 import { sun as fast } from "@himmel/sternzeit/approx"; // approximate
 ```
 
-## Using it
+## Code examples
 
 `@himmel/sternzeit` has no dependencies, touches neither the DOM nor the GPU, and runs anywhere JavaScript runs. It
-returns plain numbers, and it is up to you what to do with them. Four things worth doing with them:
+returns plain numbers, and it is up to you what to do with them. A CAD or architecture viewer with the correct
+light and shadows for a real site and hour. A sun study for a solar roof. A game whose day follows the player's real
+clock. A photo planner that knows when the full Moon rises behind a landmark. A moon calendar. An augmented reality
+overlay that labels what is up there right now. A sundial, or the sky over a date in history. Here are four more
+ideas to start with, code included:
 
 **Light a scene.** The two directions a renderer wants, the ones
 [dunstkreis](../dunstkreis/) takes to light its atmosphere, are one call each, and the Moon's brightness comes with
