@@ -57,15 +57,28 @@ const current = Astro.url.pathname.replace(/\/$/, "");
         </footer>
         <script>
             // Keeps glossary and citation tooltips inside the viewport: shifted left by however far they would overflow.
-            const fit = (event: Event) => {
-                const tip = (event.target as Element).closest?.(".term, .cite")?.querySelector<HTMLElement>(".term-tip");
+            const host = (event: Event) => (event.target as Element).closest?.(".term, .cite") ?? null;
+            const fit = (element: Element | null) => {
+                const tip = element?.querySelector<HTMLElement>(".term-tip");
                 if (!tip) return;
                 tip.style.setProperty("--tip-shift", "0px");
                 const overflow = tip.getBoundingClientRect().right - (document.documentElement.clientWidth - 16);
                 if (overflow > 0) tip.style.setProperty("--tip-shift", `${-overflow}px`);
             };
-            document.addEventListener("pointerover", fit);
-            document.addEventListener("focusin", fit);
+            document.addEventListener("pointerover", (event) => fit(host(event)));
+            document.addEventListener("focusin", (event) => fit(host(event)));
+
+            // A finger cannot hover: on a touch screen the browser fakes it for a moment and then drops it again, taking
+            // the definition with it. So a tap on a term keeps it open, until the next tap on it or anywhere else.
+            document.addEventListener("click", (event) => {
+                const term = (event.target as Element).closest?.(".term") ?? null;
+                for (const open of document.querySelectorAll("[data-tip-open]")) {
+                    if (open !== term) open.removeAttribute("data-tip-open");
+                }
+                if (!term) return;
+                term.toggleAttribute("data-tip-open");
+                fit(term);
+            });
 
             // The chapter list folds behind the burger on a narrow screen (the CSS decides where); it opens on a
             // press and closes again on the next one, on Escape, or on a press anywhere else.

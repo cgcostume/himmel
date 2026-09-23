@@ -17,7 +17,7 @@ const hasReferences = chapter.data.references.length > 0;
 <Base title={`${chapter.data.package}: ${chapter.data.summary}`} description={chapter.data.summary}>
     <h1 class="mono">{chapter.data.package}</h1>
     <p class="lead">{chapter.data.summary}</p>
-    <p class="chapter-meta">Unfamiliar term? Hover it.</p>
+    <p class="chapter-meta">Unfamiliar term? Hover or tap it.</p>
     {
         sections.length >= 3 && (
             <nav class="toc" aria-label="Contents">

@@ -243,7 +243,8 @@ input[type="number"]::-webkit-outer-spin-button {
     width: var(--wide-width);
     margin-left: calc(50% - var(--wide-width) / 2);
 }
-/* Glossary terms, in running text and tables: a dotted underline, the definition on hover or focus. */
+/* Glossary terms, in running text and tables: a dotted underline, the definition on hover, focus, or, where there is
+   nothing to hover with, a tap that leaves it open until the next one (see the script in Base.astro). */
 .term {
     position: relative;
     cursor: help;
@@ -288,6 +289,7 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 .term:hover .term-tip,
 .term:focus-visible .term-tip,
+.term[data-tip-open] .term-tip,
 .cite:hover .term-tip,
 .cite:focus-visible .term-tip {
     visibility: visible;
@@ -306,9 +308,6 @@ input[type="number"]::-webkit-outer-spin-button {
 /* The chapter's sections, compact under its lead: numbered, in two columns where there is room. */
 .toc {
     margin: 1.5rem 0 2rem;
-    padding: 0.6rem 1rem;
-    border: var(--border);
-    border-radius: var(--radius);
     font-size: var(--text-meta);
 }
 .toc ol {

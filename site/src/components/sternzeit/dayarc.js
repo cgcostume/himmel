@@ -196,39 +196,35 @@ function addDot(horizontal, color, strokePx) {
     styled(new Shape({ addTo: anchorFor(horizontal.altitude), translate: skyPoint(horizontal), color }), strokePx);
 }
 
-// The Sun and the Moon are the same size here; the Sun is told apart by the ring of short rays around it, the same
-// motif as in the locked views. The rays lie on the dome's surface around it, in scene units, so they turn with the
-// dome and sort with it rather than floating on top.
+// The Sun and the Moon are the same size here; the Sun is told apart by the same ring of dotted rays it wears in the
+// locked views, at the same size in screen pixels, and always square to the viewer (see frame()).
 const BODY_DOT_PX = 10;
+const SUN_RADIUS_PX = BODY_DOT_PX / 2;
 const SUN_RAY_COUNT = 8;
-const SUN_RAY_GAP = 1.5;
-const SUN_RAY_LENGTH = 2.5;
+const SUN_RAY_GAP_PX = 3;
+const SUN_RAY_LENGTH_PX = 5;
+const SUN_RAY_DOTS = [0.1, 3];
+const billboards = [];
 
 function addSunRays(horizontal) {
-    const center = skyPoint(horizontal);
-    const up = new Vector(center).multiply(1 / R);
-    // Two directions along the dome at the Sun: one level with the horizon, one at right angles to it.
-    const side = new Vector({ x: -up.z, y: 0, z: up.x });
-    side.multiply(1 / (side.magnitude() || 1));
-    const over = new Vector({
-        x: up.y * side.z - up.z * side.y,
-        y: up.z * side.x - up.x * side.z,
-        z: up.x * side.y - up.y * side.x,
-    });
-    const anchor = anchorFor(horizontal.altitude);
+    const at = new Anchor({ addTo: anchorFor(horizontal.altitude), translate: skyPoint(horizontal) });
+    const yaw = new Anchor({ addTo: at });
+    const face = new Anchor({ addTo: yaw });
+    billboards.push({ yaw, face });
+    const [inner, outer] = [SUN_RADIUS_PX + SUN_RAY_GAP_PX, SUN_RADIUS_PX + SUN_RAY_GAP_PX + SUN_RAY_LENGTH_PX];
     for (let i = 0; i < SUN_RAY_COUNT; i++) {
         const [c, s] = [Math.cos((i / SUN_RAY_COUNT) * 2 * Math.PI), Math.sin((i / SUN_RAY_COUNT) * 2 * Math.PI)];
-        const out = new Vector(side).multiply(c).add(new Vector(over).multiply(s));
         const path = [
-            new Vector(center).add(new Vector(out).multiply(SUN_RAY_GAP)),
-            new Vector(center).add(new Vector(out).multiply(SUN_RAY_GAP + SUN_RAY_LENGTH)),
+            { x: inner * c, y: inner * s },
+            { x: outer * c, y: outer * s },
         ];
-        styled(new Shape({ addTo: anchor, path, color: INK }), 1);
+        styled(new Shape({ addTo: face, path, color: INK }), 1, SUN_RAY_DOTS);
     }
 }
 
 function rebuildPaths() {
     const { jd, latitude, longitude } = state;
+    billboards.length = 0;
     for (const anchor of dynamic) {
         for (const child of [...anchor.children]) {
             styles.delete(child);
@@ -350,6 +346,13 @@ frameEl.addEventListener("pointerup", () => {
 });
 
 function frame() {
+    // Undoing the scene's rotation, outermost turn first, leaves these anchors facing the viewer; the scale makes
+    // their own units screen pixels.
+    for (const { yaw, face } of billboards) {
+        yaw.rotate.set({ x: 0, y: -rotation.y, z: 0 });
+        face.rotate.set({ x: -rotation.x, y: 0, z: 0 });
+        face.scale.set({ x: 1 / zoom, y: 1 / zoom, z: 1 / zoom });
+    }
     for (const illustration of layers) {
         illustration.rotate.set(rotation);
         illustration.updateRenderGraph();

@@ -106,11 +106,35 @@ async function lookupElevation(latitude, longitude) {
 }
 
 let liveIntervalId = null;
+let animateIntervalId = null;
+const ANIMATE_PER_SECOND = 30;
 
+function stopAnimate() {
+    clearInterval(animateIntervalId);
+    animateIntervalId = null;
+}
+
+// Both drive the moment, so turning one on turns the other off.
 function setLive(live, source) {
     clearInterval(liveIntervalId);
     liveIntervalId = live ? setInterval(() => update({ jd: julianDayNow() }), 1000) : null;
-    update({ live, ...(live ? { jd: julianDayNow() } : {}) }, source);
+    if (live) stopAnimate();
+    update({ live, ...(live ? { jd: julianDayNow(), animate: false } : {}) }, source);
+}
+
+// The same step the buttons take, taken over and over: whatever granularity is chosen becomes the speed.
+function setAnimate(animate, source, steps) {
+    stopAnimate();
+    if (animate && state.live) setLive(false, source);
+    const minStep = minStepOf(steps);
+    const tick = () => {
+        const choice = chosenStep(steps);
+        const unit = choice?.dataset.calendar;
+        const next = unit ? stepCalendar(state.jd, unit, 1) : state.jd + Number(choice?.value ?? 0);
+        update({ jd: roundToStep(next, minStep) });
+    };
+    if (animate) animateIntervalId = setInterval(tick, 1000 / ANIMATE_PER_SECOND);
+    update({ animate }, source);
 }
 
 for (const root of roots) {
@@ -122,6 +146,7 @@ for (const root of roots) {
 
     const commitJd = () => {
         if (state.live) setLive(false, root);
+        if (state.animate) setAnimate(false, root, field("jdStep"));
         update({ jd: Number(jd.value) }, root);
     };
     const commitLatLong = () => update({ latitude: Number(latitude.value), longitude: Number(longitude.value) }, root);
@@ -154,6 +179,7 @@ for (const root of roots) {
     });
     // One button for both: while it is on the moment follows the clock, and switching it off leaves it at "now".
     field("live").addEventListener("click", () => setLive(!state.live, root));
+    field("animate").addEventListener("click", () => setAnimate(!state.animate, root, field("jdStep")));
     field("geolocate").addEventListener("click", () => {
         const status = field("location");
         if (!navigator.geolocation) {
@@ -192,18 +218,21 @@ function sync(source) {
         set(field("longitude"), state.longitude);
         set(field("height"), state.heightM);
         field("live").setAttribute("aria-pressed", String(state.live));
-        // Nothing to set or step by hand while the clock is driving it.
-        field("jd").disabled = state.live;
+        field("animate").setAttribute("aria-pressed", String(state.animate));
+        // Nothing to set or step by hand while the clock or the animation is driving it.
+        const driven = state.live || state.animate;
+        field("jd").disabled = driven;
         for (const button of root.querySelectorAll('.stepper:has([data-field="jd"]) [data-step]')) {
-            button.disabled = state.live;
+            button.disabled = driven;
         }
         field("summary").textContent = formatSummary();
     }
 }
 
 onChange(sync);
-// Anything else on the page may end live mode too, e.g. the eclipse views jumping to an example moment.
+// Anything else on the page may end live mode or the animation, e.g. the eclipse views jumping to an example moment.
 onChange(() => {
     if (!state.live && liveIntervalId !== null) setLive(false, null);
+    if (!state.animate && animateIntervalId !== null) stopAnimate();
 });
 sync(null);

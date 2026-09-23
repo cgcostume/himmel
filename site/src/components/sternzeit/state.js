@@ -4,7 +4,7 @@ import { fromDate, julianDayUT } from "@himmel/sternzeit";
  * The one moment and place the whole page shows. Every set of controls writes here, and the tables and the scene
  * read from here, so any number of controls on the page stay in sync by construction.
  */
-export const state = { jd: 0, latitude: 52.3920607, longitude: 13.0925765, heightM: 0, live: false };
+export const state = { jd: 0, latitude: 52.3920607, longitude: 13.0925765, heightM: 0, live: false, animate: false };
 
 const changes = new EventTarget();
 

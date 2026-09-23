@@ -10,10 +10,9 @@
 .scene-frame:not(.wide) {
     margin-left: 0;
 }
-/* Space above as well as below: the caption may follow the scene itself or, once the panels move below it, one of
-   their own captions, and it has to read as separate from either. */
 /* Space above and below, none at the sides, and never wider than the text: a caption is read like a paragraph, so it
-   keeps the reading column's width and its place, centered, even under a figure that breaks out of it. */
+   keeps the reading column's width and its place, centered, even under a figure that breaks out of it. The space
+   above matters as much as the one below, since what precedes it may be a sub-figure's own caption. */
 .scene-frame .figure-caption {
     width: calc(var(--measure) - 3rem);
     max-width: 100%;
@@ -57,7 +56,8 @@
     display: flex;
     align-items: center;
 }
-.stepper button {
+.stepper > button[data-step],
+.stepper > button[data-field="geolocate"] {
     width: 1.9rem;
     padding: 0;
 }
@@ -81,10 +81,9 @@
     position: relative;
     z-index: 1;
 }
-/* "now" is a toggle: on, the moment follows the clock and the field beside it is not to be touched; off, it stays
-   wherever the clock left it, as one click on it would have. */
-.stepper button[data-field="live"] {
-    width: auto;
+/* "now" follows the clock, "animate" steps on by itself; both are toggles, and both take their width from their word. */
+.stepper button[data-field="live"],
+.stepper button[data-field="animate"] {
     padding: 0.15rem 0.5rem;
 }
 .stepper button[aria-pressed="true"] {
@@ -222,25 +221,28 @@ tbody tr:nth-child(even) {
 tbody tr:hover {
     background: var(--line);
 }
-/* 4:3 on a phone or a narrow window, 16:9 where the page is wide enough for it (see the media query below). */
-#scene {
+/* The two big scenes, the armillary sphere and the day-arc dome: 4:3 on a phone or a narrow window, 16:9 where the
+   page is wide enough for it (see the media query at the end). Dragging one rotates it, so it neither scrolls the
+   page away under the finger (touch-action) nor smears a selection across the labels drawn on top (user-select). */
+#scene,
+.dome-scene {
     position: relative;
     width: 100%;
     aspect-ratio: 4 / 3;
     max-height: 80vh;
     overflow: hidden;
     touch-action: none;
-    /* Dragging the scene rotates it; it should not smear a selection across the labels drawn on top. */
     user-select: none;
+    cursor: grab;
+}
+#scene:active,
+.dome-scene:active {
+    cursor: grabbing;
 }
 #stage {
     display: block;
     width: 100%;
     height: 100%;
-    cursor: grab;
-}
-#stage:active {
-    cursor: grabbing;
 }
 /* Annotations on top of the scene: an SVG layer for the arrows, HTML for the labels (placed by scene.js). */
 .scene-annotations {
@@ -285,13 +287,27 @@ tbody tr:hover {
 .altaz-panel-moon {
     top: 50%;
 }
-.altaz-panel > svg {
+/* Every panel drawn as an SVG sits in the same framed box, whether it floats over a scene or stands in the reading
+   column. All of them are square, except the analemma as soon as it floats (see the media queries at the end). */
+.altaz-panel > svg,
+.analemma-panel > svg,
+.eclipse-view > svg,
+.moon-view > svg {
     display: block;
     width: 100%;
-    height: 100%;
+    aspect-ratio: 1 / 1;
     border: var(--border);
     border-radius: var(--radius);
     background: var(--bg);
+}
+/* The one panel sized by its box rather than by its own shape: it fills the height its scene gives it. */
+.altaz-panel > svg {
+    height: 100%;
+    aspect-ratio: auto;
+}
+/* Twice as tall as wide while it floats over the dome, where the analemma, a tall figure, has the room for it. */
+.analemma-panel > svg {
+    aspect-ratio: 1 / 2;
 }
 /* The Sun wherever it stands as a symbol (the locked views, the line off the Moon's bright limb): a white disc with
    dotted rays. The Moon beside it in the locked views is a muted disc. */
@@ -314,17 +330,21 @@ tbody tr:hover {
 .figure-moon-lit {
     fill: var(--muted);
 }
-/* Below its panel, small, like the analemma's. */
-/* No nowrap: absolutely positioned inside the panel, the caption takes the panel's width and wraps within it. */
+/* The caption of a panel floating over a scene, below the panel and as wide as it, so it wraps within the panel's
+   width rather than across the scene. It carries the page's background: without it the scene's lines and labels
+   would show through the lines of text. */
+.altaz-caption,
+.analemma-caption {
+    background: var(--bg);
+    font-size: var(--text-small);
+    line-height: 1.3;
+    color: var(--muted);
+}
 .altaz-caption {
     position: absolute;
     top: calc(100% + 0.3em);
     left: 0;
     width: 100%;
-    background: var(--bg);
-    font-size: var(--text-small);
-    line-height: 1.3;
-    color: var(--muted);
 }
 /* A set of moment-and-place controls, foldable behind a one-line summary of the current values. No box around it,
    just a rule down its left saying how far it reaches, the same one a jumped-to reference gets. It sits in the
@@ -369,14 +389,6 @@ tbody tr:hover {
 }
 .eclipse-view {
     margin: 0;
-}
-.eclipse-view > svg {
-    display: block;
-    width: 100%;
-    aspect-ratio: 1 / 1;
-    border: var(--border);
-    border-radius: var(--radius);
-    background: var(--bg);
 }
 .eclipse-view figcaption {
     margin: 0.5rem 0 0;
@@ -476,16 +488,9 @@ tbody tr:hover {
 .off-panel-sun circle {
     fill: none;
 }
-/* The day-arc dome: the scene fills the frame, the compass labels and the analemma panel float on top. */
+/* The day-arc dome: the scene fills the frame, the compass labels and the analemma panel float on top. It is a size
+   container, so the analemma panel can take the locked panels' width: 38% of the scene's height. */
 .dome-scene {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 4 / 3;
-    max-height: 80vh;
-    overflow: hidden;
-    touch-action: none;
-    user-select: none;
-    /* A size container, so the analemma panel can take the locked panels' width: 38% of the scene's height. */
     container-type: size;
 }
 /* Three stacked layers: what is below the horizon, the ground that veils it, and what is above. */
@@ -498,12 +503,6 @@ tbody tr:hover {
 }
 .dome-layer[data-layer="ground"] {
     opacity: 0.8;
-}
-.dome-scene {
-    cursor: grab;
-}
-.dome-scene:active {
-    cursor: grabbing;
 }
 .dome-compass {
     position: absolute;
@@ -529,23 +528,9 @@ tbody tr:hover {
     width: 38cqh;
     pointer-events: none;
 }
-.analemma-panel > svg {
-    display: block;
-    width: 100%;
-    aspect-ratio: 1 / 1;
-    border: var(--border);
-    border-radius: var(--radius);
-    background: var(--bg);
-}
-/* Over the scene, so it carries the page's own background: without it the dome's lines and compass labels show
-   through the lines of text. */
 .analemma-caption {
     display: block;
     margin-top: 0.4em;
-    background: var(--bg);
-    font-size: var(--text-small);
-    line-height: 1.3;
-    color: var(--muted);
 }
 .analemma-line {
     fill: none;
@@ -577,14 +562,6 @@ tbody tr:hover {
 .moon-view {
     max-width: 26rem;
     margin: 0 auto 0.75rem;
-}
-.moon-view > svg {
-    display: block;
-    width: 100%;
-    aspect-ratio: 1 / 1;
-    border: var(--border);
-    border-radius: var(--radius);
-    background: var(--bg);
 }
 .moon-status {
     margin: 0.5rem 0 0;
@@ -712,19 +689,87 @@ tbody tr:hover {
 .icon-button:focus-visible {
     opacity: 1;
 }
+/* Nothing to hover with: the buttons that would otherwise appear on hover are simply always there. */
 @media (hover: none) {
     .svg-download,
     .icon-button {
         opacity: 1;
     }
 }
-/* Narrow screens: what floats over the two big scenes moves below them, the analemma to its own row. The scenes keep
-   their square-ish stage; the layers stay stacked and absolute, so a pseudo element reserves their height in the
-   column. Touch keeps rotating in both axes here (touch-action stays none), so a drag on a scene turns it rather
-   than scrolling the page away under the finger. */
+/* Wide enough for both value columns: no summary line to unfold it, nothing to swap, nothing to explain. */
+.table-fold > summary,
+.table-note,
+.value-swap {
+    display: none;
+}
+/* The page has three widths, and every rule below belongs to one of them, in this order:
+   wide (64rem and up), the big scenes turn 16:9 and the analemma stands tall beside the dome;
+   medium (up to 64rem), the tables come back into the reading column;
+   narrow (up to 48rem), one column all the way down, figures square, tables as cards, controls sized for a finger;
+   plus one step below that (40rem), where even two small panels no longer fit side by side. */
+@media (min-width: 64rem) {
+    /* The flatter frame the reading column no longer constrains: room for the orbits to either side of Earth. */
+    #scene,
+    .dome-scene {
+        aspect-ratio: 16 / 9;
+    }
+}
+/* Narrower than the full site width: only one column of values fits, precise unless the button in its heading
+   swaps the two. */
+@media (max-width: 64rem) {
+    .sternzeit-table.wide {
+        width: auto;
+        margin-left: 0;
+    }
+    /* A notch below the page's meta size: two columns of numbers in the reading column are tight. */
+    .sternzeit-table table {
+        font-size: 0.8rem;
+    }
+    .sternzeit-table .approx {
+        display: none;
+    }
+    .sternzeit-table col.name {
+        width: 45%;
+    }
+    .sternzeit-table col.unit {
+        width: 10%;
+    }
+    .sternzeit-table col.value {
+        width: 45%;
+    }
+    .sternzeit-table col.approx {
+        width: 0;
+    }
+    .sternzeit-table[data-show="approx"] .value:not(.approx) {
+        display: none;
+    }
+    .sternzeit-table[data-show="approx"] .approx {
+        display: table-cell;
+    }
+    .sternzeit-table[data-show="approx"] col.value {
+        width: 0;
+    }
+    .sternzeit-table[data-show="approx"] col.approx {
+        width: 45%;
+    }
+    .value-swap {
+        display: inline;
+        height: auto;
+        margin-left: 0.5rem;
+        padding: 0 0.3rem;
+        color: var(--muted);
+        font-size: inherit;
+    }
+    .value-swap:hover {
+        color: var(--accent);
+    }
+}
+/* Narrow screens, one column all the way down: every figure is the width of the text and square, what floats over
+   the two big scenes moves below them, the tables become cards folded behind their name (a hundred of them would
+   bury the text around them), and everything tappable grows to a finger's size. The scenes keep their square stage,
+   with the layers stacked and absolute, so a pseudo element reserves their height in the column. Touch still rotates
+   in both axes (touch-action stays none), so a drag on a scene turns it rather than scrolling the page. */
 @media (max-width: 48rem) {
-    /* Every figure is the width of the text here, and square: one rule for all of them rather than each panel
-       keeping a size of its own, so the page reads as one column all the way down. */
     .scene-frame.wide {
         width: auto;
         margin-left: 0;
@@ -774,13 +819,14 @@ tbody tr:hover {
         position: relative;
         right: auto;
         height: auto;
-        /* On the square panel itself the caption below it would stick out; it belongs to the SVG instead. */
+        /* On a square box the caption below it would stick out; the shape belongs to the SVG instead. */
         aspect-ratio: auto;
     }
     .altaz-panel-sun,
     .altaz-panel-moon {
         top: auto;
     }
+    /* Square again by its own shape, like every other panel: its box no longer has a height to fill. */
     .altaz-panel > svg {
         height: auto;
         aspect-ratio: 1 / 1;
@@ -789,6 +835,10 @@ tbody tr:hover {
         position: static;
         display: block;
         margin-top: 0.3em;
+    }
+    /* Square and as wide as the text, standing in the column: the tall shape needs a scene to float over. */
+    .analemma-panel > svg {
+        aspect-ratio: 1 / 1;
     }
     .analemma-panel {
         /* Relative, not static: its own download button would otherwise anchor itself to the scene above. Relative
@@ -809,10 +859,6 @@ tbody tr:hover {
         bottom: auto;
         left: auto;
     }
-}
-/* Narrow screens: the controls drop to label plus input per row, with the step sizes and the notes on a row of their
-   own, and everything tappable gets a bigger target. */
-@media (max-width: 48rem) {
     /* One column: the label goes above its field rather than beside it, which leaves the field its full width even
        with a second button (now, the location pin) beside the two steppers. */
     .input-grid {
@@ -820,66 +866,28 @@ tbody tr:hover {
         gap: 0.3rem;
     }
     .input-grid > label,
+    .input-grid-extra,
+    .input-grid-subrow,
     .stepper {
         grid-column: 1;
     }
     .input-grid > label {
         margin-top: 0.4rem;
     }
-    .input-grid-extra,
-    .input-grid-subrow {
-        grid-column: 1;
-    }
-
     /* Bigger targets for a finger; the field between them grows with them, so the row stays one block. */
-    .stepper button {
-        width: 2.4rem;
-        height: 2rem;
-    }
+    .stepper button,
     .stepper input {
         height: 2rem;
+    }
+    .stepper > button[data-step],
+    .stepper > button[data-field="geolocate"] {
+        width: 2.4rem;
     }
     /* Taller for a finger, but narrow enough that the seven Julian Day steps stay one unbroken row. */
     .steps label span {
         padding: 0.3rem 0.45rem;
     }
-}
-/* Narrower than the full site width: the tables come back into the reading column and drop the approx values, which
-   are the comparison, not the answer. The precise ones stay. */
-@media (max-width: 64rem) {
-    .sternzeit-table.wide {
-        width: auto;
-        margin-left: 0;
-    }
-    /* A notch below the page's meta size: three columns of numbers in the reading column are tight. */
-    .sternzeit-table table {
-        font-size: 0.8rem;
-    }
-    .sternzeit-table .approx {
-        display: none;
-    }
-    .sternzeit-table col.approx {
-        width: 0;
-    }
-    .sternzeit-table col.name {
-        width: 46%;
-    }
-    .sternzeit-table col.unit {
-        width: 10%;
-    }
-    .sternzeit-table col.value {
-        width: 44%;
-    }
-}
-/* Wide enough for the table itself: it is always open, so its summary line is not needed. */
-.table-fold > summary {
-    display: none;
-}
-/* The same width at which the figures rearrange: one card per row instead of columns, the approx value dropped (the
-   precise one is the point), and the whole table folded away behind its name, since a hundred cards would bury the
-   text around them. */
-@media (max-width: 48rem) {
-    /* The same size as the moment-and-place summary it sits next to, so both fold markers match. */
+    /* The same size and marker as the moment-and-place summary it sits next to, so both folds match. */
     .table-fold > summary {
         display: block;
         margin-bottom: 0.5rem;
@@ -892,7 +900,6 @@ tbody tr:hover {
     .table-fold > summary::-webkit-details-marker {
         display: none;
     }
-    /* The same marker the moment-and-place box folds behind. */
     .table-fold > summary::before {
         content: "+";
         display: inline-block;
@@ -938,21 +945,28 @@ tbody tr:hover {
         text-align: left;
         padding-right: 0;
     }
-    /* Value first, its unit after it, as one reads it out. */
+    /* Value first, its unit after it, as one reads it out, and the approximation behind both, dimmed. */
     .sternzeit-table td.unit {
         order: 2;
         color: var(--muted);
     }
-}
-/* Wide windows: the two big scenes get the flatter frame the reading column no longer constrains, the one for the
-   orbits reaching out to either side of Earth, the other for the tall analemma panel floating over its right. */
-@media (min-width: 64rem) {
-    #scene,
-    .dome-scene {
-        aspect-ratio: 16 / 9;
+    .sternzeit-table .approx {
+        display: block;
     }
-    .analemma-panel > svg {
-        aspect-ratio: 1 / 2;
+    .sternzeit-table td.approx {
+        order: 3;
+        color: var(--muted);
+    }
+    .sternzeit-table[data-show="approx"] .value:not(.approx) {
+        display: block;
+    }
+    .table-note {
+        display: block;
+        margin: 0 0 0.6rem;
+        font-size: var(--text-meta);
+    }
+    .value-swap {
+        display: none;
     }
 }
 /* Too narrow for two panels side by side: the eclipses stack, and are then as wide as every other figure. */

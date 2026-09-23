@@ -290,12 +290,16 @@ function renderDomain(domainName, jd, open) {
     const rows = computeRows(names, preciseNs, approxNs, jd);
 
     // Foldable, because on a phone a table of this length is a wall to scroll past; open unless the cards are showing.
+    // Where only one of the two value columns fits, the button in its heading swaps which one that is.
+    const swap = (other) =>
+        `<button type="button" class="value-swap" title="Show the ${other} values">${other}</button>`;
     return `
         <details class="table-fold"${open ? " open" : ""}>
             <summary>${domainName}.* <span class="note">${rows.length} values</span></summary>
+            <p class="table-note note">Every card gives the precise value and, dimmed, the one the approximate math arrives at.</p>
             <table>
                 <colgroup><col class="name" /><col class="unit" /><col class="value" /><col class="approx" /></colgroup>
-                <thead><tr><th>${domainName}.*</th><th>unit</th><th class="value">precise</th><th class="value approx">approx</th></tr></thead>
+                <thead><tr><th>${domainName}.*</th><th>unit</th><th class="value">precise${swap("approx")}</th><th class="value approx">approx${swap("precise")}</th></tr></thead>
                 <tbody>${rows.join("")}</tbody>
             </table>
         </details>
@@ -335,6 +339,11 @@ function render() {
 // The details element's toggle event does not bubble, so it is caught on the way down instead.
 for (const container of tableContainers) {
     container.addEventListener("toggle", () => syncControls(container), true);
+    // On the container, not on the button, which is rewritten with the rest of the table on every change.
+    container.addEventListener("click", (event) => {
+        if (!event.target.closest(".value-swap")) return;
+        container.dataset.show = container.dataset.show === "approx" ? "precise" : "approx";
+    });
 }
 
 onChange(render);
