@@ -28,9 +28,9 @@ osghimmel/         read-only reference clone, gitignored
 |---|---|---|
 | `@himmelszelt/sternzeit` (astronomy/sidereal time math) | `packages/sternzeit` | Julian Day, sidereal time, sun/moon/earth positions, moon phase, sun direction from the moon and earthshine done (precise + approx); stars stubbed |
 | `@himmelszelt/dunstkreis` (WebGPU atmosphere, Bruneton precise + Hillaire fast) | `packages/dunstkreis` | Hillaire pipeline + dev page working; Bruneton, IBL, performance pending |
-| `@himmelszelt/sternwarte` (the website, `private: true`) | `site/` | sternzeit chapter done (figures, glossary tooltips, references, TOC); dunstkreis placeholder, and `planned: true` placeholders for nachtgestirn, sternenzelt, gewoelk, rundbild; deployed to GitHub Pages by CI from main |
+| `@himmelszelt/sternwarte` (the website, `private: true`) | `site/` | sternzeit chapter done (figures, glossary tooltips, references, TOC); dunstkreis placeholder, and `planned: true` placeholders for nachtgestirn, funkelwerk, gewoelk, rundbild; deployed to GitHub Pages by CI from main |
 | `@himmelszelt/gewoelk` (clouds) | not created yet | later |
-| `@himmelszelt/sternenzelt` (star rendering) | not created yet | later |
+| `@himmelszelt/funkelwerk` (star rendering) | not created yet | later; named for the twinkle, and to stay clear of himmelszelt |
 | `@himmelszelt/nachtgestirn` (moon rendering) | not created yet | later |
 | `@himmelszelt/rundbild` (texture mapped skies) | not created yet | later; sky projections, HDR environment maps, IBL computed from them, and the horizon band from the thesis. Named after the Rundgemaelde, the 19th century panorama: a 360 degree image of the surroundings, which is what an environment map is |
 
