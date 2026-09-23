@@ -5,6 +5,7 @@ import "./sternzeit.css";
 
 <figure class="moon-figure">
     <div class="moon-view" data-export="moon">
+        <button type="button" class="view-toggle" data-field="lockMoon" aria-pressed="false" title="Lock the view to the Moon itself: north up, no horizon">moon-locked</button>
         <svg viewBox="-100 -100 200 200" aria-hidden="true"></svg>
         <p class="moon-status" data-field="status"></p>
     </div>
@@ -15,7 +16,8 @@ import "./sternzeit.css";
         look at) and its north pole (N) turned, against the zenith (dashed), by the{" "}
         <Term of="Position angle of axis">position angle of the axis</Term> and the{" "}
         <Term of="Parallactic angle">parallactic angle</Term> (arc). The dashed circles are its size at apogee and perigee.
-        Magnified, with the horizon at the same scale.
+        Magnified, with the horizon at the same scale. The button in the corner locks the view to the Moon itself,
+        its north up and the horizon gone, leaving the librations as the only motion.
     </figcaption>
 </figure>
 

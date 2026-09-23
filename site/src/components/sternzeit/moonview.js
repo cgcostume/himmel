@@ -24,6 +24,9 @@ const SUN_ARROW_LENGTH = 14;
 const view = document.querySelector(".moon-view");
 const svgEl = view.querySelector(":scope > svg");
 const statusEl = view.querySelector('[data-field="status"]');
+const lockButton = view.querySelector('[data-field="lockMoon"]');
+// Locked to the Moon: its north up rather than the zenith, and no horizon, so only the librations still move.
+let locked = false;
 
 const f = (n) => n.toFixed(2);
 const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
@@ -82,7 +85,8 @@ function render() {
     const earthshine = precise.moon.earthshine(jd);
     // On the sky, position angles run from north through east, counterclockwise with east to the left. The zenith is at
     // the parallactic angle, so with the zenith up, the Moon's north pole sits at axis - parallactic, counterclockwise.
-    const tilt = axis - parallactic;
+    const twist = axis - parallactic;
+    const tilt = locked ? 0 : twist;
 
     // The Sun's direction in the view's own frame: right = view x up, up = the zenith projected across the line of sight.
     const lineOfSight = precise.horizontalToDirection(horizontal);
@@ -91,7 +95,8 @@ function render() {
     const sun = precise.moon.sunDirection(time, latitude, longitude);
     const s = [dot(sun, right), dot(sun, up), -dot(sun, lineOfSight)];
     // The bright limb's direction on screen, clockwise from up, and how far the terminator bulges.
-    const limb = Math.atan2(s[0], s[1]);
+    // Turning the pole up turns the whole view with it, the Sun's direction on screen included.
+    const limb = Math.atan2(s[0], s[1]) + (twist - tilt) * DEG;
     const bulge = s[2] / Math.hypot(...s);
 
     let svg = "";
@@ -136,10 +141,12 @@ function render() {
     const [nx, ny] = toScreen([0, 1], tilt, 1);
     svg += `<line x1="${f(nx * radius)}" y1="${f(ny * radius)}" x2="${f(nx * (outside + 7))}" y2="${f(ny * (outside + 7))}" class="moon-axis"/>`;
     svg += svgText(nx * (outside + 13), ny * (outside + 13), "N", "figure-note", unitsPerPx);
-    const tiltDeg = ((((tilt + 180) % 360) + 360) % 360) - 180;
-    svg += `<line x1="0" y1="${f(-outside)}" x2="0" y2="${f(-(outside + 7))}" class="moon-zenith"/>`;
-    const arc = Array.from({ length: 25 }, (_, i) => toScreen([0, 1], (tiltDeg * i) / 24, outside + 4));
-    svg += polyline(arc, "moon-tilt");
+    const tiltDeg = ((((twist + 180) % 360) + 360) % 360) - 180;
+    if (!locked) {
+        svg += `<line x1="0" y1="${f(-outside)}" x2="0" y2="${f(-(outside + 7))}" class="moon-zenith"/>`;
+        const arc = Array.from({ length: 25 }, (_, i) => toScreen([0, 1], (tiltDeg * i) / 24, outside + 4));
+        svg += polyline(arc, "moon-tilt");
+    }
 
     // The libration: an arrow from where the Moon's mean center (0° longitude, 0° latitude) appears to the disc's center,
     // the point we look at; that is how far, and which way, we see around the Moon's edge.
@@ -179,18 +186,29 @@ function render() {
 
     // The visible horizon, below the Moon by its apparent altitude over it, at the disc's own scale (so it only shows
     // within a few tenths of a degree); the ground beneath veils what it hides.
-    const horizon = aboveVisibleHorizon(horizontal.altitude, state.heightM) * DEG * UNITS_PER_RADIAN;
-    svg += veiledHorizon(horizon, 100, unitsPerPx);
+    if (!locked) {
+        const horizon = aboveVisibleHorizon(horizontal.altitude, state.heightM) * DEG * UNITS_PER_RADIAN;
+        svg += veiledHorizon(horizon, 100, unitsPerPx);
+    }
     svgEl.innerHTML = svg;
 
     const minutes = (precise.moon.apparentAngularDiameter(jd) / DEG) * 60;
     const ew = l >= 0 ? "E" : "W";
     const ns = b >= 0 ? "N" : "S";
+    const tiltText = locked
+        ? ""
+        : `tilt ${tiltDeg.toFixed(1)}° (axis ${axis.toFixed(1)}° − parallactic ${parallactic.toFixed(1)}°); `;
     statusEl.innerHTML =
         `<span class="subfigure-title">lunar libration</span> ${Math.abs(l).toFixed(1)}° ${ew}, ${Math.abs(b).toFixed(1)}° ${ns}; ` +
-        `tilt ${tiltDeg.toFixed(1)}° (axis ${axis.toFixed(1)}° − parallactic ${parallactic.toFixed(1)}°); ` +
+        tiltText +
         `${minutes.toFixed(1)}′ across; earthshine ${(earthshine * 100).toFixed(1)}%`;
 }
+
+lockButton.addEventListener("click", () => {
+    locked = !locked;
+    lockButton.setAttribute("aria-pressed", String(locked));
+    render();
+});
 
 onChange(render);
 // Its text keeps the page's small size in screen pixels, so a resized panel redraws.

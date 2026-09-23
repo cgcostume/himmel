@@ -668,6 +668,23 @@ tbody tr:hover {
     stroke-linecap: round;
     stroke-linejoin: round;
 }
+/* A switch over a figure, opposite its download button: always visible, since nothing else hints at the second view. */
+.view-toggle {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    z-index: 5;
+    padding: 0.1rem 0.4rem;
+    color: var(--muted);
+    font-size: var(--text-small);
+}
+.view-toggle:hover {
+    color: var(--accent);
+}
+.view-toggle[aria-pressed="true"] {
+    color: var(--accent);
+    border-color: var(--accent);
+}
 /* No box around the controls any more, so their copy button sits in the corner of the summary line itself. It is
    inside the summary element, not a child of the set, hence the descendant selector. */
 .moment .icon-button {
