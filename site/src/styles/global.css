@@ -191,6 +191,13 @@ pre code {
     border: 0;
     padding: 0;
 }
+/* Snippets are wrapped at 80 columns, which a phone cannot show: there the lines wrap rather than scroll sideways. */
+@media (max-width: 48rem) {
+    pre {
+        white-space: pre-wrap;
+        overflow-wrap: break-word;
+    }
+}
 /* Form controls, shared by every chapter's interactive parts. */
 input,
 button,
@@ -319,7 +326,8 @@ input[type="number"]::-webkit-outer-spin-button {
 .toc li::marker {
     color: var(--muted);
 }
-h2 {
+h2,
+figure[id] {
     scroll-margin-top: 1rem;
 }
 .chapter-meta {

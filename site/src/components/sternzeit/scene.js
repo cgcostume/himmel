@@ -1,6 +1,6 @@
 import * as precise from "@himmel/sternzeit";
 import Zdog from "zdog";
-import { COMPASS, cssColor, gridLine, labelAboveY, moonSymbol, sunSymbol, svgText } from "./figure.js";
+import { COMPASS, cssColor, gridLine, labelAboveY, moonSymbol, sunInViewFrame, sunSymbol, svgText } from "./figure.js";
 import { aboveVisibleHorizon } from "./horizon.js";
 import { offPanelArrow, offPanelArrowSvg } from "./offpanel.js";
 import { state } from "./state.js";
@@ -341,7 +341,7 @@ function azimuthDelta(fromAzimuth, toAzimuth) {
     return ((((toAzimuth - fromAzimuth) % 360) + 540) % 360) - 180;
 }
 
-function updateAltAzPanel(panel, anchorHorizontal, otherHorizontal, lit, earthshine) {
+function updateAltAzPanel(panel, anchorHorizontal, otherHorizontal, lit, earthshine, towardsSun) {
     // The panel is drawn at whatever size the page gives it; arrows and labels keep their size in screen pixels.
     const unitsPerPx = ALTAZ_PANEL_SIZE / (panel.element.clientWidth || ALTAZ_PANEL_SIZE);
     // Redrawn only when something changed, not every frame of the main scene.
@@ -352,6 +352,7 @@ function updateAltAzPanel(panel, anchorHorizontal, otherHorizontal, lit, earthsh
         otherHorizontal.azimuth,
         lit,
         earthshine,
+        towardsSun.x,
         unitsPerPx,
     ].join();
     if (key === panel.drawn) return;
@@ -381,9 +382,6 @@ function updateAltAzPanel(panel, anchorHorizontal, otherHorizontal, lit, earthsh
         if (Math.abs(d) > ALTAZ_FIELD_OF_VIEW_DEG / 2) return;
         svg += svgText(tangentPx(d), labelAboveY(ALTAZ_HORIZON_Y, unitsPerPx), label, "figure-label", unitsPerPx);
     });
-    // Which way the Moon's lit side faces: towards the Sun as this panel places it, off-panel Sun included.
-    const gap = Math.hypot(sunPoint.x - moonPoint.x, sunPoint.y - moonPoint.y) || 1;
-    const towardsSun = { x: (sunPoint.x - moonPoint.x) / gap, y: (sunPoint.y - moonPoint.y) / gap };
     // The sun before the moon, whichever is the anchor, so the moon renders in front whenever the two nearly overlap.
     svg += altAzBody(sunPoint, true) + altAzBody(moonPoint, false, towardsSun, lit, earthshine);
     // A body outside the panel, usually far below the horizon, gets the shared off-panel arrow (see offpanel.js).
@@ -494,8 +492,12 @@ function frame() {
     const moonSeen = overHorizon(moonHorizontal);
     const lit = precise.moon.illuminatedFraction(jd);
     const earthshine = precise.moon.earthshine(jd);
-    updateAltAzPanel(sunView, sunSeen, moonSeen, lit, earthshine);
-    updateAltAzPanel(moonView, moonSeen, sunSeen, lit, earthshine);
+    // The tilt of the crescent is the observer's, not the panel's: taken from the sky itself, so it matches the
+    // Moon's own figure rather than following this panel's stretched projection.
+    const sunFrame = sunInViewFrame(time, latitude, longitude);
+    const towardsSun = { x: sunFrame.right, y: -sunFrame.up };
+    updateAltAzPanel(sunView, sunSeen, moonSeen, lit, earthshine, towardsSun);
+    updateAltAzPanel(moonView, moonSeen, sunSeen, lit, earthshine, towardsSun);
 
     sunAnchor.translate = sunPos;
     sunDisc.rotate = billboardRotate(rotX, rotY);

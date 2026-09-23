@@ -30,6 +30,20 @@ import {
 /** http://nssdc.gsfc.nasa.gov/planetary/factsheet/moonfact.html */
 export const MEAN_RADIUS_KM = 1737.1;
 
+/**
+ * Mean length of a lunation, new moon to new moon, in days, per Meeus' "Astronomical Algorithms" (49.1). The true
+ * interval swings about half a day either side of it, so it locates a phase rather than timing it: stepping by it
+ * from `MEAN_NEW_MOON` lands within a day of every new moon, which is enough to then search for one.
+ */
+export const MEAN_SYNODIC_MONTH = 29.530588861;
+
+/**
+ * The mean new moon of 2000 January 6, from which lunations are counted (Meeus 49.1): lunation k is at
+ * `MEAN_NEW_MOON + k * MEAN_SYNODIC_MONTH`, a full moon half a lunation later. In JDE (terrestrial time), which
+ * is about a minute ahead of the UT these functions take, far below the accuracy of the mean phase itself.
+ */
+export const MEAN_NEW_MOON = 2451550.09766;
+
 /** Inclination of the Moon's mean equator to the ecliptic (I), in radians. */
 const MEAN_EQUATOR_INCLINATION = 1.54242 * DEG_TO_RAD;
 

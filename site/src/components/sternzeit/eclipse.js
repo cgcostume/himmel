@@ -11,6 +11,8 @@ const HALF = 100;
 const SUN_RADIUS_UNITS = 30;
 // Lunar panel: kilometers at the Moon's distance per unit, so the penumbra (~8,200 km) fills most of the panel.
 const KM_PER_UNIT = 110;
+// How far past the umbra's edge its shading is carried, fading as it goes.
+const UMBRA_FADE = 1.09;
 // Off-panel bodies get the shared off-panel arrow instead (see offpanel.js), sized in screen pixels.
 let unitsPerPx = 1;
 // A Sun hidden completely shows its corona: a photograph of the total eclipse of 20 April 2023 from Exmouth, Western
@@ -22,12 +24,6 @@ const CORONA_IMAGE = `${import.meta.env.BASE_URL.replace(/\/$/, "")}/images/coro
 const CORONA_PHOTO_PX = 1254;
 const CORONA_DISC_CENTER_PX = [625.5, 606.5];
 const CORONA_DISC_DIAMETER_PX = 419;
-
-// The two examples the chapter text mentions, each from a place where it was visible.
-const JUMPS = {
-    solar: { jd: 2461265.2708333, latitude: 42.34, longitude: -3.7, live: false },
-    lunar: { jd: 2457293.6173611, latitude: 52.3920607, longitude: 13.0925765, live: false },
-};
 
 let idCount = 0;
 
@@ -116,11 +112,15 @@ function renderLunar(jd) {
         const edge = (umbra / penumbra).toFixed(3);
         svg += `<radialGradient id="${pid}" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="${penumbra}">`;
         svg += `<stop offset="${edge}" class="eclipse-penumbra-inner"/><stop offset="1" class="eclipse-penumbra-outer"/></radialGradient>`;
-        svg += `<radialGradient id="${uid}" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="${umbra}">`;
-        svg += `<stop offset="0" class="eclipse-umbra-core"/><stop offset="0.7" class="eclipse-umbra-mid"/>`;
-        svg += `<stop offset="1" class="eclipse-umbra-rim"/></radialGradient>`;
+        // Drawn past the umbra's edge and fading out over it: the real shadow has no hard rim either, and the last
+        // light to make it round the Earth has been through the ozone layer, which leaves it blue.
+        svg += `<radialGradient id="${uid}" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="${umbra * UMBRA_FADE}">`;
+        svg += `<stop offset="0" class="eclipse-umbra-core"/><stop offset="0.42" class="eclipse-umbra-inner"/>`;
+        svg += `<stop offset="0.66" class="eclipse-umbra-mid"/><stop offset="0.84" class="eclipse-umbra-rim"/>`;
+        svg += `<stop offset="0.93" class="eclipse-umbra-ozone"/><stop offset="1" class="eclipse-umbra-fade"/>`;
+        svg += `</radialGradient>`;
         svg += `<g clip-path="url(#${clip})"><circle r="${penumbra}" fill="url(#${pid})"/>`;
-        svg += `<circle r="${umbra}" fill="url(#${uid})"/></g>`;
+        svg += `<circle r="${umbra * UMBRA_FADE}" fill="url(#${uid})"/></g>`;
     }
     const arrow = onPanelLunar ? "" : offPanelMoon(mx, my);
     svg += circle(0, 0, penumbra, "eclipse-edge") + circle(0, 0, umbra, "eclipse-edge");
@@ -156,15 +156,108 @@ const views = document.querySelectorAll(".eclipse-view[data-kind]");
 
 function render() {
     for (const view of views) {
-        unitsPerPx = (2 * HALF) / (view.querySelector(":scope > svg").clientWidth || 2 * HALF);
+        const panel = view.querySelector(".eclipse-panel > svg");
+        unitsPerPx = (2 * HALF) / (panel.clientWidth || 2 * HALF);
         const { svg, status } = RENDERERS[view.dataset.kind](state.jd);
-        view.querySelector(":scope > svg").innerHTML = svg;
+        panel.innerHTML = svg;
         view.querySelector('[data-field="status"]').textContent = status;
     }
 }
 
+// An eclipse needs a new moon (solar) or a full one (lunar), so the search steps from one to the next rather than
+// through the days between them (moon.MEAN_SYNODIC_MONTH and moon.MEAN_NEW_MOON); the true phase wanders up to
+// about half a day either side of the mean one, which the day around each candidate covers.
+const SEARCH_YEARS = 20;
+const CANDIDATE_WINDOW = 1;
+// The grids a candidate is walked on: three hours to rule it out, ten minutes to find the closest approach, one
+// minute to pin it down.
+const RULE_OUT_STEP = 1 / 8;
+const COARSE_STEP = 1 / 144;
+const FINE_STEP = 1 / 1440;
+// Geocentric separation under which the Moon may cover the Sun somewhere on Earth: the two discs are about half a
+// degree wide, and parallax moves the Moon by up to another degree.
+const SOLAR_REACH_DEG = 2.5;
+
+const timeOf = (jd) => precise.fromJulianDay(jd);
+
+/** How far the Moon is from what would eclipse it, as seen from Earth's center. */
+function geocentricDistance(jd, lunar) {
+    if (lunar) return precise.eclipse.lunar(jd).axisOffsetKm;
+    const [m, s] = [precise.moon.apparentPosition(jd), precise.sun.apparentPosition(jd)];
+    return precise.angularSeparation(m.rightAscension, m.declination, s.rightAscension, s.declination);
+}
+
+/** Whether `jd` is close enough to be worth walking minute by minute. */
+function mayEclipse(jd, lunar) {
+    if (!lunar) return geocentricDistance(jd, false) < SOLAR_REACH_DEG;
+    const shadow = precise.eclipse.lunar(jd);
+    return shadow.axisOffsetKm < 2 * shadow.penumbraRadiusKm;
+}
+
+/**
+ * How far the Moon is from the Sun in this place's own sky, or null while the Sun is down: an eclipse no one here
+ * can see is not one to jump to, and skipping the night is what makes the search quick.
+ */
+function separationHere(jd) {
+    const time = timeOf(jd);
+    const s = precise.sun.horizontalPosition(time, state.latitude, state.longitude);
+    if (s.altitude <= 0) return null;
+    const m = precise.moon.horizontalPosition(time, state.latitude, state.longitude);
+    return precise.angularSeparation(s.azimuth, s.altitude, m.azimuth, m.altitude);
+}
+
+/** The deepest moment within `window` of `middle`, walked coarsely and then refined, or null if there is none. */
+function deepest(middle, lunar) {
+    const distance = lunar ? (jd) => precise.eclipse.lunar(jd).axisOffsetKm : separationHere;
+    let best = null;
+    for (let jd = middle - CANDIDATE_WINDOW; jd <= middle + CANDIDATE_WINDOW; jd += COARSE_STEP) {
+        const value = distance(jd);
+        if (value !== null && (!best || value < best.value)) best = { jd, value };
+    }
+    if (!best) return null;
+    for (let jd = best.jd - COARSE_STEP; jd <= best.jd + COARSE_STEP; jd += FINE_STEP) {
+        const value = distance(jd);
+        if (value !== null && value < best.value) best = { jd, value };
+    }
+    if (lunar) {
+        const shadow = precise.eclipse.lunar(best.jd);
+        return shadow.axisOffsetKm - precise.moon.MEAN_RADIUS_KM < shadow.umbraRadiusKm ? best.jd : null;
+    }
+    return precise.eclipse.solar(timeOf(best.jd), state.latitude, state.longitude).phase < 1 ? best.jd : null;
+}
+
+/**
+ * The nearest eclipse before or after `from`, searched rather than looked up: one candidate per lunation, ruled out
+ * in a few calls unless the two bodies really do come close. Penumbral lunar eclipses are left out, there is nothing
+ * to see in them, and solar ones are answered for the chosen place, which is why they are rarer than the almanac's.
+ */
+function nearestEclipse(from, direction, lunar) {
+    const { MEAN_NEW_MOON, MEAN_SYNODIC_MONTH } = precise.moon;
+    const offset = lunar ? 0.5 : 0;
+    const k0 = (from - MEAN_NEW_MOON) / MEAN_SYNODIC_MONTH - offset;
+    const months = Math.round((SEARCH_YEARS * 365.25) / MEAN_SYNODIC_MONTH);
+    for (let i = 0; i <= months; i++) {
+        const k = direction > 0 ? Math.floor(k0) + i : Math.ceil(k0) - i;
+        const middle = MEAN_NEW_MOON + (k + offset) * MEAN_SYNODIC_MONTH;
+        let near = false;
+        for (let jd = middle - CANDIDATE_WINDOW; jd <= middle + CANDIDATE_WINDOW && !near; jd += RULE_OUT_STEP) {
+            near = mayEclipse(jd, lunar);
+        }
+        if (!near) continue;
+        const found = deepest(middle, lunar);
+        if (found !== null && (direction > 0 ? found > from : found < from)) return found;
+    }
+    return null;
+}
+
 for (const button of document.querySelectorAll(".eclipse-view [data-jump]")) {
-    button.addEventListener("click", () => update(JUMPS[button.dataset.jump]));
+    button.addEventListener("click", () => {
+        const view = button.closest(".eclipse-view");
+        const status = view.querySelector('[data-field="status"]');
+        const jd = nearestEclipse(state.jd, Number(button.dataset.step), button.dataset.jump === "lunar");
+        if (jd === null) status.textContent = `none within ${SEARCH_YEARS} years of this moment`;
+        else update({ jd, live: false, animate: false });
+    });
 }
 
 onChange(render);

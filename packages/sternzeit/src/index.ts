@@ -77,6 +77,8 @@ export const sun = {
 export type { MoonLibration } from "./moon.js";
 export const moon = {
     MEAN_RADIUS_KM: moonImpl.MEAN_RADIUS_KM,
+    MEAN_SYNODIC_MONTH: moonImpl.MEAN_SYNODIC_MONTH,
+    MEAN_NEW_MOON: moonImpl.MEAN_NEW_MOON,
     meanLongitude: moonImpl.meanLongitude,
     meanElongation: moonImpl.meanElongation,
     meanAnomaly: moonImpl.meanAnomaly,

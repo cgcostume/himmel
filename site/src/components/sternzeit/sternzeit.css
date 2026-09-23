@@ -291,7 +291,7 @@ tbody tr:hover {
    column. All of them are square, except the analemma as soon as it floats (see the media queries at the end). */
 .altaz-panel > svg,
 .analemma-panel > svg,
-.eclipse-view > svg,
+.eclipse-panel > svg,
 .moon-view > svg {
     display: block;
     width: 100%;
@@ -402,8 +402,26 @@ tbody tr:hover {
     display: block;
     color: var(--muted);
 }
-.eclipse-view figcaption button {
-    margin-top: 0.4rem;
+/* The panel proper, without the caption below it: what floats over the figure is placed against this. */
+.eclipse-panel {
+    position: relative;
+}
+/* Over the foot of its panel, where the figure is empty anyway: the step to the nearest eclipse either way. */
+.eclipse-jump {
+    position: absolute;
+    bottom: 0.6rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 5;
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+    color: var(--muted);
+    font-size: var(--text-small);
+    white-space: nowrap;
+}
+.eclipse-jump button:hover {
+    color: var(--accent);
 }
 .eclipse-sun {
     fill: var(--text);
@@ -434,15 +452,27 @@ tbody tr:hover {
     stop-color: #000;
     stop-opacity: 0;
 }
-/* A totally eclipsed Moon is not black: Earth's atmosphere bends sunset-red light into the umbra, least into its center. */
+/* A totally eclipsed Moon is not black: Earth's atmosphere bends sunset-red light into the umbra, least into its
+   center, which stays very nearly dark. */
 .eclipse-umbra-core {
-    stop-color: hsl(4 60% 13%);
+    stop-color: hsl(6 55% 5%);
+}
+.eclipse-umbra-inner {
+    stop-color: hsl(6 58% 9%);
 }
 .eclipse-umbra-mid {
-    stop-color: hsl(10 60% 24%);
+    stop-color: hsl(10 60% 15%);
 }
 .eclipse-umbra-rim {
-    stop-color: hsl(20 60% 38%);
+    stop-color: hsl(18 60% 26%);
+}
+/* The blue rim of Earth's shadow: sunlight grazing the ozone layer loses its red before it reaches the Moon. */
+.eclipse-umbra-ozone {
+    stop-color: hsl(205 45% 30%);
+}
+.eclipse-umbra-fade {
+    stop-color: hsl(205 40% 34%);
+    stop-opacity: 0;
 }
 .eclipse-edge {
     fill: none;
@@ -668,15 +698,19 @@ tbody tr:hover {
     stroke-linecap: round;
     stroke-linejoin: round;
 }
-/* A switch over a figure, opposite its download button: always visible, since nothing else hints at the second view. */
+/* Controls that sit over a figure rather than under it: the view switch and the steps to the nearest eclipse. */
+.view-toggle,
+.eclipse-jump button {
+    padding: 0.1rem 0.4rem;
+    color: var(--muted);
+    font-size: var(--text-small);
+}
+/* Opposite the download button, always visible, since nothing else hints at the second view. */
 .view-toggle {
     position: absolute;
     top: 6px;
     left: 6px;
     z-index: 5;
-    padding: 0.1rem 0.4rem;
-    color: var(--muted);
-    font-size: var(--text-small);
 }
 .view-toggle:hover {
     color: var(--accent);

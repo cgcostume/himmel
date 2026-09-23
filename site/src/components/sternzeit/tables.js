@@ -11,6 +11,8 @@ import { onChange, state } from "./state.js";
 // Anything not listed defaults to degrees, the overwhelming majority.
 const UNITS = {
     MEAN_RADIUS_KM: "km",
+    MEAN_SYNODIC_MONTH: "d",
+    MEAN_NEW_MOON: "jd",
     ATMOSPHERE_THICKNESS_KM: "km",
     ATMOSPHERE_THICKNESS_NON_UNIFORM_KM: "km",
     PRESSURE_SCALE_HEIGHT_M: "m",
@@ -38,6 +40,14 @@ const DEFAULT_UNIT = "deg";
 // style as glossary terms. Keyed by name or "name.field".
 const DESCRIPTIONS = {
     MEAN_RADIUS_KM: ["Mean radius", "The body's mean radius, in kilometers."],
+    MEAN_SYNODIC_MONTH: [
+        "Mean synodic month",
+        "Mean length of a lunation, new moon to new moon, in days. The true interval swings about half a day either side of it.",
+    ],
+    MEAN_NEW_MOON: [
+        "Mean new moon epoch",
+        "The mean new moon of 2000 January 6, as a Julian Day: lunation k falls at this plus k mean synodic months, a full moon half a lunation later.",
+    ],
     ATMOSPHERE_THICKNESS_KM: [
         "Atmosphere thickness",
         "The uniform-density atmosphere thickness used for simplified scattering models, in kilometers.",

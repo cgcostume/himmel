@@ -78,3 +78,22 @@ test("moon.sunDirection is a unit vector within a fraction of a degree of the Su
         expect(angle).toBeLessThan(0.2);
     }
 });
+
+test("stepping by moon.MEAN_SYNODIC_MONTH from MEAN_NEW_MOON stays within a day of every new and full moon", () => {
+    const { MEAN_NEW_MOON, MEAN_SYNODIC_MONTH } = precise.moon;
+    // Two hundred lunations, about sixteen years, from the epoch.
+    for (let k = 0; k < 200; k++) {
+        for (const [offset, wanted] of [
+            [0, 0],
+            [0.5, 1],
+        ] as const) {
+            const mean = MEAN_NEW_MOON + (k + offset) * MEAN_SYNODIC_MONTH;
+            let closest = Number.POSITIVE_INFINITY;
+            for (let jd = mean - 1; jd <= mean + 1; jd += 1 / 48) {
+                closest = Math.min(closest, Math.abs(precise.moon.illuminatedFraction(jd) - wanted));
+            }
+            // A true new or full moon lies inside the window, to a fraction of a percent of the disc.
+            expect(closest).toBeLessThan(0.002);
+        }
+    }
+});

@@ -1,5 +1,5 @@
 import * as precise from "@himmel/sternzeit";
-import { svgText, veiledHorizon } from "./figure.js";
+import { sunInViewFrame, svgText, veiledHorizon } from "./figure.js";
 import { aboveVisibleHorizon } from "./horizon.js";
 import { onChange, state } from "./state.js";
 import "./export.js";
@@ -29,12 +29,6 @@ const lockButton = view.querySelector('[data-field="lockMoon"]');
 let locked = false;
 
 const f = (n) => n.toFixed(2);
-const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
-const normalize = (a) => {
-    const length = Math.hypot(...a);
-    return a.map((c) => c / length);
-};
 const polyline = (points, cls) =>
     `<polyline points="${points.map(([x, y]) => `${f(x)},${f(y)}`).join(" ")}" class="${cls}"/>`;
 
@@ -88,16 +82,11 @@ function render() {
     const twist = axis - parallactic;
     const tilt = locked ? 0 : twist;
 
-    // The Sun's direction in the view's own frame: right = view x up, up = the zenith projected across the line of sight.
-    const lineOfSight = precise.horizontalToDirection(horizontal);
-    const up = normalize(cross(cross(lineOfSight, [0, 0, 1]), lineOfSight)); // (v x z) x v = z - (z . v) v
-    const right = cross(lineOfSight, up);
-    const sun = precise.moon.sunDirection(time, latitude, longitude);
-    const s = [dot(sun, right), dot(sun, up), -dot(sun, lineOfSight)];
-    // The bright limb's direction on screen, clockwise from up, and how far the terminator bulges.
-    // Turning the pole up turns the whole view with it, the Sun's direction on screen included.
-    const limb = Math.atan2(s[0], s[1]) + (twist - tilt) * DEG;
-    const bulge = s[2] / Math.hypot(...s);
+    // The bright limb's direction on screen, clockwise from up, and how far the terminator bulges. Turning the pole
+    // up turns the whole view with it, the Sun's direction on screen included.
+    const sunFrame = sunInViewFrame(time, latitude, longitude);
+    const limb = Math.atan2(sunFrame.right, sunFrame.up) + (twist - tilt) * DEG;
+    const bulge = sunFrame.toward / Math.hypot(sunFrame.right, sunFrame.up, sunFrame.toward);
 
     let svg = "";
     svg += `<circle r="${f(radius)}" class="moon-night"/>`;

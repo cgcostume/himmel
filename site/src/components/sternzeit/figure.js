@@ -1,3 +1,5 @@
+import * as precise from "@himmel/sternzeit";
+
 // Text inside the figures' SVGs, at the page's small text size (--text-small, 0.75rem, like the compass labels)
 // whatever size the SVG is drawn at: each figure passes how many of its own units one screen pixel is.
 const SMALL_TEXT_PX = 12;
@@ -57,6 +59,27 @@ export function gridLine(y, left, right, label, unitsPerPx) {
     const start = left + (GRID_LABEL_PADDING_PX + GRID_LABEL_WIDTH_PX) * unitsPerPx;
     const line = `<line x1="${start.toFixed(2)}" y1="${y.toFixed(2)}" x2="${right.toFixed(2)}" y2="${y.toFixed(2)}" class="figure-grid"/>`;
     return svgText(start - GRID_LABEL_GAP_PX * unitsPerPx, y, label, "figure-grid-label", unitsPerPx) + line;
+}
+
+const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+const normalize = (a) => {
+    const length = Math.hypot(...a);
+    return a.map((c) => c / length);
+};
+
+/**
+ * Where the Sun stands as seen from the Moon's place in the sky, in the frame every figure draws that sky in: right
+ * across the view, up towards the zenith, and toward the viewer. It is what tilts the crescent, and it belongs to
+ * the observer, not to any one panel, so every figure that shows the Moon from here has to agree on it.
+ */
+export function sunInViewFrame(time, latitude, longitude) {
+    const lineOfSight = precise.horizontalToDirection(precise.moon.horizontalPosition(time, latitude, longitude));
+    // (v x z) x v is the zenith with the line of sight taken out of it: straight up, across the view.
+    const up = normalize(cross(cross(lineOfSight, [0, 0, 1]), lineOfSight));
+    const right = cross(lineOfSight, up);
+    const sun = precise.moon.sunDirection(time, latitude, longitude);
+    return { right: dot(sun, right), up: dot(sun, up), toward: -dot(sun, lineOfSight) };
 }
 
 // Earthshine peaks at about this, relative to full sunlight (see moon.earthshine): the night side is at its bluest.
