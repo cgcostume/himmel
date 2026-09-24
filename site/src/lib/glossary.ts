@@ -36,5 +36,13 @@ export function findEntry(name: string): GlossaryEntry {
     return entry;
 }
 
+/** What a German library name means word for word: the first quoted phrase of its entry, e.g. "star time". */
+export function literalMeaning(name: string): string {
+    const definition = (glossary as Record<string, string>)[name.toLowerCase()] ?? "";
+    const match = definition.match(/"([^"]+)"/);
+    if (!match) throw new Error(`"${name}" has no quoted literal meaning in the glossary`);
+    return match[1];
+}
+
 /** Like findEntry, but for the browser: undefined instead of throwing. */
 export const lookupEntry = (name: string): GlossaryEntry | undefined => byName.get(name.toLowerCase());

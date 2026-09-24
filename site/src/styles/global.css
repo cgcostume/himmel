@@ -164,20 +164,27 @@ main {
 .lead {
     font-size: 1.15rem;
 }
+/* The libraries as tiles, each with what its German name means; planned ones only outlined. */
 .chapter-list {
     list-style: none;
     padding: 0;
     display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
     gap: 1rem;
     margin: 2.5rem 0 3rem;
 }
 .chapter-list a {
     display: block;
+    height: 100%;
     padding: 1rem 1.25rem;
     background: var(--surface);
     border: var(--border);
     border-radius: var(--radius);
     color: var(--text);
+}
+.chapter-list a.planned {
+    background: none;
+    border-style: dashed;
 }
 .chapter-list a:hover {
     border-color: var(--accent);
@@ -186,13 +193,18 @@ main {
 .chapter-list .mono {
     color: var(--accent);
 }
-.chapter-list .planned {
+.chapter-list .planned-tag {
     margin-left: 0.6rem;
     color: var(--muted);
-    font-size: var(--text-small);
+}
+.chapter-list .literal {
+    display: block;
+    color: var(--muted);
+    font-size: var(--text-meta);
+    font-style: italic;
 }
 .chapter-list p {
-    margin: 0.25rem 0 0;
+    margin: 0.5rem 0 0;
     color: var(--muted);
 }
 /* The same introduction to himmelszelt on every chapter: set apart from the chapter's own voice, but not boxed in. */
