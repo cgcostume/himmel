@@ -16,8 +16,6 @@ const SAMPLES_PER_HOUR = 6;
 const HOURS = 24;
 // The analemma: the Sun at the same time of day, on every day of the half year before and after the moment.
 const ANALEMMA_DAYS = 182;
-// Dots along the analemma every this many days, so its uneven speed shows.
-const ANALEMMA_TICK_DAYS = 14;
 // Half the analemma panel's width in degrees; its height always spans the full 180 degrees from zenith to nadir.
 const ANALEMMA_HALF_WIDTH = 35;
 // The dome sits below the frame's middle: seen from high up it reaches as far above the horizon plane as the sky
@@ -256,7 +254,8 @@ function renderAnalemma() {
     for (let day = -ANALEMMA_DAYS; day <= ANALEMMA_DAYS; day++) {
         const { azimuth, altitude } = seen(precise.sun, precise.fromJulianDay(jd + day), latitude, longitude);
         const deltaAzimuth = ((azimuth - today.azimuth + 540) % 360) - 180;
-        points.push({ day, x: deltaAzimuth * Math.cos(altitude * DEG), y: -altitude });
+        const firstOfMonth = new Date((jd + day - 2440587.5) * 86400000).getUTCDate() === 1;
+        points.push({ day, firstOfMonth, x: deltaAzimuth * Math.cos(altitude * DEG), y: -altitude });
     }
     // A fixed scale, zenith to nadir with the horizon in the middle, so analemmas from different places compare directly.
     // The viewBox is fitted into the panel keeping its aspect ratio, so the larger of the two scales applies.
@@ -287,8 +286,9 @@ function renderAnalemma() {
             svg += svgText(x, labelAboveY(0, unitsPerPx), label, "figure-label", unitsPerPx);
     });
     svg += `<polyline points="${points.map((p) => `${f(p.x)},${f(p.y)}`).join(" ")}" class="analemma-line"/>`;
+    // A dot on the 1st of every month: fixed on the curve while the Sun moves along it, and their spacing shows its pace.
     for (const p of points) {
-        if (p.day % ANALEMMA_TICK_DAYS !== 0 || p.day === 0) continue;
+        if (!p.firstOfMonth) continue;
         svg += `<circle cx="${f(p.x)}" cy="${f(p.y)}" r="0.9" class="analemma-tick"/>`;
     }
     svg += `<circle cx="0" cy="${f(-today.altitude)}" r="2.4" class="analemma-sun"/>`;
