@@ -28,9 +28,9 @@ osghimmel/         read-only reference clone, gitignored
 |---|---|---|
 | `@himmelszelt/sternzeit` (astronomy/sidereal time math) | `packages/sternzeit` | Julian Day, sidereal time, sun/moon/earth positions, moon phase, sun direction from the moon and earthshine done (precise + approx); stars stubbed |
 | `@himmelszelt/dunstkreis` (WebGPU atmosphere, Bruneton precise + Hillaire fast) | `packages/dunstkreis` | Hillaire pipeline + dev page working; Bruneton, IBL, performance pending |
-| `@himmelszelt/sternwarte` (the website, `private: true`) | `site/` | sternzeit chapter done (figures, glossary tooltips, references, TOC); dunstkreis placeholder, and `planned: true` placeholders for nachtgestirn, funkelwerk, gewoelk, rundbild; deployed to GitHub Pages by CI from main |
+| `@himmelszelt/sternwarte` (the website, `private: true`) | `site/` | sternzeit chapter done (figures, glossary tooltips, references, TOC); dunstkreis placeholder, and `planned: true` placeholders for nachtgestirn, sternenheer, gewoelk, rundbild; deployed to GitHub Pages by CI from main |
 | `@himmelszelt/gewoelk` (clouds) | not created yet | later |
-| `@himmelszelt/funkelwerk` (star rendering) | not created yet | later; named for the twinkle, and to stay clear of himmelszelt |
+| `@himmelszelt/sternenheer` (star rendering) | not created yet | later; the old poetic word for the host of stars, and clear of himmelszelt |
 | `@himmelszelt/nachtgestirn` (moon rendering) | not created yet | later |
 | `@himmelszelt/rundbild` (texture mapped skies) | not created yet | later; sky projections, HDR environment maps, IBL computed from them, and the horizon band from the thesis. Named after the Rundgemaelde, the 19th century panorama: a 360 degree image of the surroundings, which is what an environment map is |
 
@@ -41,11 +41,12 @@ Markdown). Terms are explained only as hover tooltips, in the text (`<Term>`) an
 site-wide glossary (`site/src/data/glossary.json`); no glossary pages, no per-package GLOSSARY.md.
 Sources are cited with `<Cite>` and listed at the end of each chapter (`site/src/data/references.ts`).
 
-**sternzeit is the blueprint for every chapter.** The layout adds lead (the `summary`), the short himmelszelt note, a meta
-line (last updated, term hint, "Jump to code" when a `## Code examples` exists) and a TOC from three sections on. The body
-follows: an interactive scene first ("Pick a moment and a place"), then the concepts building on each other, "Precise
-or approximate?" wherever both variants exist, `## Code examples` with code, and the references. Leads are short and
-curious rather than feature lists, and never promise what a planned chapter does not have yet.
+**sternzeit is the blueprint for every chapter.** The layout adds the name's meaning (from the glossary) under the
+title, the lead (the `summary`), a meta line (last updated, term hint), a TOC from three sections on, and after the content the short himmelszelt note before the references. The
+body follows: an interactive scene first ("Pick a moment and a place"), then the concepts building on each other,
+"Precise or approximate?" wherever both variants exist, `## Code examples` with code, and the references. Leads are
+short and curious rather than feature lists, and never promise what a planned chapter does not have yet.
+Figures are numbered automatically; refer to one with `<Fig id="..." />`, never with a typed number.
 
 Final showpiece: one comprehensive demo
 combining sun, moon, atmosphere, stars, clouds. Audience: developers who want to use the

@@ -1,0 +1,24 @@
+---
+/** The chapter's sections as one line under its lead, for chapters long enough to need one. */
+interface Props {
+    sections: { slug: string; text: string }[];
+}
+const { sections } = Astro.props;
+---
+
+{
+    sections.length >= 3 && (
+        <nav class="toc" aria-label="Contents">
+            <ol>
+                {sections.map((heading) => (
+                    <li>
+                        <a href={`#${heading.slug}`}>{heading.text}</a>
+                    </li>
+                ))}
+                <li>
+                    <a href="#references">References</a>
+                </li>
+            </ol>
+        </nav>
+    )
+}

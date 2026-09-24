@@ -64,6 +64,12 @@ const current = Astro.url.pathname.replace(/\/$/, "");
             <span>The accent blue is a step of Saussure's cyanometer.</span>
         </footer>
         <script>
+            // Figure references get the numbers the captions count in CSS: figures with a caption, in page order.
+            const figures = [...document.querySelectorAll("figure[id]:has(> .figure-caption)")].map((f) => f.id);
+            for (const ref of document.querySelectorAll<HTMLAnchorElement>("a.figref")) {
+                const number = figures.indexOf(ref.hash.slice(1)) + 1;
+                if (number > 0) ref.textContent = `figure ${number}`;
+            }
             // Keeps glossary and citation tooltips inside the viewport: shifted left by however far they would overflow.
             const host = (event: Event) => (event.target as Element).closest?.(".term, .cite") ?? null;
             const fit = (element: Element | null) => {

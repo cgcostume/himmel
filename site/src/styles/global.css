@@ -355,18 +355,21 @@ input[type="number"]::-webkit-outer-spin-button {
     content: "Figure " counter(figure) ". ";
     color: var(--accent);
 }
-/* The chapter's sections, compact under its lead: numbered, in two columns where there is room. */
+/* The chapter's sections in one flowing line, so the contents never push the text far down. */
 .toc {
     margin: 1.5rem 0 2rem;
     font-size: var(--text-meta);
 }
 .toc ol {
+    display: inline;
     margin: 0;
-    padding-left: 1.4rem;
-    columns: 2 16rem;
-    column-gap: 2rem;
+    padding: 0;
 }
-.toc li::marker {
+.toc li {
+    display: inline;
+}
+.toc li + li::before {
+    content: " · ";
     color: var(--muted);
 }
 h2,
@@ -374,7 +377,15 @@ figure[id],
 #about {
     scroll-margin-top: 1rem;
 }
+/* What a German library name means, set right under it like a dictionary line. */
+.etymology {
+    margin-top: -0.5rem;
+    color: var(--muted);
+    font-size: var(--text-meta);
+    font-style: italic;
+}
 .page-meta {
+    margin-top: -0.9rem;
     color: var(--muted);
     font-size: var(--text-meta);
 }

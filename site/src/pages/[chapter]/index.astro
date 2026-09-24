@@ -1,8 +1,11 @@
 ---
 import { getCollection, render } from "astro:content";
 import About from "../../components/About.astro";
+import Fig from "../../components/Fig.astro";
 import References from "../../components/References.astro";
+import Toc from "../../components/Toc.astro";
 import Base from "../../layouts/Base.astro";
+import { findEntry } from "../../lib/glossary";
 import { formatUpdated, lastUpdated } from "../../lib/updated";
 
 export async function getStaticPaths() {
@@ -11,38 +14,21 @@ export async function getStaticPaths() {
 }
 const { chapter } = Astro.props;
 const { Content, headings } = await render(chapter);
-// A table of contents from the chapter's sections, for chapters long enough to need one.
 const sections = headings.filter((heading) => heading.depth === 2);
-const hasReferences = chapter.data.references.length > 0;
+// What the German name means, from the glossary, for the readers who do not speak it.
+const name = findEntry(chapter.data.title);
 const updated = formatUpdated(lastUpdated(chapter.filePath ?? ""));
-const usage = sections.find((heading) => heading.slug === "code-examples");
 ---
 
 <Base title={`${chapter.data.package}: ${chapter.data.summary}`} description={chapter.data.summary}>
     <h1 class="mono">{chapter.data.package}</h1>
+    <p class="etymology"><strong>{name.term}</strong>: <Fragment set:html={name.html} /></p>
     <p class="lead">{chapter.data.summary}</p>
-    <About />
     <p class="page-meta">
-        Last updated {updated} · Unfamiliar term? Hover or tap it.{usage && <> · <a href={`#${usage.slug}`}>Jump to code</a></>}
+        Last updated {updated} · Unfamiliar term? Hover or tap it.
     </p>
-    {
-        sections.length >= 3 && (
-            <nav class="toc" aria-label="Contents">
-                <ol>
-                    {sections.map((heading) => (
-                        <li>
-                            <a href={`#${heading.slug}`}>{heading.text}</a>
-                        </li>
-                    ))}
-                    {hasReferences && (
-                        <li>
-                            <a href="#references">References</a>
-                        </li>
-                    )}
-                </ol>
-            </nav>
-        )
-    }
-    <Content />
+    <Toc sections={sections} />
+    <Content components={{ Fig }} />
+    <About />
     <References chapter={chapter.id} body={chapter.body ?? ""} />
 </Base>

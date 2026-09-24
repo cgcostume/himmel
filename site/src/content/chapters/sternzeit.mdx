@@ -31,9 +31,10 @@ the Sun? How high is the Moon, how large does it appear, which way is its cresce
 on? None of this is guesswork: astronomers have been computing it for centuries, and the formulas are well documented.
 They are just scattered across books written for telescope operators rather than graphics programmers.
 
-This chapter walks through that math, from how astronomers count time to why the Moon seems to wobble. Everything
-below is computed live, in your browser, by the library itself, the astronomy core of osgHimmel rebuilt in
-TypeScript <Cite id="mueller2012thesis" />.
+This chapter does not derive those formulas; the references do. It goes through what the numbers mean, how they fit
+together and what to do with them, from how astronomers count time to why the Moon seems to wobble. Everything below
+is computed live, in your browser, by the library itself, the astronomy core of osgHimmel rebuilt in TypeScript
+<Cite id="mueller2012thesis" />.
 
 <Scene />
 
@@ -45,10 +46,10 @@ of our time, and the reason both total and annular solar eclipses exist.
 <Controls open />
 
 Every quantity on this page is a function of _when_ and, for some, _where_. Step through time with the buttons beside
-the Julian Day field, or with the arrow keys or the mouse wheel in it, by whatever unit is selected next to it; press
-_now_ and the moment follows the clock until you press it again, or _animate_ and it steps on by itself, thirty steps
-a second, so a step of one hour runs through a day in under a second and one of a day through a year in twelve. Latitude and longitude are in degrees, north and
-east positive; the pin beside them fills them in from the browser, and looks up the height above sea level that goes
+the Julian Day field, or with the arrow keys or the mouse wheel in it, by whatever unit is selected next to it. Press
+_now_ and the moment follows the clock until you press it again. Press _animate_ and it steps on by itself, thirty
+steps a second: a step of one hour runs through a day in under a second, one of a day through a year in twelve.
+Latitude and longitude are in degrees, north and east positive; the pin beside them fills them in from the browser, and looks up the height above sea level that goes
 with them. That height only matters for the air: how thin it is, how much it bends light, and how far a ray travels
 through it. The same controls sit folded up below every table, so there is no need to scroll back up
 here: they all change the one moment and place this whole page shows.
@@ -333,15 +334,17 @@ point the lit side at least somewhat towards the horizon and you are right witho
 
 The other classic is the unlit part. It is not a hole: no star has ever shone through the Moon. What is faintly there
 instead is earthshine, sunlight that went to Earth and back, and it is one call away (`moon.earthshine`), which is how
-[figure 3](#moon-view) above shades the Moon's night side.
+<Fig id="moon-view" /> above shades the Moon's night side.
 
 **Know when to bother.** Eclipses are rare enough that a renderer should not compute them every frame, and special
 enough to be worth a notification when one comes. A lunar eclipse is pure geometry, the same from every place on the
 night side, so a scan ahead finds the next one, no ephemeris table needed. This is, give or take the search window,
-what the buttons under [figure 4](#eclipses) above do:
+what the buttons under <Fig id="eclipse-views" /> above do:
 
 ```ts
-import { eclipse, fromJulianDay, moon, toDate } from "@himmelszelt/sternzeit";
+import {
+    eclipse, fromDate, fromJulianDay, julianDayUT, moon, toDate,
+} from "@himmelszelt/sternzeit";
 
 // Only a full moon can be eclipsed, so step by lunations rather than
 // by days. Full moons sit half a lunation after the counted new ones.
@@ -374,10 +377,11 @@ function nextTotalLunarEclipse(from: number): Date | null {
     return null;
 }
 
-// Twenty years ahead in a twentieth of a second: 2028-12-31T16:19Z.
+// Up to twenty years ahead in a twentieth of a second; from late 2026
+// that is totality on 2028-12-31, from 16:19 UTC.
 const next = nextTotalLunarEclipse(julianDayUT(fromDate(new Date())));
 ```
 
 The same goes for the other libraries: the Moon's phase, libration, sun direction and earthshine are what
 [nachtgestirn](../nachtgestirn/) shades the Moon with, sidereal time is what will turn the stars of
-[funkelwerk](../funkelwerk/), and the Sun's and the Moon's directions light the clouds of [gewoelk](../gewoelk/).
+[sternenheer](../sternenheer/), and the Sun's and the Moon's directions light the clouds of [gewoelk](../gewoelk/).

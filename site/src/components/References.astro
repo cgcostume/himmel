@@ -13,10 +13,12 @@ for (const { id } of list) {
 }
 ---
 
-{
-    list.length > 0 && (
-        <section class="references">
-            <h2 id="references">References</h2>
+<section class="references">
+    <h2 id="references">References</h2>
+    {
+        list.length === 0 ? (
+            <p>None yet.</p>
+        ) : (
             <ol>
                 {list.map(({ id, reference: r }) => (
                     <li id={`ref-${id}`}>
@@ -25,6 +27,6 @@ for (const { id } of list) {
                     </li>
                 ))}
             </ol>
-        </section>
-    )
-}
+        )
+    }
+</section>

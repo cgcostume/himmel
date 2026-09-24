@@ -398,6 +398,14 @@ tbody tr:hover {
 .subfigure-title {
     color: var(--accent);
 }
+/* Lettered like a paper's sub-figures, so a caption names them by letter rather than by where the layout puts them. */
+figure[id] {
+    counter-reset: subfigure;
+}
+.subfigure-title::before {
+    counter-increment: subfigure;
+    content: "(" counter(subfigure, lower-alpha) ") ";
+}
 .eclipse-orientation {
     display: block;
     color: var(--muted);
