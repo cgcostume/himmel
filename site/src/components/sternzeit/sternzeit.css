@@ -269,6 +269,14 @@ tbody tr:hover {
     color: var(--accent);
     pointer-events: none;
 }
+/* The poles' N and S belong to the drawing, not to the annotations, so they take its muted grey. */
+.scene-annotation.pole-label {
+    color: var(--muted);
+}
+/* The labels toggle hides the annotations, for a clean view and a clean export. */
+#scene.labels-off :is(.scene-annotation, .scene-annotations) {
+    visibility: hidden;
+}
 /* The two alt-az panels float on top of #stage, transparent and click-through, straddling its vertical middle. */
 .altaz-panels {
     position: absolute;
@@ -394,8 +402,10 @@ tbody tr:hover {
     margin: 0.5rem 0 0;
     font-size: var(--text-meta);
 }
-/* The title of a sub-figure's caption: what that panel shows, named at its head, the words to read first. */
-.subfigure-title {
+/* The title of a sub-figure's caption: what that panel shows, named at its head, the words to read first. A figure's
+   own status line takes the same look, unlettered. */
+.subfigure-title,
+.status-title {
     color: var(--accent);
 }
 /* Lettered like a paper's sub-figures, so a caption names them by letter rather than by where the layout puts them. */
@@ -742,6 +752,11 @@ figure[id] {
     bottom: 0.5rem;
     left: var(--content-inset);
 }
+/* The labels switch sits under the credit line, lined up with it and the download button. */
+#scene > .view-toggle {
+    top: 2.2rem;
+    left: var(--content-inset);
+}
 [data-export]:hover > .svg-download,
 .svg-download:focus-visible,
 .moment:hover .icon-button,
@@ -833,7 +848,8 @@ figure[id] {
         width: auto;
         margin-left: 0;
     }
-    .vis-credit {
+    .vis-credit,
+    #scene > .view-toggle {
         left: 0;
     }
     .moon-view {

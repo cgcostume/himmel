@@ -48,14 +48,9 @@ in the middle of the day.
 
 <Controls open />
 
-Every quantity on this page is a function of _when_ and, for some, _where_. Step through time with the buttons beside
-the Julian Day field, or with the arrow keys or the mouse wheel in it, by whatever unit is selected next to it. Press
-_now_ and the moment follows the clock until you press it again. Press _animate_ and it steps on by itself, thirty
-steps a second: a step of one hour runs through a day in under a second, one of a day through a year in twelve.
-Latitude and longitude are in degrees, north and east positive; the pin beside them fills them in from the browser, and looks up the height above sea level that goes
-with them. That height only matters for the air: how thin it is, how much it bends light, and how far a ray travels
-through it. The same controls sit folded up below every table, so there is no need to scroll back up
-here: they all change the one moment and place this whole page shows.
+Every figure and table on this page shows one moment and one place. The same controls sit folded up below every
+table, so there is no need to scroll back up here. The pin fills in your location and looks up its height above sea
+level, which matters mostly for the air.
 
 ## Counting time the astronomer's way
 
@@ -96,29 +91,58 @@ const date = toDate(fromJulianDay(jd)); // and back to a Date
 ## Earth, the platform we observe from
 
 Earth's rotation axis is tilted against the plane of its orbit by about 23.4°, the
-<Term of="Obliquity of the ecliptic">obliquity of the ecliptic</Term>, and that is why we have seasons. The tilt is not
-constant. It changes slowly over millennia (the _mean_ obliquity), and on top of that the Moon's pull on Earth's
-equatorial bulge makes the axis nod with a period of 18.6 years, a wobble called <Term of="Nutation">nutation</Term>.
-It has two components: one in obliquity, tilting the axis a little more and a little less, and one in longitude,
-sliding the point from which the sky's coordinates are measured, the vernal equinox. Both are tiny, below 20
-arcseconds, but they separate a position that is almost right from one that is right.
-
-In the [armillary sphere](#armillary-sphere), the true obliquity is the arc between Earth's rotation axis and the dotted axis of its orbit. The orbit
-itself is the dashed ellipse around everything, and at an eccentricity of about 0.0167 <Cite id="bretagnon1982" /> it
-is honestly almost a circle.
+<Term of="Obliquity of the ecliptic">obliquity of the ecliptic</Term>, and that is why we have seasons. The tilt drifts
+slowly over millennia (the _mean_ obliquity), and the Moon's pull on Earth's equatorial bulge adds a nod with a period
+of 18.6 years, the <Term of="Nutation">nutation</Term>. It tilts the axis a little more and a little less, and slides
+the <Term of="Vernal equinox">vernal equinox</Term>, the point where the Sun crosses the equator northwards in
+March. Both effects stay below 20 arcseconds, but they separate a position that is almost right from one that is
+right.
 
 <Table domain="earth" />
 <Controls />
 
 The table also holds the constants the atmosphere needs: Earth's radius <Cite id="nssdc" />, the thickness of the
-atmosphere <Cite id="nishita1993" /> <Cite id="bruneton2008" />, and the
-<Term of="Atmospheric refraction">refraction</Term> that makes the Sun linger visibly above the horizon for a few
+atmosphere <Cite id="nishita1993" /> <Cite id="bruneton2008" />, and the refraction that keeps the Sun visible for a few
 minutes after it has geometrically set. Refraction comes in two directions, from the true altitude
 <Cite id="saemundsson1986" /> and from the apparent one <Cite id="bennett1982" />, and a renderer bending its view rays
-wants the latter. Both rows, like the distance a ray travels through the atmosphere, are evaluated towards the Sun.
-Once the Sun is more than a degree below the horizon, refraction no longer means anything and shows as n/a, while
-the ray towards it simply ends in the ground: 0 km from sea level, a little more from a mountain, whose horizon lies
-lower.
+wants the latter. These rows are evaluated towards the Sun. More than a degree below the horizon, refraction shows as
+n/a, and the ray simply ends in the ground: 0 km at sea level, a little more from a mountain, whose horizon lies lower.
+
+The tilt and the vernal equinox are also what the sky's coordinates are built on. There are several coordinate
+systems, and each exists because one step of the computation is simplest in it.
+<Term of="Ecliptic coordinates">Ecliptic coordinates</Term> take the plane of Earth's orbit, the ecliptic
+(<Fig id="armillary-sphere" />), as their equator. The Sun never leaves it, and the Moon and the planets stay within a
+few degrees, so orbits are computed here: an ecliptic longitude counted from the vernal equinox,
+and a small latitude off the plane. The orbit itself is almost a circle, at an eccentricity of about 0.0167
+<Cite id="bretagnon1982" />.
+
+<Term of="Equatorial coordinates">Equatorial coordinates</Term> take Earth's equator instead: right ascension along it,
+also counted from the vernal equinox, and declination north or south of it. This is the sky's own map, the one star
+catalogues use, since a star keeps both values while Earth turns underneath. The two systems differ only by the
+obliquity, a tilt about the line towards the vernal equinox.
+
+Both are <Term of="Geocentric">geocentric</Term>, and nobody stands at Earth's center. From the surface, a nearby
+body appears slightly shifted by its <Term of="Parallax">parallax</Term>: not at all for the stars, by 8.8 arcseconds for the Sun, and by up to a degree
+for the Moon, two of its own diameters. The topocentric position corrects for it, with the observer on the flattened
+ellipsoid and at their height above sea level.
+
+<Term of="Horizontal coordinates">Horizontal coordinates</Term>, finally, are the observer's own: an altitude above the
+horizon and an azimuth from north through east. They follow from the topocentric position through the
+<Term of="Hour angle">hour angle</Term>, and this is where <Term of="Sidereal time">sidereal time</Term> comes in: it
+says how far the sky has turned past the observer's meridian.
+
+The function names say how far a position has been corrected:
+
+- **Mean**: on an idealized, circular orbit at constant speed.
+- **True**: on the real, elliptical orbit.
+- **Apparent**: where the light seems to come from, after nutation and <Term of="Aberration">aberration</Term>. Still
+  geocentric, and without the air.
+- **Apparent altitude**: the same word for what the eye sees, lifted by
+  <Term of="Atmospheric refraction">refraction</Term>. At the horizon, by more than the Sun's own diameter.
+
+For a renderer, it all ends in two calls: `horizontalPosition`, and `horizontalToDirection` for a unit vector in the
+local east-north-up frame. Refraction is left out on purpose: the altitude returned is the true one, and bending the
+rays is the atmosphere's job.
 
 ## The Sun
 
@@ -130,10 +154,7 @@ ellipses, so add the <Term of="Equation of the center">equation of the center</T
 Earth's own orbital speed, to get the <Term of="Apparent position">apparent position</Term> in
 <Term of="Equatorial coordinates">right ascension and declination</Term>, the sky's own latitude and longitude.
 
-That position is still geocentric, as seen from Earth's center. For an actual observer on the surface, the
-<Term of="Parallax">topocentric position</Term> corrects for where they stand, and the
-<Term of="Horizontal coordinates">horizontal position</Term> turns it into what a renderer wants: an altitude above the
-horizon and an azimuth along it, measured from north through east.
+From there, the topocentric and the horizontal position bring it to the observer, as described under Earth.
 
 <DayArc />
 <Controls />

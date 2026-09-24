@@ -538,8 +538,8 @@ function frame() {
     const eclipticPoleAt = (obliquityDeg) =>
         v(0, -Math.cos(obliquityDeg * DEG) * EARTH_R, Math.sin(obliquityDeg * DEG) * EARTH_R);
     const truePole = eclipticPoleAt(obliquity);
-    trueEclipticAxis.path[0] = vScale(truePole, -1);
-    trueEclipticAxis.path[1] = truePole;
+    trueEclipticAxis.path[0] = vScale(truePole, -AXIS_OVERHANG);
+    trueEclipticAxis.path[1] = vScale(truePole, AXIS_OVERHANG);
     trueEclipticAxis.updatePath();
 
     const OBLIQUITY_ARC_SEGMENTS = 16;
@@ -569,7 +569,13 @@ function frame() {
 
     illustration.rotate = { x: rotX, y: rotY, z: 0 };
     illustration.updateRenderGraph();
-    annotateObserver(vScale(observerPos, 1.02));
+    annotate("observer", vScale(observerPos, 1.02));
+    annotate("equinox", trueEquinoxDot.translate);
+    annotate("north", v(0, -AXIS_OVERHANG * EARTH_R, 0));
+    annotate("south", v(0, AXIS_OVERHANG * EARTH_R, 0));
+    // At the axis' end, so the arrow runs along the axis and stops short of it like the others do at their dots.
+    annotate("eclipticAxis", vScale(truePole, AXIS_OVERHANG));
+    annotateEcliptic(sunPos);
     // svgElement only exists once a shape has rendered at least once, hence setting this here rather than
     // at construction; idempotent, so doing it every frame is fine. See the earthAnchor comment for the
     // three-tier rationale. radiusLine and longitudeNutationLine are deliberately left alone here: each is itself
@@ -610,34 +616,98 @@ function frame() {
 
 requestAnimationFrame(frame);
 
-// "observer": a label outside Earth, in the observer's direction on screen, with a straight arrow to the marker.
-// Placed by projecting the marker the way Zdog does: rotated with the scene, scaled by the zoom, around the center.
+// The labels on Earth's surface ride one circle around it, a fixed gap outside the globe on screen, each in its marker's
+// direction, so rotating the scene swings them around the circle instead of flinging them across the stage. Markers
+// are projected the way Zdog does: rotated with the scene, scaled by the zoom, around the center.
 const ANNOTATION_GAP_PX = 70;
+// N and S sit just past the ends of Earth's axis.
+const POLE_LABEL_GAP_PX = 6;
+// Room between a label's box and the start of its arrow.
+const ANNOTATION_LABEL_PAD_PX = 3;
 const ANNOTATION_TIP_GAP_PX = 7;
-const annotationLabel = document.querySelector('.scene-annotation[data-annotation="observer"]');
-const annotationArrow = document.querySelector('.annotation-arrow[data-annotation="observer"]');
-const annotationHead = document.querySelector('.annotation-arrowhead[data-annotation="observer"]');
+const annotationParts = (name) =>
+    ["scene-annotation", "annotation-arrow", "annotation-arrowhead"].map((c) =>
+        document.querySelector(`.${c}[data-annotation="${name}"]`),
+    );
+const annotations = Object.fromEntries(
+    ["observer", "equinox", "north", "south", "eclipticAxis"].map((n) => [n, annotationParts(n)]),
+);
 
-function annotateObserver(point) {
+// "observer", "vernal equinox" and "ecliptic axis" ride the circle with a straight arrow to their marker; N and S sit
+// right past the ends of Earth's axis and need none.
+function annotate(name, point) {
+    const [label, arrow, head] = annotations[name];
     const p = new Vector(point).rotate(illustration.rotate);
     const zoom = illustration.zoom;
     const [cx, cy] = [stageWidth / 2, stageHeight / 2];
     const [px, py] = [cx + p.x * zoom, cy + p.y * zoom];
     const length = Math.hypot(p.x, p.y) || 1;
     const [ux, uy] = length > 1e-3 ? [p.x / length, p.y / length] : [0, -1];
-    const reach = EARTH_R * zoom + ANNOTATION_GAP_PX;
+    // Without an arrow, a label sits past its point by a gap plus its own half extent in that direction.
+    const extent = (Math.abs(ux) * label.offsetWidth + Math.abs(uy) * label.offsetHeight) / 2;
+    // Arrowed labels keep to the circle, or stand further out when their marker lies beyond it.
+    const circle = Math.max(EARTH_R * zoom + ANNOTATION_GAP_PX, length * zoom + ANNOTATION_GAP_PX / 2);
+    const reach = arrow ? circle : length * zoom + POLE_LABEL_GAP_PX + extent;
     const [lx, ly] = [cx + ux * reach, cy + uy * reach];
-    annotationLabel.style.left = `${lx}px`;
-    annotationLabel.style.top = `${ly}px`;
-    // A straight line from just short of the label to just short of the marker.
-    const [sx, sy] = [lx - ux * 12, ly - uy * 12];
+    label.style.left = `${lx}px`;
+    label.style.top = `${ly}px`;
+    if (!arrow) return;
+    // A straight line from the label's box to just short of the marker. It leaves the box where the line from the
+    // label's center to the marker crosses it, and slides towards the middle of the left or right edge the more the
+    // marker lies to that side, so the start never jumps as the scene turns.
+    const [w, h] = [label.offsetWidth / 2 + ANNOTATION_LABEL_PAD_PX, label.offsetHeight / 2 + ANNOTATION_LABEL_PAD_PX];
+    const [ex, ey] = [(px - lx) / w, (py - ly) / h];
+    const hit = 1 / Math.max(Math.abs(ex), Math.abs(ey), 1e-6);
+    const sideness = Math.abs(ex) / (Math.abs(ex) + Math.abs(ey) || 1);
+    const toMiddle = sideness <= 0.5 ? 0 : ((t) => t * t * (3 - 2 * t))(Math.min((sideness - 0.5) / 0.3, 1));
+    const [sx, sy] = [lx + ex * hit * w, ly + ey * hit * h * (1 - toMiddle)];
     const toTip = Math.hypot(px - sx, py - sy) || 1;
     const [dx, dy] = [(px - sx) / toTip, (py - sy) / toTip];
     const [tx, ty] = [px - dx * ANNOTATION_TIP_GAP_PX, py - dy * ANNOTATION_TIP_GAP_PX];
-    annotationArrow.setAttribute("d", `M ${sx} ${sy} L ${tx} ${ty}`);
+    arrow.setAttribute("d", `M ${sx} ${sy} L ${tx} ${ty}`);
     const [hx, hy] = [tx - dx * 7, ty - dy * 7];
-    annotationHead.setAttribute(
-        "points",
-        `${tx},${ty} ${hx - dy * 3.5},${hy + dx * 3.5} ${hx + dy * 3.5},${hy - dx * 3.5}`,
-    );
+    head.setAttribute("points", `${tx},${ty} ${hx - dy * 3.5},${hy + dx * 3.5} ${hx + dy * 3.5},${hy - dx * 3.5}`);
 }
+
+// "ecliptic": a label on the orbit ellipse's upper half on screen, at its rightmost point that stays inside the stage,
+// left of the alt-az panels and clear of the Sun, so it keeps to one place as the scene turns; hidden if none is. Lifted off the line, off the dashes.
+const ECLIPTIC_MARGIN_PX = 40;
+const eclipticLabel = document.querySelector('.scene-annotation[data-annotation="ecliptic"]');
+
+function annotateEcliptic(sunPos) {
+    const zoom = illustration.zoom;
+    const [cx, cy] = [stageWidth / 2, stageHeight / 2];
+    const project = (point) => {
+        const p = new Vector(point).rotate(illustration.rotate);
+        return [cx + p.x * zoom, cy + p.y * zoom];
+    };
+    const [sx, sy] = project(sunPos);
+    const clearOfSun = (SUN_R + SUN_RAY_GAP + SUN_RAY_LENGTH) * zoom + ECLIPTIC_MARGIN_PX;
+    // The panels cover the stage's right side on wide screens; on narrow ones they sit below it.
+    const stageBox = eclipticLabel.parentElement.querySelector("#stage").getBoundingClientRect();
+    const panelBox = eclipticLabel.parentElement.querySelector(".altaz-panel")?.getBoundingClientRect();
+    const right = panelBox && panelBox.top < stageBox.bottom ? panelBox.left - stageBox.left : stageWidth;
+    let best = null;
+    for (let i = 0; i < 360; i++) {
+        const t = i * DEG;
+        const local = new Vector({
+            x: (orbitEllipse.width / 2) * Math.cos(t),
+            y: (orbitEllipse.height / 2) * Math.sin(t),
+        });
+        const [x, y] = project(local.rotate(orbitEllipse.rotate));
+        const inside = x > ECLIPTIC_MARGIN_PX && x < right - ECLIPTIC_MARGIN_PX && y > ECLIPTIC_MARGIN_PX;
+        if (!inside || y > stageHeight - ECLIPTIC_MARGIN_PX || Math.hypot(x - sx, y - sy) < clearOfSun) continue;
+        if (y < cy && (!best || x > best.x)) best = { x, y };
+    }
+    eclipticLabel.hidden = !best;
+    if (!best) return;
+    eclipticLabel.style.left = `${best.x}px`;
+    eclipticLabel.style.top = `${best.y - 12}px`;
+}
+
+const labelsButton = document.querySelector('#scene [data-field="labels"]');
+labelsButton.addEventListener("click", () => {
+    const on = labelsButton.getAttribute("aria-pressed") !== "true";
+    labelsButton.setAttribute("aria-pressed", String(on));
+    document.querySelector("#scene").classList.toggle("labels-off", !on);
+});

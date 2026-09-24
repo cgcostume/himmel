@@ -5,12 +5,22 @@ import "./sternzeit.css";
 
 <figure class="scene-frame wide" id="armillary-sphere">
     <div id="scene" data-export="armillary-sphere">
+        <button type="button" class="view-toggle" data-field="labels" aria-pressed="true" title="Show or hide the labels">show labels</button>
         <svg id="stage" aria-hidden="true"></svg>
         <svg class="scene-annotations" aria-hidden="true">
             <path class="annotation-arrow" data-annotation="observer"></path>
             <polygon class="annotation-arrowhead" data-annotation="observer"></polygon>
+            <path class="annotation-arrow" data-annotation="equinox"></path>
+            <polygon class="annotation-arrowhead" data-annotation="equinox"></polygon>
+            <path class="annotation-arrow" data-annotation="eclipticAxis"></path>
+            <polygon class="annotation-arrowhead" data-annotation="eclipticAxis"></polygon>
         </svg>
         <span class="scene-annotation" data-annotation="observer" data-export-text>observer</span>
+        <span class="scene-annotation" data-annotation="ecliptic" data-export-text>ecliptic</span>
+        <span class="scene-annotation" data-annotation="equinox" data-export-text>vernal equinox</span>
+        <span class="scene-annotation pole-label" data-annotation="north" data-export-text>N</span>
+        <span class="scene-annotation pole-label" data-annotation="south" data-export-text>S</span>
+        <span class="scene-annotation" data-annotation="eclipticAxis" data-export-text>ecliptic axis</span>
         <div class="altaz-panels">
             <div class="altaz-panel altaz-panel-sun" data-export="sun-locked">
                 <svg id="sunView" aria-hidden="true"></svg>
@@ -26,10 +36,11 @@ import "./sternzeit.css";
         </p>
     </div>
     <figcaption class="figure-caption">
-        An <Term of="Armillary sphere">armillary sphere</Term>: Earth's equator and axis, the observer's latitude circle and
-        meridian, and the Sun and the Moon in their directions from Earth's center. Distances are schematic, the discs magnified but
-        true to each other. (a, b) The Sun and the Moon as seen from the chosen place, as symbols,
-        not to scale.
+        An <Term of="Armillary sphere">armillary sphere</Term>: Earth's equator and axis, its north (N) and south (S)
+        pole, the ecliptic and its axis, the vernal equinox, the observer's latitude circle and meridian, and the Sun and
+        the Moon in their directions from Earth's center, all in geocentric equatorial coordinates. Distances are
+        schematic, the discs magnified but true to each other. (a, b) The Sun and the Moon as seen from the chosen
+        place, in horizontal coordinates, as symbols, not to scale.
     </figcaption>
 </figure>
 

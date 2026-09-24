@@ -93,7 +93,9 @@ function frame(svg, box, index) {
 }
 
 async function compose(root) {
-    const svgs = [...root.querySelectorAll("svg")].filter((svg) => ownedBy(root, svg) && !svg.closest("button"));
+    const svgs = [...root.querySelectorAll("svg")].filter(
+        (svg) => ownedBy(root, svg) && !svg.closest("button") && getComputedStyle(svg).visibility !== "hidden",
+    );
     const labels = [...root.querySelectorAll("[data-export-text]")].filter(
         (label) => ownedBy(root, label) && getComputedStyle(label).visibility !== "hidden",
     );

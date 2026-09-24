@@ -188,7 +188,7 @@ function render() {
         ? ""
         : `tilt ${tiltDeg.toFixed(1)}° (axis ${axis.toFixed(1)}° − parallactic ${parallactic.toFixed(1)}°); `;
     statusEl.innerHTML =
-        `<span class="subfigure-title">lunar libration</span> ${Math.abs(l).toFixed(1)}° ${ew}, ${Math.abs(b).toFixed(1)}° ${ns}; ` +
+        `<span class="status-title">lunar libration</span> ${Math.abs(l).toFixed(1)}° ${ew}, ${Math.abs(b).toFixed(1)}° ${ns}; ` +
         tiltText +
         `${minutes.toFixed(1)}′ across; earthshine ${(earthshine * 100).toFixed(1)}%`;
 }
