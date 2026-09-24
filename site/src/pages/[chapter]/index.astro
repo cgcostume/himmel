@@ -25,7 +25,7 @@ const updated = formatUpdated(lastUpdated(chapter.filePath ?? ""));
     <p class="etymology"><strong>{name.term}</strong>: <Fragment set:html={name.html} /></p>
     <p class="lead">{chapter.data.summary}</p>
     <p class="page-meta">
-        Last updated {updated} · Unfamiliar term? Hover or tap it.
+        by <a href="https://daniellimberger.de" target="_blank" rel="noopener">Daniel Limberger</a> · Last updated {updated} · Unfamiliar term? Hover or tap it.
     </p>
     <Toc sections={sections} />
     <Content components={{ Fig }} />

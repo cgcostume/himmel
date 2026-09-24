@@ -13,9 +13,11 @@ const updated = formatUpdated(lastUpdated("src/pages/index.astro"));
 <Base title="himmelszelt · WebGPU sky" description="Small, composable TypeScript + WebGPU libraries for rendering the sky.">
     <h1>himmelszelt</h1>
     <p class="etymology"><strong>{name.term}</strong>: <Fragment set:html={name.html} /></p>
-    <p class="byline">by <a href="https://daniellimberger.de" target="_blank" rel="noopener">Daniel Limberger</a></p>
     <p class="lead">
         A family of composable libraries for rendering the sky in real time with WebGPU.
+    </p>
+    <p class="page-meta">
+        by <a href="https://daniellimberger.de" target="_blank" rel="noopener">Daniel Limberger</a> · Last updated {updated}
     </p>
     <p id="about">
         The goal is a sky that is correct for any place, date and hour. Sun, Moon and stars in their true positions,
@@ -29,7 +31,6 @@ const updated = formatUpdated(lastUpdated("src/pages/index.astro"));
         sky is not wanted, the classic image-based route stays open, with HDR sources and several projections. All of
         it is plain functions and compute-first WGSL, with no scene graph to adopt.
     </p>
-    <p class="page-meta">Last updated {updated}.</p>
     <ul class="chapter-list">
         {
             chapters.map((c) => (

@@ -395,10 +395,6 @@ figure[id],
     font-size: var(--text-meta);
     font-style: italic;
 }
-.byline {
-    margin-top: -0.5rem;
-    font-size: var(--text-meta);
-}
 .page-meta {
     margin-top: -0.9rem;
     color: var(--muted);
