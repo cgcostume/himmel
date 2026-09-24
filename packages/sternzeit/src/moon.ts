@@ -24,7 +24,7 @@ import {
     type JulianCenturies,
     type JulianDay,
     julianCenturiesSinceStandardEquinox,
-    julianDayUT,
+    julianEphemerisDay,
 } from "./time.js";
 
 /** http://nssdc.gsfc.nasa.gov/planetary/factsheet/moonfact.html */
@@ -353,7 +353,7 @@ export function topocentricPosition(
     longitude: number,
     observerHeightM = 0,
 ): EquatorialCoords {
-    const t = julianDayUT(time);
+    const t = julianEphemerisDay(time);
     const s = meanSiderealTime(time);
 
     return applyParallax(apparentPosition(t), equatorialHorizontalParallax(t), s, latitude, longitude, observerHeightM);
@@ -365,7 +365,7 @@ export function topocentricPositionApprox(
     longitude: number,
     observerHeightM = 0,
 ): EquatorialCoords {
-    const t = julianDayUT(time);
+    const t = julianEphemerisDay(time);
     const s = meanSiderealTimeApprox(time);
 
     return applyParallax(
@@ -566,7 +566,7 @@ export function opticalLibrationsApprox(t: JulianDay): MoonLibration {
 
 /** Parallactic angle, in degrees, per Meeus' "Astronomical Algorithms" (13.1). */
 export function parallacticAngle(time: AstronomicalTime, latitude: number, longitude: number): number {
-    const t = julianDayUT(time);
+    const t = julianEphemerisDay(time);
 
     const la = latitude * DEG_TO_RAD;
     const lo = longitude * DEG_TO_RAD;
@@ -588,7 +588,7 @@ export function parallacticAngle(time: AstronomicalTime, latitude: number, longi
 
 /** ("A Physically-Based Night Sky Model" - 2001 - Wann Jensen et al.) */
 export function parallacticAngleApprox(time: AstronomicalTime, latitude: number, longitude: number): number {
-    const t = julianDayUT(time);
+    const t = julianEphemerisDay(time);
 
     const la = latitude * DEG_TO_RAD;
     const lo = longitude * DEG_TO_RAD;
@@ -725,7 +725,7 @@ export function illuminatedFractionApprox(t: JulianDay): number {
  * sits ~384,000 km off to the side, which turns the vector by up to ~0.15°.
  */
 export function sunDirection(time: AstronomicalTime, latitude: number, longitude: number): Direction {
-    const t = julianDayUT(time);
+    const t = julianEphemerisDay(time);
 
     return between(
         horizontalToDirection(horizontalPosition(time, latitude, longitude)),
@@ -736,7 +736,7 @@ export function sunDirection(time: AstronomicalTime, latitude: number, longitude
 }
 
 export function sunDirectionApprox(time: AstronomicalTime, latitude: number, longitude: number): Direction {
-    const t = julianDayUT(time);
+    const t = julianEphemerisDay(time);
 
     return between(
         horizontalToDirection(horizontalPositionApprox(time, latitude, longitude)),

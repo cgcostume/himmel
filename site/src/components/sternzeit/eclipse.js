@@ -2,7 +2,7 @@ import * as precise from "@himmelszelt/sternzeit";
 import { svgText, veiledHorizon } from "./figure.js";
 import { aboveVisibleHorizon } from "./horizon.js";
 import { offPanelArrowFromCenter, offPanelArrowSvg } from "./offpanel.js";
-import { onChange, state, update } from "./state.js";
+import { ephemerisDay, onChange, state, update } from "./state.js";
 import "./export.js";
 
 // Both panels share a 200 x 200 viewBox centered on the origin: the Sun, or the axis of Earth's shadow, sits in the middle.
@@ -50,8 +50,8 @@ function renderSolar(jd) {
     const time = precise.fromJulianDay(jd);
     const eclipse = precise.eclipse.solar(time, state.latitude, state.longitude, state.heightM);
     const sunAltitude = precise.sun.horizontalPosition(time, state.latitude, state.longitude, state.heightM).altitude;
-    const sunRadiusDeg = (precise.sun.apparentAngularDiameter(jd) * precise.RAD_TO_DEG) / 2;
-    const moonRadiusDeg = (precise.moon.apparentAngularDiameter(jd) * precise.RAD_TO_DEG) / 2;
+    const sunRadiusDeg = (precise.sun.apparentAngularDiameter(ephemerisDay(jd)) * precise.RAD_TO_DEG) / 2;
+    const moonRadiusDeg = (precise.moon.apparentAngularDiameter(ephemerisDay(jd)) * precise.RAD_TO_DEG) / 2;
     const scale = SUN_RADIUS_UNITS / sunRadiusDeg;
     const moonRadius = moonRadiusDeg * scale;
 
@@ -90,7 +90,7 @@ function renderSolar(jd) {
 }
 
 function renderLunar(jd) {
-    const eclipse = precise.eclipse.lunar(jd);
+    const eclipse = precise.eclipse.lunar(ephemerisDay(jd));
     const moonRadius = precise.moon.MEAN_RADIUS_KM / KM_PER_UNIT;
     const umbra = eclipse.umbraRadiusKm / KM_PER_UNIT;
     const penumbra = eclipse.penumbraRadiusKm / KM_PER_UNIT;
@@ -183,15 +183,15 @@ const timeOf = (jd) => precise.fromJulianDay(jd);
 
 /** How far the Moon is from what would eclipse it, as seen from Earth's center. */
 function geocentricDistance(jd, lunar) {
-    if (lunar) return precise.eclipse.lunar(jd).axisOffsetKm;
-    const [m, s] = [precise.moon.apparentPosition(jd), precise.sun.apparentPosition(jd)];
+    if (lunar) return precise.eclipse.lunar(ephemerisDay(jd)).axisOffsetKm;
+    const [m, s] = [precise.moon.apparentPosition(ephemerisDay(jd)), precise.sun.apparentPosition(ephemerisDay(jd))];
     return precise.angularSeparation(m.rightAscension, m.declination, s.rightAscension, s.declination);
 }
 
 /** Whether `jd` is close enough to be worth walking minute by minute. */
 function mayEclipse(jd, lunar) {
     if (!lunar) return geocentricDistance(jd, false) < SOLAR_REACH_DEG;
-    const shadow = precise.eclipse.lunar(jd);
+    const shadow = precise.eclipse.lunar(ephemerisDay(jd));
     return shadow.axisOffsetKm < 2 * shadow.penumbraRadiusKm;
 }
 
@@ -209,7 +209,7 @@ function separationHere(jd) {
 
 /** The deepest moment within `window` of `middle`, walked coarsely and then refined, or null if there is none. */
 function deepest(middle, lunar) {
-    const distance = lunar ? (jd) => precise.eclipse.lunar(jd).axisOffsetKm : separationHere;
+    const distance = lunar ? (jd) => precise.eclipse.lunar(ephemerisDay(jd)).axisOffsetKm : separationHere;
     let best = null;
     for (let jd = middle - CANDIDATE_WINDOW; jd <= middle + CANDIDATE_WINDOW; jd += COARSE_STEP) {
         const value = distance(jd);
@@ -221,7 +221,7 @@ function deepest(middle, lunar) {
         if (value !== null && value < best.value) best = { jd, value };
     }
     if (lunar) {
-        const shadow = precise.eclipse.lunar(best.jd);
+        const shadow = precise.eclipse.lunar(ephemerisDay(best.jd));
         return shadow.axisOffsetKm - precise.moon.MEAN_RADIUS_KM < shadow.umbraRadiusKm ? best.jd : null;
     }
     return precise.eclipse.solar(timeOf(best.jd), state.latitude, state.longitude, state.heightM).phase < 1

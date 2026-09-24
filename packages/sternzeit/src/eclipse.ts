@@ -3,7 +3,7 @@ import * as earth from "./earth.js";
 import { angularSeparation, DEG_TO_RAD, normalizeDegrees, positionAngle, RAD_TO_DEG } from "./math.js";
 import * as moon from "./moon.js";
 import * as sun from "./sun.js";
-import { type AstronomicalTime, type JulianDay, julianDayUT } from "./time.js";
+import { type AstronomicalTime, type JulianDay, julianEphemerisDay } from "./time.js";
 
 /**
  * Piecewise-linear phase axis: `[0, inner]` maps to `[0, 0.5]` and `[inner, outer]` maps to `[0.5, 1]`, each
@@ -70,7 +70,7 @@ export function solarEclipseState(
     longitude: number,
     observerHeightM = 0,
 ): SolarEclipseState {
-    const t = julianDayUT(time);
+    const t = julianEphemerisDay(time);
     const sh = sun.horizontalPosition(time, latitude, longitude, observerHeightM);
     const mh = moon.horizontalPosition(time, latitude, longitude, observerHeightM);
     const separation = angularSeparation(sh.azimuth, sh.altitude, mh.azimuth, mh.altitude);
@@ -90,7 +90,7 @@ export function solarEclipseStateApprox(
     longitude: number,
     observerHeightM = 0,
 ): SolarEclipseState {
-    const t = julianDayUT(time);
+    const t = julianEphemerisDay(time);
     const sh = sun.horizontalPositionApprox(time, latitude, longitude, observerHeightM);
     const mh = moon.horizontalPositionApprox(time, latitude, longitude, observerHeightM);
     const separation = angularSeparation(sh.azimuth, sh.altitude, mh.azimuth, mh.altitude);

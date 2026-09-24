@@ -5,7 +5,7 @@ import { escapeText } from "./figure.js";
 import { formatDMS } from "./format.js";
 import { GLOSSARY_TERMS } from "./glossary-map.js";
 import { REFRACTION_FLOOR_DEG } from "./horizon.js";
-import { onChange, state } from "./state.js";
+import { ephemerisDay, onChange, state } from "./state.js";
 
 // Unit of each export's return value (or of an object return's fields, which all share one unit here).
 // Anything not listed defaults to degrees, the overwhelming majority.
@@ -135,7 +135,7 @@ function refractionTowardsSun(fn, jd, apparent) {
 }
 
 // How to call an export that isn't just fn(julianDay). Anything not listed here falls back to
-// fn.length === 0 ? fn() : fn(jd).
+// fn.length === 0 ? fn() : fn(jd), with jd in ephemeris time.
 const CALL_OVERRIDES = {
     atmosphericRefraction: (fn, jd) => refractionTowardsSun(fn, jd, false),
     // Fed the apparent altitude it expects: the true one lifted by the refraction from the row above.
@@ -212,7 +212,7 @@ function callExport(name, entry, jd) {
     if (typeof entry !== "function") return undefined;
     const override = CALL_OVERRIDES[name];
     try {
-        return override ? override(entry, jd) : entry.length === 0 ? entry() : entry(jd);
+        return override ? override(entry, jd) : entry.length === 0 ? entry() : entry(ephemerisDay(jd));
     } catch (err) {
         return `error: ${err.message}`;
     }

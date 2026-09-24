@@ -17,9 +17,9 @@ export interface EclipticalCoords {
 }
 
 export interface HorizontalCoords {
-    /** Azimuth (h), in degrees, compass convention: measured clockwise from north through east, 0-360. */
+    /** Azimuth (A), in degrees, compass convention: measured clockwise from north through east, 0-360. */
     azimuth: number;
-    /** Altitude (A), in degrees. Positive above, negative below the horizon. */
+    /** Altitude (h), in degrees. Positive above, negative below the horizon. */
     altitude: number;
 }
 

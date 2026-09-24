@@ -1,7 +1,7 @@
 import * as precise from "@himmelszelt/sternzeit";
 import { sunInViewFrame, svgText, veiledHorizon } from "./figure.js";
 import { aboveVisibleHorizon } from "./horizon.js";
-import { onChange, state } from "./state.js";
+import { ephemerisDay, onChange, state } from "./state.js";
 import "./export.js";
 
 const DEG = precise.DEG_TO_RAD;
@@ -71,12 +71,12 @@ function render() {
     const { jd, latitude, longitude } = state;
     const unitsPerPx = 200 / (svgEl.clientWidth || 200);
     const time = precise.fromJulianDay(jd);
-    const radius = (precise.moon.apparentAngularDiameter(jd) / 2) * UNITS_PER_RADIAN;
-    const { longitude: l, latitude: b } = precise.moon.opticalLibrations(jd);
-    const axis = precise.moon.positionAngleOfAxis(jd);
+    const radius = (precise.moon.apparentAngularDiameter(ephemerisDay(jd)) / 2) * UNITS_PER_RADIAN;
+    const { longitude: l, latitude: b } = precise.moon.opticalLibrations(ephemerisDay(jd));
+    const axis = precise.moon.positionAngleOfAxis(ephemerisDay(jd));
     const parallactic = precise.moon.parallacticAngle(time, latitude, longitude);
     const horizontal = precise.moon.horizontalPosition(time, latitude, longitude, state.heightM);
-    const earthshine = precise.moon.earthshine(jd);
+    const earthshine = precise.moon.earthshine(ephemerisDay(jd));
     // On the sky, position angles run from north through east, counterclockwise with east to the left. The zenith is at
     // the parallactic angle, so with the zenith up, the Moon's north pole sits at axis - parallactic, counterclockwise.
     const twist = axis - parallactic;
@@ -181,7 +181,7 @@ function render() {
     }
     svgEl.innerHTML = svg;
 
-    const minutes = (precise.moon.apparentAngularDiameter(jd) / DEG) * 60;
+    const minutes = (precise.moon.apparentAngularDiameter(ephemerisDay(jd)) / DEG) * 60;
     const ew = l >= 0 ? "E" : "W";
     const ns = b >= 0 ? "N" : "S";
     const tiltText = locked

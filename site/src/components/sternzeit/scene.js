@@ -3,7 +3,7 @@ import Zdog from "zdog";
 import { COMPASS, cssColor, gridLine, labelAboveY, moonSymbol, sunInViewFrame, sunSymbol, svgText } from "./figure.js";
 import { aboveVisibleHorizon } from "./horizon.js";
 import { offPanelArrow, offPanelArrowSvg } from "./offpanel.js";
-import { state } from "./state.js";
+import { ephemerisDay, state } from "./state.js";
 import "./export.js";
 
 const { Illustration, Anchor, Shape, Ellipse, Vector } = Zdog;
@@ -473,10 +473,10 @@ function frame() {
     const { jd, latitude, longitude } = state;
     const time = precise.fromJulianDay(jd);
 
-    const sunEqu = precise.sun.apparentPosition(jd);
-    const moonEqu = precise.moon.apparentPosition(jd);
+    const sunEqu = precise.sun.apparentPosition(ephemerisDay(jd));
+    const moonEqu = precise.moon.apparentPosition(ephemerisDay(jd));
     const siderealTime = precise.siderealTime(time);
-    const obliquity = precise.earth.trueObliquity(jd);
+    const obliquity = precise.earth.trueObliquity(ephemerisDay(jd));
 
     const sunPos = sphericalToVector(sunEqu.rightAscension, sunEqu.declination, SUN_DIST);
     const moonPos = sphericalToVector(moonEqu.rightAscension, moonEqu.declination, MOON_DIST);
@@ -490,8 +490,8 @@ function frame() {
     const overHorizon = (h) => ({ ...h, altitude: aboveVisibleHorizon(h.altitude, state.heightM) });
     const sunSeen = overHorizon(sunHorizontal);
     const moonSeen = overHorizon(moonHorizontal);
-    const lit = precise.moon.illuminatedFraction(jd);
-    const earthshine = precise.moon.earthshine(jd);
+    const lit = precise.moon.illuminatedFraction(ephemerisDay(jd));
+    const earthshine = precise.moon.earthshine(ephemerisDay(jd));
     // The tilt of the crescent is the observer's, not the panel's: taken from the sky itself, so it matches the
     // Moon's own figure rather than following this panel's stretched projection.
     const sunFrame = sunInViewFrame(time, latitude, longitude, state.heightM);
@@ -501,7 +501,7 @@ function frame() {
 
     sunAnchor.translate = sunPos;
     sunDisc.rotate = billboardRotate(rotX, rotY);
-    sunDisc.diameter = APPARENT_SIZE_SCALE * precise.sun.apparentAngularDiameter(jd) * precise.RAD_TO_DEG;
+    sunDisc.diameter = APPARENT_SIZE_SCALE * precise.sun.apparentAngularDiameter(ephemerisDay(jd)) * precise.RAD_TO_DEG;
     sunDisc.updatePath();
     const sunRayInner = sunDisc.diameter / 2 + SUN_RAY_GAP;
     const sunRayOuter = sunRayInner + SUN_RAY_LENGTH;
@@ -515,7 +515,8 @@ function frame() {
     });
     moonAnchor.translate = moonPos;
     moonDisc.rotate = billboardRotate(rotX, rotY);
-    moonDisc.diameter = APPARENT_SIZE_SCALE * precise.moon.apparentAngularDiameter(jd) * precise.RAD_TO_DEG;
+    moonDisc.diameter =
+        APPARENT_SIZE_SCALE * precise.moon.apparentAngularDiameter(ephemerisDay(jd)) * precise.RAD_TO_DEG;
     moonDisc.updatePath();
     atmosphereShell.rotate = billboardRotate(rotX, rotY);
     // observerPos already has magnitude EARTH_R (sphericalToVector's radius arg), so this only needs a
@@ -554,14 +555,14 @@ function frame() {
     // The true equinox, shifted from the mean one (our +X axis) by longitudeNutation within the equatorial
     // plane; marked on the equator's surface (dec 0) rather than at the pole, since that's what "longitude"
     // (as opposed to obliquity, an angle *between* poles) refers to here.
-    const longitudeNutation = precise.earth.longitudeNutation(jd);
+    const longitudeNutation = precise.earth.longitudeNutation(ephemerisDay(jd));
     const trueEquinoxPoint = sphericalToVector(longitudeNutation, 0, EARTH_R);
     longitudeNutationLine.path[0] = sphericalToVector(0, 0, EARTH_R);
     longitudeNutationLine.path[1] = trueEquinoxPoint;
     longitudeNutationLine.updatePath();
     trueEquinoxDot.translate = vScale(trueEquinoxPoint, 1.02);
 
-    const orbitEccentricity = precise.earth.orbitEccentricity(jd);
+    const orbitEccentricity = precise.earth.orbitEccentricity(ephemerisDay(jd));
     orbitEllipse.width = 2 * SUN_DIST;
     orbitEllipse.height = 2 * SUN_DIST * Math.sqrt(1 - orbitEccentricity * orbitEccentricity);
     orbitEllipse.rotate = { x: Math.PI / 2 + obliquity * DEG };

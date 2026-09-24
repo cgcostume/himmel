@@ -26,6 +26,8 @@ export {
     julianDay,
     julianDay0UT,
     julianDayUT,
+    julianEphemerisDay,
+    deltaT,
     fromDate,
     fromJulianDay,
     modifiedJulianDay,

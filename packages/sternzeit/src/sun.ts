@@ -10,7 +10,12 @@ import * as earth from "./earth.js";
 import { meanAnomaly, meanAnomalyApprox, meanAscendingNodeLongitude } from "./elements.js";
 import { ASTRONOMICAL_UNIT_KM, DEG_TO_RAD, normalizeDegrees, RAD_TO_DEG } from "./math.js";
 import { meanSiderealTime, meanSiderealTimeApprox } from "./siderealTime.js";
-import { type AstronomicalTime, type JulianDay, julianCenturiesSinceStandardEquinox, julianDayUT } from "./time.js";
+import {
+    type AstronomicalTime,
+    type JulianDay,
+    julianCenturiesSinceStandardEquinox,
+    julianEphemerisDay,
+} from "./time.js";
 
 /** http://nssdc.gsfc.nasa.gov/planetary/factsheet/sunfact.html */
 export const MEAN_RADIUS_KM = 0.696e6;
@@ -98,7 +103,7 @@ export function topocentricPosition(
     longitude: number,
     observerHeightM = 0,
 ): EquatorialCoords {
-    const t = julianDayUT(time);
+    const t = julianEphemerisDay(time);
     const s = meanSiderealTime(time);
 
     return applyParallax(apparentPosition(t), equatorialHorizontalParallax(t), s, latitude, longitude, observerHeightM);
@@ -110,7 +115,7 @@ export function topocentricPositionApprox(
     longitude: number,
     observerHeightM = 0,
 ): EquatorialCoords {
-    const t = julianDayUT(time);
+    const t = julianEphemerisDay(time);
     const s = meanSiderealTimeApprox(time);
 
     return applyParallax(

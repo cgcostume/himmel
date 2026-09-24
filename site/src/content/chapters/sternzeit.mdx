@@ -14,6 +14,9 @@ references:
     - nishita1993
     - bruneton2008
     - mueller2012vmv
+    - espenak2006
+    - espenak2009
+    - yapo2009
     - vandehulst1980
 ---
 
@@ -62,6 +65,11 @@ Today is somewhere around 2.46 million.
 Most formulas then don't use the day count directly but <Term of="Julian century">Julian centuries</Term> since
 <Term of="J2000.0">J2000</Term>, noon on January 1st, 2000. Orbital motion drifts slowly, and polynomials in centuries
 keep the coefficients in a numerically comfortable range.
+
+The clock and the orbits do not quite agree, though. Earth's rotation slows, unevenly, so the time it keeps drifts
+from the uniform time the orbits run on, by <Term of="Delta T">ΔT</Term>: about a minute today, hours in antiquity.
+Functions that take a date and a place account for it on their own. Those that take a bare Julian Day expect the
+uniform one, which `julianEphemerisDay` gives.
 
 Then there is <Term of="Sidereal time">sidereal time</Term>. A solar day, noon to noon, is 24 hours. But Earth also
 moves along its orbit, so it has to turn a little more than once for the Sun to come back to the same spot. Relative
@@ -163,8 +171,8 @@ stars, so its path never quite closes.
 
 The analemma's height swings with the seasons, from the tilt of Earth's axis. Its sideways swing comes
 from the <Term of="Equation of time">equation of time</Term>: Earth moves faster along its orbit in January than in
-July, and the tilt adds a second, twice-yearly wobble, so the Sun runs up to about 16 minutes ahead of the clock or
-behind it <Cite id="meeus1998" />. Where its dots crowd, the Sun is turning around.
+July, and the tilt adds a second, twice-yearly wobble, so the Sun runs up to about 16 minutes ahead of the clock in
+November and 14 behind it in February <Cite id="meeus1998" />. Where its dots crowd, the Sun is turning around.
 
 <Table domain="sun" />
 <Controls />
@@ -226,19 +234,18 @@ nothing to see. The fixed 0.5 boundary is what makes the phase usable as a textu
 <Controls />
 
 Most of the time there is nothing to see, hence the four buttons: they search the sky itself, forwards or backwards
-from the moment you are on, for the next eclipse, and jump to its maximum. Nothing is looked up, there is no table of
-dates anywhere on this page. Only a full moon can enter Earth's shadow and only a new moon can cross the Sun, so the
-search steps from one lunation to the next, 29.53 days apart, instead of walking the days in between; a handful of
-calls per candidate rules out the ones where the two bodies stay far apart, and what is left is walked minute by
-minute. Twenty years either way take about twenty milliseconds. The lunar search answers for the whole night side of
-Earth at once. The solar one answers for the place you chose, which is why it often lands on a modest partial
-eclipse, and why it sometimes has to look years ahead: the same eclipse that turns day into night along its central
-line does no more than take a bite out of the Sun a thousand kilometers away. From the maximum, step the Julian Day
-by minutes and watch it unfold. The Moon darkens in the penumbra first, barely noticeable, then turns a dark red in
-the umbra, lit only by sunlight that Earth's atmosphere bends around the planet, its outer rim tinged blue by the ozone
-the light passes through. The panel only
-hints at those colors; rendering them properly, along with the Moon's surface, is the job of
-[nachtgestirn](../nachtgestirn/).
+from the moment you are on, for the next eclipse, and jump to its maximum. Nothing is looked up. NASA's catalogs list
+every eclipse over five millennia <Cite id="espenak2006" /> <Cite id="espenak2009" />, but the search finds them from
+the positions alone: only a full moon can enter Earth's shadow and only a new moon can cross the Sun, so it needs to
+look closer only once a <Term of="Lunation">lunation</Term>. The solar search answers for the place you chose, which
+is why it often lands on a modest partial eclipse. How it works is shown [below](#code-examples).
+
+From the maximum, step the Julian Day by minutes and watch it unfold. The Moon darkens in the penumbra first, barely
+noticeable, then turns a dark red in the umbra, lit only by sunlight that Earth's atmosphere bends around the planet,
+its outer rim tinged blue by the ozone the light passes through. Tracing that light through the atmosphere gives the
+colors physically <Cite id="yapo2009" />, but far from real time. osgHimmel approximated them from the eclipse's `phase`
+instead <Cite id="mueller2012vmv" />. The panel only hints at those colors; rendering them properly, along with the
+Moon's surface, is the job of [nachtgestirn](../nachtgestirn/).
 
 <Table domain="eclipse" />
 <Controls />
@@ -360,9 +367,10 @@ instead is earthshine, sunlight that went to Earth and back, and it is one call 
 <Fig id="moon-view" /> above shades the Moon's night side.
 
 **Know when to bother.** Eclipses are rare enough that a renderer should not compute them every frame, and special
-enough to be worth a notification when one comes. A lunar eclipse is pure geometry, the same from every place on the
-night side, so a scan ahead finds the next one, no ephemeris table needed. This is, give or take the search window,
-what the buttons under <Fig id="eclipse-views" /> above do:
+enough to be worth a notification when one comes. This example finds the next total lunar eclipse: it steps from
+full moon to full moon, checks each one in coarse steps for whether the Moon gets near Earth's shadow at all, and only
+then walks it minute by minute. This is, give or take the search window, what the buttons under
+<Fig id="eclipse-views" /> above do:
 
 ```ts
 import {
@@ -400,8 +408,8 @@ function nextTotalLunarEclipse(from: number): Date | null {
     return null;
 }
 
-// Up to twenty years ahead in a twentieth of a second; from late 2026
-// that is totality on 2028-12-31, from 16:19 UTC.
+// Up to twenty years ahead; from late 2026 that is totality on
+// 2028-12-31, from 16:19 UTC.
 const next = nextTotalLunarEclipse(julianDayUT(fromDate(new Date())));
 ```
 
