@@ -122,7 +122,8 @@ function nameCell(name, field) {
 // The Sun's current true altitude: what the refraction and view-distance rows are evaluated for, since they need a
 // direction and the Sun's is the one a sky renderer cares about most.
 function sunAltitude(jd) {
-    return precise.sun.horizontalPosition(precise.fromJulianDay(jd), state.latitude, state.longitude).altitude;
+    return precise.sun.horizontalPosition(precise.fromJulianDay(jd), state.latitude, state.longitude, state.heightM)
+        .altitude;
 }
 
 // Refraction is only meaningful for a body at or near the horizon, not for one well below it: null reads as n/a.
@@ -145,14 +146,14 @@ const CALL_OVERRIDES = {
     // jd is already an absolute instant; fromJulianDay(jd) (offset 0) round-trips it as a UT AstronomicalTime,
     // which is what julianDayUT() inside horizontalPosition/parallacticAngle expects. A nonzero offset here
     // would double-shift the instant, since jd carries no timezone to begin with.
-    horizontalPosition: (fn, jd) => fn(precise.fromJulianDay(jd), state.latitude, state.longitude),
-    topocentricPosition: (fn, jd) => fn(precise.fromJulianDay(jd), state.latitude, state.longitude),
-    parallacticAngle: (fn, jd) => fn(precise.fromJulianDay(jd), state.latitude, state.longitude),
-    sunDirection: (fn, jd) => fn(precise.fromJulianDay(jd), state.latitude, state.longitude),
+    horizontalPosition: (fn, jd) => fn(precise.fromJulianDay(jd), state.latitude, state.longitude, state.heightM),
+    topocentricPosition: (fn, jd) => fn(precise.fromJulianDay(jd), state.latitude, state.longitude, state.heightM),
+    parallacticAngle: (fn, jd) => fn(precise.fromJulianDay(jd), state.latitude, state.longitude, state.heightM),
+    sunDirection: (fn, jd) => fn(precise.fromJulianDay(jd), state.latitude, state.longitude, state.heightM),
     airPressureRatio: (fn) => fn(state.heightM),
     horizonDip: (fn) => fn(state.heightM),
     // lunar takes just jd like the fn(jd) default already handles; only solar needs observer location too.
-    solar: (fn, jd) => fn(precise.fromJulianDay(jd), state.latitude, state.longitude),
+    solar: (fn, jd) => fn(precise.fromJulianDay(jd), state.latitude, state.longitude, state.heightM),
 };
 
 const DECIMALS = 4;

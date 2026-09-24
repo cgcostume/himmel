@@ -48,8 +48,8 @@ function offPanelMoon(dx, dy) {
 
 function renderSolar(jd) {
     const time = precise.fromJulianDay(jd);
-    const eclipse = precise.eclipse.solar(time, state.latitude, state.longitude);
-    const sunAltitude = precise.sun.horizontalPosition(time, state.latitude, state.longitude).altitude;
+    const eclipse = precise.eclipse.solar(time, state.latitude, state.longitude, state.heightM);
+    const sunAltitude = precise.sun.horizontalPosition(time, state.latitude, state.longitude, state.heightM).altitude;
     const sunRadiusDeg = (precise.sun.apparentAngularDiameter(jd) * precise.RAD_TO_DEG) / 2;
     const moonRadiusDeg = (precise.moon.apparentAngularDiameter(jd) * precise.RAD_TO_DEG) / 2;
     const scale = SUN_RADIUS_UNITS / sunRadiusDeg;
@@ -142,6 +142,7 @@ function renderLunar(jd) {
         precise.fromJulianDay(jd),
         state.latitude,
         state.longitude,
+        state.heightM,
     ).altitude;
     if (aboveVisibleHorizon(moonAltitude, state.heightM) < 0) {
         // The panel's frame is the sky's, not the observer's, so a Moon below the horizon veils all of it.
@@ -200,9 +201,9 @@ function mayEclipse(jd, lunar) {
  */
 function separationHere(jd) {
     const time = timeOf(jd);
-    const s = precise.sun.horizontalPosition(time, state.latitude, state.longitude);
+    const s = precise.sun.horizontalPosition(time, state.latitude, state.longitude, state.heightM);
     if (s.altitude <= 0) return null;
-    const m = precise.moon.horizontalPosition(time, state.latitude, state.longitude);
+    const m = precise.moon.horizontalPosition(time, state.latitude, state.longitude, state.heightM);
     return precise.angularSeparation(s.azimuth, s.altitude, m.azimuth, m.altitude);
 }
 
@@ -223,7 +224,9 @@ function deepest(middle, lunar) {
         const shadow = precise.eclipse.lunar(best.jd);
         return shadow.axisOffsetKm - precise.moon.MEAN_RADIUS_KM < shadow.umbraRadiusKm ? best.jd : null;
     }
-    return precise.eclipse.solar(timeOf(best.jd), state.latitude, state.longitude).phase < 1 ? best.jd : null;
+    return precise.eclipse.solar(timeOf(best.jd), state.latitude, state.longitude, state.heightM).phase < 1
+        ? best.jd
+        : null;
 }
 
 /**

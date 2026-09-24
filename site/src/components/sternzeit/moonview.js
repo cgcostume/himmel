@@ -75,7 +75,7 @@ function render() {
     const { longitude: l, latitude: b } = precise.moon.opticalLibrations(jd);
     const axis = precise.moon.positionAngleOfAxis(jd);
     const parallactic = precise.moon.parallacticAngle(time, latitude, longitude);
-    const horizontal = precise.moon.horizontalPosition(time, latitude, longitude);
+    const horizontal = precise.moon.horizontalPosition(time, latitude, longitude, state.heightM);
     const earthshine = precise.moon.earthshine(jd);
     // On the sky, position angles run from north through east, counterclockwise with east to the left. The zenith is at
     // the parallactic angle, so with the zenith up, the Moon's north pole sits at axis - parallactic, counterclockwise.
@@ -84,7 +84,7 @@ function render() {
 
     // The bright limb's direction on screen, clockwise from up, and how far the terminator bulges. Turning the pole
     // up turns the whole view with it, the Sun's direction on screen included.
-    const sunFrame = sunInViewFrame(time, latitude, longitude);
+    const sunFrame = sunInViewFrame(time, latitude, longitude, state.heightM);
     const limb = Math.atan2(sunFrame.right, sunFrame.up) + (twist - tilt) * DEG;
     const bulge = sunFrame.toward / Math.hypot(sunFrame.right, sunFrame.up, sunFrame.toward);
 

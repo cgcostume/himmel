@@ -83,7 +83,7 @@ const layers = [below, ground, above];
 // Every altitude here is over the visible horizon, as in the other figures: lifted by refraction, the horizon lowered by
 // the observer's height (see horizon.js). So rising and setting line up with the horizon ring and line to the second.
 function seen(body, time, latitude, longitude) {
-    const horizontal = body.horizontalPosition(time, latitude, longitude);
+    const horizontal = body.horizontalPosition(time, latitude, longitude, state.heightM);
     return { ...horizontal, altitude: aboveVisibleHorizon(horizontal.altitude, state.heightM) };
 }
 
@@ -198,11 +198,11 @@ function addDot(horizontal, color, strokePx) {
 
 // The Sun and the Moon are the same size here; the Sun is told apart by the same ring of dotted rays it wears in the
 // locked views, at the same size in screen pixels, and always square to the viewer (see frame()).
-const BODY_DOT_PX = 10;
+const BODY_DOT_PX = 17;
 const SUN_RADIUS_PX = BODY_DOT_PX / 2;
 const SUN_RAY_COUNT = 8;
-const SUN_RAY_GAP_PX = 3;
-const SUN_RAY_LENGTH_PX = 5;
+const SUN_RAY_GAP_PX = 5;
+const SUN_RAY_LENGTH_PX = 9;
 const SUN_RAY_DOTS = [0.1, 3];
 const billboards = [];
 

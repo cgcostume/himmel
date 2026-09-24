@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import * as approx from "../src/approx.js";
+import { observerGeocentric } from "../src/coords.js";
 import * as precise from "../src/index.js";
 
 test("earth.meanObliquity matches the standard J2000.0 value (23°26'21.448\")", () => {
@@ -135,4 +136,20 @@ test("earth.horizonDip is zero at sea level and about a degree from a 1000 m mou
     expect(precise.earth.horizonDip(0)).toBe(0);
     expect(precise.earth.horizonDip(1000)).toBeCloseTo(1.015, 2);
     expect(approx.earth.horizonDip(1000)).toBeCloseTo(precise.earth.horizonDip(1000), 3);
+});
+
+// Meeus, "Astronomical Algorithms", example 11.a: Palomar Observatory, 33°21'22" N, 1706 m.
+test("observerGeocentric places an observer on the ellipsoid and above it", () => {
+    const { rhoSinPhi, rhoCosPhi } = observerGeocentric(33 + 21 / 60 + 22 / 3600, 1706);
+    expect(rhoSinPhi).toBeCloseTo(0.546861, 6);
+    expect(rhoCosPhi).toBeCloseTo(0.836339, 6);
+});
+
+test("moon.topocentricPosition shifts with the observer's height", () => {
+    const time = precise.fromJulianDay(2461265.0);
+    const low = precise.moon.topocentricPosition(time, 43, 0);
+    const high = precise.moon.topocentricPosition(time, 43, 0, 1000);
+    const shift = Math.abs(high.declination - low.declination) + Math.abs(high.rightAscension - low.rightAscension);
+    expect(shift * 3600).toBeGreaterThan(0.05);
+    expect(shift * 3600).toBeLessThan(2);
 });

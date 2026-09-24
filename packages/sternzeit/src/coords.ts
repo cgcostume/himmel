@@ -68,31 +68,48 @@ export function equatorialToHorizontal(
     };
 }
 
-/** Corrects a geocentric equatorial position for parallax as seen from an observer's location, per Meeus'
- *  "Astronomical Algorithms" (40.7-40.9). Uses the same hour-angle convention as equatorialToHorizontal.
- *  Shared by sun.ts and moon.ts: the Moon's parallax is large enough (~1 degree) to always matter, the Sun's
- *  is tiny (~8.8") but applying it too keeps their topocentric positions on the same footing for eclipse math. */
+/** Earth's equatorial radius and polar to equatorial axis ratio (b/a) of the IAU 1976 ellipsoid, as in Meeus' chapter 11. */
+const EQUATORIAL_RADIUS_M = 6378140;
+const POLAR_AXIS_RATIO = 0.99664719;
+
+/** The observer's geocentric position (ρ sin φ', ρ cos φ') in Earth equatorial radii, on the ellipsoid and
+ *  `observerHeightM` above it, per Meeus' "Astronomical Algorithms" (chapter 11). */
+export function observerGeocentric(latitude: number, observerHeightM = 0): { rhoSinPhi: number; rhoCosPhi: number } {
+    const phi = latitude * DEG_TO_RAD;
+    const u = Math.atan(POLAR_AXIS_RATIO * Math.tan(phi));
+    const h = observerHeightM / EQUATORIAL_RADIUS_M;
+    return {
+        rhoSinPhi: POLAR_AXIS_RATIO * Math.sin(u) + h * Math.sin(phi),
+        rhoCosPhi: Math.cos(u) + h * Math.cos(phi),
+    };
+}
+
+/** Corrects a geocentric equatorial position for parallax as seen from an observer's location, on the ellipsoid and at
+ *  its height, per Meeus' "Astronomical Algorithms" (40.2, 40.3). Uses the same hour-angle convention as
+ *  equatorialToHorizontal. Shared by sun.ts and moon.ts: the Moon's parallax is large enough (~1 degree) to always
+ *  matter, the Sun's is tiny (~8.8") but applying it too keeps their topocentric positions on the same footing for
+ *  eclipse math. */
 export function applyParallax(
     position: EquatorialCoords,
     parallax: number,
     siderealTime: JulianDay,
     observersLatitude: number,
     observersLongitude: number,
+    observerHeightM = 0,
 ): EquatorialCoords {
     const H = (siderealTime + observersLongitude - position.rightAscension) * DEG_TO_RAD;
-    const phi = observersLatitude * DEG_TO_RAD;
+    const { rhoSinPhi, rhoCosPhi } = observerGeocentric(observersLatitude, observerHeightM);
     const pi = parallax * DEG_TO_RAD;
     const delta = position.declination * DEG_TO_RAD;
 
     const sinPi = Math.sin(pi);
-    const cosPhi = Math.cos(phi);
     const cosH = Math.cos(H);
     const cosDelta = Math.cos(delta);
 
-    const deltaAlpha = Math.atan2(-cosPhi * sinPi * Math.sin(H), cosDelta - cosPhi * sinPi * cosH);
+    const deltaAlpha = Math.atan2(-rhoCosPhi * sinPi * Math.sin(H), cosDelta - rhoCosPhi * sinPi * cosH);
     const deltaPrime = Math.atan2(
-        (Math.sin(delta) - Math.sin(phi) * sinPi) * Math.cos(deltaAlpha),
-        cosDelta - cosPhi * sinPi * cosH,
+        (Math.sin(delta) - rhoSinPhi * sinPi) * Math.cos(deltaAlpha),
+        cosDelta - rhoCosPhi * sinPi * cosH,
     );
 
     return {

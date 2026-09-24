@@ -64,10 +64,15 @@ function classifySolarEclipse(
  * Purely angular (apparent positions and angular diameters); doesn't predict eclipse *paths*, only whether
  * one is visible from a given place at a given time.
  */
-export function solarEclipseState(time: AstronomicalTime, latitude: number, longitude: number): SolarEclipseState {
+export function solarEclipseState(
+    time: AstronomicalTime,
+    latitude: number,
+    longitude: number,
+    observerHeightM = 0,
+): SolarEclipseState {
     const t = julianDayUT(time);
-    const sh = sun.horizontalPosition(time, latitude, longitude);
-    const mh = moon.horizontalPosition(time, latitude, longitude);
+    const sh = sun.horizontalPosition(time, latitude, longitude, observerHeightM);
+    const mh = moon.horizontalPosition(time, latitude, longitude, observerHeightM);
     const separation = angularSeparation(sh.azimuth, sh.altitude, mh.azimuth, mh.altitude);
     const direction = positionAngle(sh.azimuth, sh.altitude, mh.azimuth, mh.altitude);
 
@@ -83,10 +88,11 @@ export function solarEclipseStateApprox(
     time: AstronomicalTime,
     latitude: number,
     longitude: number,
+    observerHeightM = 0,
 ): SolarEclipseState {
     const t = julianDayUT(time);
-    const sh = sun.horizontalPositionApprox(time, latitude, longitude);
-    const mh = moon.horizontalPositionApprox(time, latitude, longitude);
+    const sh = sun.horizontalPositionApprox(time, latitude, longitude, observerHeightM);
+    const mh = moon.horizontalPositionApprox(time, latitude, longitude, observerHeightM);
     const separation = angularSeparation(sh.azimuth, sh.altitude, mh.azimuth, mh.altitude);
     const direction = positionAngle(sh.azimuth, sh.altitude, mh.azimuth, mh.altitude);
 
