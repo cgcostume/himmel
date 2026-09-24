@@ -13,6 +13,7 @@ const updated = formatUpdated(lastUpdated("src/pages/index.astro"));
 <Base title="himmelszelt · WebGPU sky" description="Small, composable TypeScript + WebGPU libraries for rendering the sky.">
     <h1>himmelszelt</h1>
     <p class="etymology"><strong>{name.term}</strong>: <Fragment set:html={name.html} /></p>
+    <p class="byline">by <a href="https://daniellimberger.de" target="_blank" rel="noopener">Daniel Limberger</a></p>
     <p class="lead">
         A family of composable libraries for rendering the sky in real time with WebGPU.
     </p>
@@ -29,9 +30,6 @@ const updated = formatUpdated(lastUpdated("src/pages/index.astro"));
         it is plain functions and compute-first WGSL, with no scene graph to adopt.
     </p>
     <p class="page-meta">Last updated {updated}.</p>
-    <p class="status">
-        <span class="beta">beta</span> Work in progress. The packages are usable but their APIs can still change.
-    </p>
     <ul class="chapter-list">
         {
             chapters.map((c) => (
@@ -73,11 +71,11 @@ const updated = formatUpdated(lastUpdated("src/pages/index.astro"));
     <p>
         So himmelszelt is the successor of{" "}
         <a href="https://github.com/cgcostume/osghimmel" target="_blank" rel="noopener">osgHimmel</a>, the C++ sky
-        renderer behind my 2012{" "}
+        renderer behind my 2012 master's thesis{" "}
         <a
             href="https://daniellimberger.de/resources/2012%20%E2%80%93%20Mueller%20%28now%20Limberger%29%20%E2%80%93%20Photorealistisches%20Rendering%20atmosphaerischer%20Effekte%20in%20geovirtuellen%203D-Umgebungen%20in%20Echtzeit.pdf"
             target="_blank"
-            rel="noopener">master's thesis, Photorealistic Real-Time Rendering of Atmospheric Effects in Geovirtual
+            rel="noopener">Photorealistic Real-Time Rendering of Atmospheric Effects in Geovirtual
             3D Environments</a>, written in German, and the paper{" "}
         <a href="https://daniellimberger.de/publications.html#abstract-2012-vmv-sky-phenomena" target="_blank" rel="noopener">
             Single-Pass Rendering of Day and Night Sky Phenomena</a> (videos:{" "}

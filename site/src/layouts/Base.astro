@@ -1,5 +1,6 @@
 ---
 import { getCollection } from "astro:content";
+import Term from "../components/Term.astro";
 import "../styles/global.css";
 
 interface Props {
@@ -51,9 +52,10 @@ const current = Astro.url.pathname.replace(/\/$/, "");
         </main>
         <footer class="site-footer">
             <span>
-                The successor of{" "}
-                <a href="https://github.com/cgcostume/osghimmel" target="_blank" rel="noopener">osgHimmel</a>, by{" "}
-                <a href="https://daniellimberger.de" target="_blank" rel="noopener">Daniel Limberger</a>.
+                Designed and directed by{" "}
+                <a href="https://daniellimberger.de" target="_blank" rel="noopener">Daniel Limberger</a>, implemented with{" "}
+                <a href="https://claude.com/claude-code" target="_blank" rel="noopener">Claude Code</a>. The successor of{" "}
+                <a href="https://github.com/cgcostume/osghimmel" target="_blank" rel="noopener">osgHimmel</a>.
             </span>
             <span>
                 &copy; {new Date().getFullYear()} Daniel Limberger. Code under the{" "}
@@ -61,7 +63,7 @@ const current = Astro.url.pathname.replace(/\/$/, "");
                 license</a>, text and figures under{" "}
                 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>.
             </span>
-            <span>The accent blue is a step of Saussure's cyanometer.</span>
+            <span>The accent blue is modeled on a step of Saussure's <Term of="Cyanometer">cyanometer</Term>.</span>
         </footer>
         <script>
             // Figure references get the numbers the captions count in CSS: figures with a caption, in page order.

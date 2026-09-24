@@ -5,7 +5,7 @@
     --line: #262b36;
     --text: #d6dae3;
     --muted: #8a92a3;
-    /* A light step of Saussure's cyanometer (1789): Prussian blue lightened with white, the hue (~207°) kept. The
+    /* A light step of Saussure's cyanometer (late 18th century): Prussian blue lightened with white, the hue (~207°) kept. The
        cyanometer measured how blue the sky is in 53 such steps; see Götz Hoeppe, "Blau: Die Farbe des Himmels". */
     --cyanometer: hsl(207 62% 62%);
     --accent: var(--cyanometer);
@@ -95,13 +95,6 @@ h3 {
 }
 .site-header .beta {
     margin-right: auto;
-}
-.status {
-    color: var(--muted);
-    font-size: var(--text-meta);
-}
-.status .beta {
-    margin-right: 0.4rem;
 }
 .site-header nav {
     display: flex;
@@ -343,6 +336,12 @@ input[type="number"]::-webkit-outer-spin-button {
     white-space: normal;
     pointer-events: none;
 }
+/* At the foot of the page a tip opens upwards, or its hidden box would lengthen the page below the footer. */
+.site-footer .term-tip {
+    top: auto;
+    bottom: calc(100% + 0.4rem);
+    text-align: left;
+}
 /* Row-specific context under a definition, e.g. in the sternzeit tables. */
 .tip-note {
     display: block;
@@ -395,6 +394,10 @@ figure[id],
     color: var(--muted);
     font-size: var(--text-meta);
     font-style: italic;
+}
+.byline {
+    margin-top: -0.5rem;
+    font-size: var(--text-meta);
 }
 .page-meta {
     margin-top: -0.9rem;
