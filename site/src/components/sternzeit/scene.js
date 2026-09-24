@@ -669,8 +669,9 @@ function annotate(name, point) {
     head.setAttribute("points", `${tx},${ty} ${hx - dy * 3.5},${hy + dx * 3.5} ${hx + dy * 3.5},${hy - dx * 3.5}`);
 }
 
-// "ecliptic": a label on the orbit ellipse's upper half on screen, at its rightmost point that stays inside the stage,
-// left of the alt-az panels and clear of the Sun, so it keeps to one place as the scene turns; hidden if none is. Lifted off the line, off the dashes.
+// "ecliptic": a label on the orbit ellipse's upper branch on screen, right of Earth, at its rightmost point inside the
+// stage, left of the alt-az panels and clear of the Sun, so it keeps to one place as the scene turns; hidden if there is
+// none. Lifted off the line, off the dashes.
 const ECLIPTIC_MARGIN_PX = 40;
 const eclipticLabel = document.querySelector('.scene-annotation[data-annotation="ecliptic"]');
 
@@ -687,18 +688,25 @@ function annotateEcliptic(sunPos) {
     const stageBox = eclipticLabel.parentElement.querySelector("#stage").getBoundingClientRect();
     const panelBox = eclipticLabel.parentElement.querySelector(".altaz-panel")?.getBoundingClientRect();
     const right = panelBox && panelBox.top < stageBox.bottom ? panelBox.left - stageBox.left : stageWidth;
-    let best = null;
-    for (let i = 0; i < 360; i++) {
+    const at = (i) => {
         const t = i * DEG;
         const local = new Vector({
             x: (orbitEllipse.width / 2) * Math.cos(t),
             y: (orbitEllipse.height / 2) * Math.sin(t),
         });
-        const [x, y] = project(local.rotate(orbitEllipse.rotate));
+        return project(local.rotate(orbitEllipse.rotate));
+    };
+    const points = Array.from({ length: 360 }, (_, i) => at(i));
+    let best = null;
+    points.forEach(([x, y], i) => {
         const inside = x > ECLIPTIC_MARGIN_PX && x < right - ECLIPTIC_MARGIN_PX && y > ECLIPTIC_MARGIN_PX;
-        if (!inside || y > stageHeight - ECLIPTIC_MARGIN_PX || Math.hypot(x - sx, y - sy) < clearOfSun) continue;
-        if (y < cy && (!best || x > best.x)) best = { x, y };
-    }
+        if (!inside || y > stageHeight - ECLIPTIC_MARGIN_PX || Math.hypot(x - sx, y - sy) < clearOfSun) return;
+        // The upper branch of the ellipse on screen: where its outward normal points up.
+        const [[ax, ay], [bx, by]] = [points[(i + 359) % 360], points[(i + 1) % 360]];
+        const [nx, ny] = [by - ay, ax - bx];
+        const outward = nx * (x - cx) + ny * (y - cy) > 0 ? 1 : -1;
+        if (x > cx && ny * outward < 0 && (!best || x > best.x)) best = { x, y };
+    });
     eclipticLabel.hidden = !best;
     if (!best) return;
     eclipticLabel.style.left = `${best.x}px`;

@@ -66,8 +66,8 @@ keep the coefficients in a numerically comfortable range.
 Then there is <Term of="Sidereal time">sidereal time</Term>. A solar day, noon to noon, is 24 hours. But Earth also
 moves along its orbit, so it has to turn a little more than once for the Sun to come back to the same spot. Relative
 to the distant stars, one rotation takes about 23 hours and 56 minutes. Sidereal time measures that rotation, as an
-angle. It is what connects the sky's coordinates to your spot on the ground: in the [armillary sphere](#armillary-sphere), the dashed meridian through
-your location rotates with it.
+angle. It is what connects the sky's coordinates to your spot on the ground: the dashed meridian through your location
+rotates with it (<Fig id="armillary-sphere" />).
 
 ```ts
 import {
@@ -92,7 +92,7 @@ const date = toDate(fromJulianDay(jd)); // and back to a Date
 
 Earth's rotation axis is tilted against the plane of its orbit by about 23.4°, the
 <Term of="Obliquity of the ecliptic">obliquity of the ecliptic</Term>, and that is why we have seasons. The tilt drifts
-slowly over millennia (the _mean_ obliquity), and the Moon's pull on Earth's equatorial bulge adds a nod with a period
+slowly over millennia (the mean obliquity), and the Moon's pull on Earth's equatorial bulge adds a nod with a period
 of 18.6 years, the <Term of="Nutation">nutation</Term>. It tilts the axis a little more and a little less, and slides
 the <Term of="Vernal equinox">vernal equinox</Term>, the point where the Sun crosses the equator northwards in
 March. Both effects stay below 20 arcseconds, but they separate a position that is almost right from one that is
@@ -106,14 +106,14 @@ atmosphere <Cite id="nishita1993" /> <Cite id="bruneton2008" />, and the refract
 minutes after it has geometrically set. Refraction comes in two directions, from the true altitude
 <Cite id="saemundsson1986" /> and from the apparent one <Cite id="bennett1982" />, and a renderer bending its view rays
 wants the latter. These rows are evaluated towards the Sun. More than a degree below the horizon, refraction shows as
-n/a, and the ray simply ends in the ground: 0 km at sea level, a little more from a mountain, whose horizon lies lower.
+`n/a`, and the ray simply ends in the ground: 0 km at sea level and a little more from a mountain, whose horizon lies lower.
 
 The tilt and the vernal equinox are also what the sky's coordinates are built on. There are several coordinate
 systems, and each exists because one step of the computation is simplest in it.
 <Term of="Ecliptic coordinates">Ecliptic coordinates</Term> take the plane of Earth's orbit, the ecliptic
 (<Fig id="armillary-sphere" />), as their equator. The Sun never leaves it, and the Moon and the planets stay within a
-few degrees, so orbits are computed here: an ecliptic longitude counted from the vernal equinox,
-and a small latitude off the plane. The orbit itself is almost a circle, at an eccentricity of about 0.0167
+few degrees, so orbits are computed here: an ecliptic longitude counted from the vernal equinox, and a small latitude
+off the plane. The orbit itself is almost a circle, at an eccentricity of about 0.0167
 <Cite id="bretagnon1982" />.
 
 <Term of="Equatorial coordinates">Equatorial coordinates</Term> take Earth's equator instead: right ascension along it,
@@ -122,39 +122,38 @@ catalogues use, since a star keeps both values while Earth turns underneath. The
 obliquity, a tilt about the line towards the vernal equinox.
 
 Both are <Term of="Geocentric">geocentric</Term>, and nobody stands at Earth's center. From the surface, a nearby
-body appears slightly shifted by its <Term of="Parallax">parallax</Term>: not at all for the stars, by 8.8 arcseconds for the Sun, and by up to a degree
-for the Moon, two of its own diameters. The topocentric position corrects for it, with the observer on the flattened
-ellipsoid and at their height above sea level.
+body appears slightly shifted by its <Term of="Parallax">parallax</Term>: not at all for the stars, by 8.8 arcseconds
+for the Sun, and by up to a degree for the Moon, two of its own diameters. The topocentric position corrects for it,
+with the observer on the flattened ellipsoid and at their height above sea level.
 
 <Term of="Horizontal coordinates">Horizontal coordinates</Term>, finally, are the observer's own: an altitude above the
 horizon and an azimuth from north through east. They follow from the topocentric position through the
-<Term of="Hour angle">hour angle</Term>, and this is where <Term of="Sidereal time">sidereal time</Term> comes in: it
-says how far the sky has turned past the observer's meridian.
+<Term of="Hour angle">hour angle</Term>, which sidereal time provides.
 
-The function names say how far a position has been corrected:
+The prefixes of the function names say how far a position has been corrected, as in `meanLongitude` or
+`apparentPosition`:
 
-- **Mean**: on an idealized, circular orbit at constant speed.
-- **True**: on the real, elliptical orbit.
-- **Apparent**: where the light seems to come from, after nutation and <Term of="Aberration">aberration</Term>. Still
-  geocentric, and without the air.
-- **Apparent altitude**: the same word for what the eye sees, lifted by
-  <Term of="Atmospheric refraction">refraction</Term>. At the horizon, by more than the Sun's own diameter.
+- `mean`: on an idealized, circular orbit at constant speed.
+- `true`: on the real, elliptical orbit.
+- `apparent`: where the light seems to come from, after nutation and <Term of="Aberration">aberration</Term>.
+- `topocentric`: from the observer's place, still in right ascension and declination.
+- `horizontal`: as altitude and azimuth above the observer's horizon.
 
 For a renderer, it all ends in two calls: `horizontalPosition`, and `horizontalToDirection` for a unit vector in the
-local east-north-up frame. Refraction is left out on purpose: the altitude returned is the true one, and bending the
-rays is the atmosphere's job.
+local east-north-up frame, ENU for short: x east, y north, z up. A y-up engine takes it as `(x, z, -y)`. Refraction is left out on purpose: the altitude returned is the true one, not the apparent
+altitude the eye sees, which refraction lifts by more than the Sun's own diameter at the horizon. Bending the rays is
+the atmosphere's job.
 
 ## The Sun
 
-Computing the Sun's position follows a pattern that most of this library repeats. Start from where the body _would_ be
+Computing the Sun's position follows a pattern that most of this library repeats. Start from where the body would be
 on a perfectly circular orbit traversed at constant speed: its <Term of="Mean anomaly">mean anomaly</Term> and
 <Term of="Mean longitude">mean longitude</Term>, both almost linear in time. Then correct for reality. Orbits are
 ellipses, so add the <Term of="Equation of the center">equation of the center</Term> to get the
 <Term of="True longitude">true longitude</Term>. Correct that for nutation and for aberration, a small shift caused by
 Earth's own orbital speed, to get the <Term of="Apparent position">apparent position</Term> in
-<Term of="Equatorial coordinates">right ascension and declination</Term>, the sky's own latitude and longitude.
-
-From there, the topocentric and the horizontal position bring it to the observer, as described under Earth.
+<Term of="Equatorial coordinates">right ascension and declination</Term>, the sky's own latitude and longitude. From
+there, the topocentric and the horizontal position bring it to the observer, as described under Earth.
 
 <DayArc />
 <Controls />
@@ -171,7 +170,8 @@ behind it <Cite id="meeus1998" />. Where its dots crowd, the Sun is turning arou
 <Controls />
 
 `distance` and `apparentAngularDiameter` belong together. Earth is about 3% closer to the Sun in early January than in
-early July, and the Sun's disc in the [armillary sphere](#armillary-sphere) grows and shrinks accordingly as you step through a year.
+early July, and the Sun's disc in <Fig id="armillary-sphere" /> grows and shrinks accordingly as you step through a
+year.
 
 ## The Moon
 
@@ -182,14 +182,14 @@ fundamental angles: its <Term of="Mean anomaly">mean anomaly</Term>, its
 <Term of="Argument of latitude">mean argument of latitude</Term>, and the longitude of its
 <Term of="Longitude of the ascending node">ascending node</Term>, where its orbit crosses Earth's heading north.
 
-Being close also means <Term of="Parallax">parallax</Term>: depending on where on Earth you stand, the Moon appears
-shifted by up to a degree, about two of its own diameters. That is why the topocentric correction matters most here.
+Being close also means a large <Term of="Parallax">parallax</Term>, which is why the topocentric correction matters
+most here.
 
 <Table domain="moon" />
 <Controls />
 
-The rows after `distance` are for rendering the Moon rather than locating it. The Moon always shows the same face, almost: tilted
-orbit and varying speed let us peek a few degrees around its edges over a month, the
+The rows after `distance` are for rendering the Moon rather than locating it. The Moon always shows the same face,
+almost: tilted orbit and varying speed let us peek a few degrees around its edges over a month, the
 <Term of="Libration">optical libration</Term>. The <Term of="Position angle of axis">position angle of the axis</Term>
 says how the Moon's north pole is oriented on the sky, and the <Term of="Parallactic angle">parallactic angle</Term>
 how that sky direction relates to your local "up". Together they determine how the Moon's surface, and its lit
@@ -199,8 +199,8 @@ The last four rows light it. The <Term of="Phase angle">phase angle</Term>, the 
 the lit half faces us, and the <Term of="Illuminated fraction">illuminated fraction</Term> turns that into what the
 phase looks like, from 0 at new moon to 1 at full moon <Cite id="meeus1998" />. For actual shading, a renderer wants
 the light direction itself: `sunDirection` points from the Moon's center to the Sun, in the same frame as every other
-direction here: the observer's local east, north and up, a right-handed frame known as ENU. It is not quite the Sun's direction as seen from Earth, since the Moon sits a few hundred thousand
-kilometers off to the side, but it is close.
+direction here, east-north-up. It is not quite the Sun's direction as seen from Earth, since the Moon sits a few
+hundred thousand kilometers off to the side, but it is close.
 
 The night side is not entirely dark either. The Earth reflects sunlight too, and around new moon, when the Moon sees
 an almost full Earth, that <Term of="Earthshine">earthshine</Term> gives the unlit part of a thin crescent a faint,
@@ -214,10 +214,10 @@ by the Earth's albedo <Cite id="jensen2001" />.
 
 With both bodies located, eclipses come almost for free. A solar eclipse is a matter of perspective: the Moon passing
 in front of the Sun, which depends on where you stand. Stand on the line the Moon's shadow sweeps and the Sun goes out
-(_total_), or, with the Moon near apogee and too small to cover it, leaves a ring of light around the black disc
-(_annular_); a few hundred kilometers to the side the Moon only takes a bite out of it (_partial_). A lunar eclipse is
-the Moon passing through Earth's shadow, and it looks the same from anywhere the Moon is up: _total_ once the whole
-disc is inside the umbra, _partial_ while only part of it is, and _penumbral_, barely a dimming, when the Moon misses
+(total), or, with the Moon near apogee and too small to cover it, leaves a ring of light around the black disc
+(annular); a few hundred kilometers to the side the Moon only takes a bite out of it (partial). A lunar eclipse is
+the Moon passing through Earth's shadow, and it looks the same from anywhere the Moon is up: total once the whole
+disc is inside the umbra, partial while only part of it is, and penumbral, barely a dimming, when the Moon misses
 the umbra altogether. Both are summarized as a single
 <Term of="Eclipse phase">phase</Term> <Cite id="mueller2012vmv" />: 0 at the deepest point, 0.5 where a total or
 annular eclipse turns partial, 1 where the discs, or the Moon and the shadow, just touch, and above 1 when there is
@@ -234,10 +234,10 @@ calls per candidate rules out the ones where the two bodies stay far apart, and 
 minute. Twenty years either way take about twenty milliseconds. The lunar search answers for the whole night side of
 Earth at once. The solar one answers for the place you chose, which is why it often lands on a modest partial
 eclipse, and why it sometimes has to look years ahead: the same eclipse that turns day into night along its central
-line does no more than take a bite out of the Sun a thousand kilometers away. From the maximum, step the Julian Day by minutes and
-watch it unfold. The Moon
-darkens in the penumbra first, barely noticeable, then turns a dark red in the umbra, lit only by sunlight that Earth's
-atmosphere bends around the planet, its outer rim tinged blue by the ozone the light passes through. The panel only
+line does no more than take a bite out of the Sun a thousand kilometers away. From the maximum, step the Julian Day
+by minutes and watch it unfold. The Moon darkens in the penumbra first, barely noticeable, then turns a dark red in
+the umbra, lit only by sunlight that Earth's atmosphere bends around the planet, its outer rim tinged blue by the ozone
+the light passes through. The panel only
 hints at those colors; rendering them properly, along with the Moon's surface, is the job of
 [nachtgestirn](../nachtgestirn/).
 
