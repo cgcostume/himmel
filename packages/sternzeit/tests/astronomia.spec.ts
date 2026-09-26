@@ -58,9 +58,7 @@ test("the Moon agrees (chapter 47)", () => {
     for (const jd of samples) {
         const theirs = A.moonposition.position(jd);
         const ours = S.moon.position(jd);
-        // position adds the nutation in longitude, astronomia's stays on the mean equinox.
-        const longitude = ours.longitude - S.earth.longitudeNutation(jd);
-        expect(Math.abs(angle(longitude, theirs.lon * R))).toBeLessThan(0.0001 * ARCSEC);
+        expect(Math.abs(angle(ours.longitude, theirs.lon * R))).toBeLessThan(0.0001 * ARCSEC);
         expect(Math.abs(ours.latitude - theirs.lat * R)).toBeLessThan(0.0001 * ARCSEC);
         expect(Math.abs(S.moon.distance(jd) - theirs.range)).toBeLessThan(0.001);
         // Earth's equatorial radius is 6378.14 km here and 6378.137 km there.
@@ -104,7 +102,7 @@ test("the Moon's phase angle and parallactic angle agree (48.2, 48.3, 14.1)", ()
         expect(Math.abs(S.moon.phaseAngle(jd) - A.moonillum.phaseAngleEquatorial(cMoon, cSun) * R)).toBeLessThan(1e-9);
 
         const time = S.fromJulianDay(jd);
-        const at = S.moon.apparentPosition(S.julianEphemerisDay(time));
+        const at = S.moon.topocentricPosition(time, latitude, longitude);
         const hourAngle = (S.apparentSiderealTime(time) + longitude - at.rightAscension) * D;
         const theirs = A.parallactic.parallacticAngle(latitude * D, at.declination * D, hourAngle) * R;
         expect(Math.abs(angle(S.moon.parallacticAngle(time, latitude, longitude), theirs))).toBeLessThan(1e-9);

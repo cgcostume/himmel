@@ -16,18 +16,19 @@ export interface AstronomicalTime {
 }
 
 export type JulianDay = number;
-/** Julian centuries since a reference epoch (commonly `T`). Not a {@link JulianDay}; see {@link julianCenturiesSinceStandardEquinox}. */
+/** Julian centuries since a reference epoch (commonly `T`), not a {@link JulianDay}. */
 export type JulianCenturies = number;
 
-/** 2000 January 1, 12:00 TT, the J2000.0 epoch. */
+/** The J2000.0 epoch, 2000 January 1, 12:00 TT, as a Julian Day. */
 export const J2000: JulianDay = 2451545.0;
-/** 2050 January 1, 12:00 TT. */
+/** 2050 January 1, 12:00 TT, as a Julian Day. */
 export const J2050: JulianDay = 2469807.5;
-/** 1900 January 0.8135 TT. */
+/** The B1900.0 epoch, 1900 January 0.8135 TT, as a Julian Day. */
 export const B1900: JulianDay = 2415020.3135;
-/** 1950 January 0.9235 TT. */
+/** The B1950.0 epoch, 1950 January 0.9235 TT, as a Julian Day. */
 export const B1950: JulianDay = 2433282.4235;
 
+/** The epoch Julian centuries are counted from: J2000.0. */
 export const STANDARD_EQUINOX: JulianDay = J2000;
 
 /**
@@ -67,9 +68,10 @@ export function julianDayUT(time: AstronomicalTime): JulianDay {
 /**
  * ΔT = TT - UT, in seconds, at a given Julian Day (UT): how far Earth's slowing, uneven rotation has fallen behind the
  * uniform time the ephemerides run on. About a minute today, hours in antiquity, and unpredictable in detail for the
- * future. Observed values from the IERS since 1962, before that the polynomials of Espenak & Meeus 2006, from the
- * Five Millennium Canon of Solar Eclipses (NASA TP-2006-214141), fitted to Morrison & Stephenson 2004. After the last observation, its recent trend blends into their extrapolation over a
- * century. https://eclipse.gsfc.nasa.gov/SEhelp/deltatpoly2004.html
+ * future. Observed values from the IERS since 1962, before that the polynomials of Espenak & Meeus 2006, from the Five
+ * Millennium Canon of Solar Eclipses (NASA TP-2006-214141), fitted to Morrison & Stephenson 2004. After the last
+ * observation, its recent trend blends into their extrapolation over a century.
+ * https://eclipse.gsfc.nasa.gov/SEhelp/deltatpoly2004.html
  */
 export function deltaT(jd: JulianDay): number {
     const y = 2000 + (jd - J2000) / 365.25;
@@ -118,10 +120,12 @@ function polynomialDeltaT(y: number): number {
     return long((y - 1820) / 100);
 }
 
-/** Julian Ephemeris Day (JDE) of `time`: its Julian Day in UT moved on by {@link deltaT}, the uniform time the orbits
- *  are computed in. Sidereal time keeps to UT, since it follows Earth's actual rotation. */
-export function julianEphemerisDay(time: AstronomicalTime): JulianDay {
-    const jd = julianDayUT(time);
+/**
+ * Julian Ephemeris Day (JDE): the Julian Day in UT moved on by {@link deltaT}, the uniform time the orbits are computed
+ * in. Takes a date and time, or a Julian Day in UT. Sidereal time keeps to UT, as it follows Earth's actual rotation.
+ */
+export function julianEphemerisDay(time: AstronomicalTime | JulianDay): JulianDay {
+    const jd = typeof time === "number" ? time : julianDayUT(time);
     return jd + deltaT(jd) / 86_400;
 }
 
@@ -170,7 +174,8 @@ export function fromJulianDay(jd: JulianDay, utcOffsetSeconds = 0): Astronomical
     return { year, month, day, hour, minute, second, utcOffsetSeconds };
 }
 
-/** A JavaScript `Date` as an AstronomicalTime in the runtime's local time zone, offset included, milliseconds as fractional seconds. */
+/** A JavaScript `Date` as an AstronomicalTime in the runtime's local time zone, offset included, milliseconds as
+ *  fractional seconds. */
 export function fromDate(date: Date): AstronomicalTime {
     return {
         year: date.getFullYear(),
@@ -198,6 +203,7 @@ export function toUT(time: AstronomicalTime): AstronomicalTime {
     return fromJulianDay(julianDay(time) - time.utcOffsetSeconds / 3600 / 24, 0);
 }
 
+/** Days since the standard equinox (J2000.0). */
 export function julianDaysSinceStandardEquinox(jd: JulianDay): number {
     return jd - STANDARD_EQUINOX;
 }

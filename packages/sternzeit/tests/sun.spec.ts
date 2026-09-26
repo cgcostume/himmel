@@ -66,3 +66,24 @@ test("sun.topocentricPosition nudges apparentPosition by no more than the Sun's 
     expect(Math.abs(topocentric.rightAscension - apparent.rightAscension)).toBeLessThan(8.8 / 3600);
     expect(Math.abs(topocentric.declination - apparent.declination)).toBeLessThan(8.8 / 3600);
 });
+
+// Meeus 25.a has R = 0.99766 AU; the Sun's disc spans 2 · atan(696,000 km / R), about 0.534°.
+test("sun.apparentAngularDiameter is in degrees", () => {
+    expect(precise.sun.apparentAngularDiameter(JDE)).toBeCloseTo(0.5344, 3);
+    expect(approx.sun.apparentAngularDiameter(JDE)).toBeCloseTo(0.5344, 3);
+});
+
+test("approx.sun.equationOfCenter stays within a hundredth of a degree of the precise one", () => {
+    for (let t = precise.J2000; t < precise.J2050; t += 11.7) {
+        expect(Math.abs(approx.sun.equationOfCenter(t) - precise.sun.equationOfCenter(t))).toBeLessThan(0.01);
+    }
+});
+
+test("sun.direction and moon.direction are the unit vectors of their horizontal positions", () => {
+    const time = { year: 2026, month: 6, day: 21, hour: 10, minute: 0, second: 0, utcOffsetSeconds: 0 };
+    for (const body of [precise.sun, precise.moon] as const) {
+        const direction = body.direction(time, 52.5, 13.4, 300);
+        expect(direction).toEqual(precise.horizontalToDirection(body.horizontalPosition(time, 52.5, 13.4, 300)));
+        expect(Math.hypot(...direction)).toBeCloseTo(1, 12);
+    }
+});

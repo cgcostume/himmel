@@ -50,8 +50,8 @@ function renderSolar(jd) {
     const time = precise.fromJulianDay(jd);
     const eclipse = precise.eclipse.solar(time, state.latitude, state.longitude, state.heightM);
     const sunAltitude = precise.sun.horizontalPosition(time, state.latitude, state.longitude, state.heightM).altitude;
-    const sunRadiusDeg = (precise.sun.apparentAngularDiameter(ephemerisDay(jd)) * precise.RAD_TO_DEG) / 2;
-    const moonRadiusDeg = (precise.moon.apparentAngularDiameter(ephemerisDay(jd)) * precise.RAD_TO_DEG) / 2;
+    const sunRadiusDeg = precise.sun.apparentAngularDiameter(ephemerisDay(jd)) / 2;
+    const moonRadiusDeg = precise.moon.apparentAngularDiameter(ephemerisDay(jd)) / 2;
     const scale = SUN_RADIUS_UNITS / sunRadiusDeg;
     const moonRadius = moonRadiusDeg * scale;
 

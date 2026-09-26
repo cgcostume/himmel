@@ -21,10 +21,10 @@ test("moon.meanArgumentOfLatitude matches Meeus' worked example 47.a", () => {
     expect(precise.moon.meanArgumentOfLatitude(JDE)).toBeCloseTo(219.889721, 6);
 });
 
-// Meeus' λ = 133.162655° is referred to the mean equinox; position adds the nutation, Δψ = 0.004610°.
+// Meeus' λ = 133.162655° is referred to the mean equinox, like position; apparentPosition adds Δψ = 0.004610°.
 test("moon.position matches Meeus' worked example 47.a", () => {
     const ecl = precise.moon.position(JDE);
-    expect(ecl.longitude).toBeCloseTo(133.162655 + 0.00461, 5);
+    expect(ecl.longitude).toBeCloseTo(133.162655, 6);
     expect(ecl.latitude).toBeCloseTo(-3.229126, 6);
 });
 

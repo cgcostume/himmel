@@ -16,7 +16,7 @@ export const GLOSSARY_TERMS = {
     trueObliquity: "Obliquity of the ecliptic",
     meanAnomaly: "Mean anomaly",
     meanLongitude: "Mean longitude",
-    center: "Equation of the center",
+    equationOfCenter: "Equation of the center",
     trueAnomaly: "True anomaly",
     trueLongitude: "True longitude",
     apparentLongitude: "Apparent position",

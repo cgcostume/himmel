@@ -1,6 +1,6 @@
 // Terms used here are explained in the himmelszelt site's glossary (site/src/data/glossary.json).
 import * as earth from "./earth.js";
-import { angularSeparation, DEG_TO_RAD, normalizeDegrees, positionAngle, RAD_TO_DEG } from "./math.js";
+import { angularSeparation, DEG_TO_RAD, normalizeDegrees, positionAngle } from "./math.js";
 import * as moon from "./moon.js";
 import * as sun from "./sun.js";
 import { type AstronomicalTime, type JulianDay, julianEphemerisDay } from "./time.js";
@@ -26,10 +26,12 @@ function linearPhase(distance: number, outer: number): number {
 export interface SolarEclipseState {
     /** Apparent center-to-center separation between Sun and Moon as seen by the observer, in degrees. */
     separation: number;
-    /** Direction from the Sun's center to the Moon's center in the observer's local sky, in degrees measured
-     *  from up (zenithward) through east, 0-360: which side of the Sun the Moon is covering it from. */
+    /** Direction from the Sun's center to the Moon's center in the observer's local sky, in degrees, 0-360: from up
+     *  (towards the zenith) clockwise as the observer sees it, i.e. towards increasing azimuth. Which side of the Sun
+     *  the Moon covers it from. */
     positionAngle: number;
     /**
+     * How deep the eclipse is, not the Moon's phase (see `moon.phaseAngle` for that).
      * 0 (centered, deepest total/annular eclipse) to 1 (Sun/Moon discs just touching, first/last contact),
      * 0.5 exactly where the discs' edges align (the total/annular-to-partial boundary); above 1 means no
      * eclipse. See `phase` above. Total vs. annular isn't encoded here (it depends on whether the Moon's or
@@ -79,11 +81,12 @@ export function solarEclipseState(
     return classifySolarEclipse(
         separation,
         direction,
-        (sun.apparentAngularDiameter(t) * RAD_TO_DEG) / 2,
-        (moon.apparentAngularDiameter(t) * RAD_TO_DEG) / 2,
+        sun.apparentAngularDiameter(t) / 2,
+        moon.apparentAngularDiameter(t) / 2,
     );
 }
 
+/** Approximation of {@link solarEclipseState}, from the approximate chain. */
 export function solarEclipseStateApprox(
     time: AstronomicalTime,
     latitude: number,
@@ -99,8 +102,8 @@ export function solarEclipseStateApprox(
     return classifySolarEclipse(
         separation,
         direction,
-        (sun.apparentAngularDiameterApprox(t) * RAD_TO_DEG) / 2,
-        (moon.apparentAngularDiameterApprox(t) * RAD_TO_DEG) / 2,
+        sun.apparentAngularDiameterApprox(t) / 2,
+        moon.apparentAngularDiameterApprox(t) / 2,
     );
 }
 
@@ -112,7 +115,8 @@ export interface LunarEclipseState {
     /** Direction from the shadow axis to the Moon, in ecliptical degrees measured from ecliptic north through
      *  increasing longitude, 0-360: which side of Earth's shadow the Moon is biased toward. */
     positionAngle: number;
-    /** 0 (Moon centered on the shadow axis, deepest possible eclipse) to 1 (Moon at the outer edge of the
+    /** How deep the eclipse is, not the Moon's phase (see `moon.phaseAngle` for that).
+     *  0 (Moon centered on the shadow axis, deepest possible eclipse) to 1 (Moon at the outer edge of the
      *  penumbra), 0.5 exactly at the umbra/penumbra boundary; above 1 outside the penumbra (no eclipse). See
      *  `phase` above. */
     phase: number;
@@ -130,13 +134,13 @@ export interface LunarEclipseState {
  * geometry of the shadow cones the Sun casts behind the Earth. Geometric shadow only: doesn't include the
  * ~1-2% atmospheric enlargement of Earth's shadow used in precise eclipse predictions (Danjon's correction).
  */
-function shadowRadiiKm(sunDistanceKm: number, distanceBeyondEarthKm: number): { umbra: number; penumbra: number } {
+function shadowRadii(sunDistanceKm: number, distanceBeyondEarthKm: number): { umbraKm: number; penumbraKm: number } {
     const umbraHalfAngle = Math.atan((sun.MEAN_RADIUS_KM - earth.MEAN_RADIUS_KM) / sunDistanceKm);
     const penumbraHalfAngle = Math.atan((sun.MEAN_RADIUS_KM + earth.MEAN_RADIUS_KM) / sunDistanceKm);
 
     return {
-        umbra: earth.MEAN_RADIUS_KM - distanceBeyondEarthKm * Math.tan(umbraHalfAngle),
-        penumbra: earth.MEAN_RADIUS_KM + distanceBeyondEarthKm * Math.tan(penumbraHalfAngle),
+        umbraKm: earth.MEAN_RADIUS_KM - distanceBeyondEarthKm * Math.tan(umbraHalfAngle),
+        penumbraKm: earth.MEAN_RADIUS_KM + distanceBeyondEarthKm * Math.tan(penumbraHalfAngle),
     };
 }
 
@@ -171,24 +175,30 @@ export function lunarEclipseState(t: JulianDay): LunarEclipseState {
     // The shadow points away from the apparent Sun: aberration is the light time the shadow's light was underway, and
     // both longitudes are then referred to the true equinox of the date.
     const shadowAxisLongitude = normalizeDegrees(sun.apparentLongitude(t) + 180);
-    const moonPosition = moon.position(t);
+    const geometric = moon.position(t);
+    const moonPosition = { longitude: geometric.longitude + earth.longitudeNutation(t), latitude: geometric.latitude };
     const offsetDeg = angularSeparation(moonPosition.longitude, moonPosition.latitude, shadowAxisLongitude, 0);
     const direction = positionAngle(shadowAxisLongitude, 0, moonPosition.longitude, moonPosition.latitude);
 
     const moonDistanceKm = moon.distance(t);
-    const { umbra, penumbra } = shadowRadiiKm(sun.distance(t), moonDistanceKm);
+    const { umbraKm, penumbraKm } = shadowRadii(sun.distance(t), moonDistanceKm);
 
-    return classifyLunarEclipse(offsetDeg, offsetDeg * DEG_TO_RAD * moonDistanceKm, direction, umbra, penumbra);
+    return classifyLunarEclipse(offsetDeg, offsetDeg * DEG_TO_RAD * moonDistanceKm, direction, umbraKm, penumbraKm);
 }
 
+/** Approximation of {@link lunarEclipseState}, from the approximate chain. */
 export function lunarEclipseStateApprox(t: JulianDay): LunarEclipseState {
     const shadowAxisLongitude = normalizeDegrees(sun.apparentLongitudeApprox(t) + 180);
-    const moonPosition = moon.positionApprox(t);
+    const geometric = moon.positionApprox(t);
+    const moonPosition = {
+        longitude: geometric.longitude + earth.longitudeNutationApprox(t),
+        latitude: geometric.latitude,
+    };
     const offsetDeg = angularSeparation(moonPosition.longitude, moonPosition.latitude, shadowAxisLongitude, 0);
     const direction = positionAngle(shadowAxisLongitude, 0, moonPosition.longitude, moonPosition.latitude);
 
     const moonDistanceKm = moon.distanceApprox(t);
-    const { umbra, penumbra } = shadowRadiiKm(sun.distanceApprox(t), moonDistanceKm);
+    const { umbraKm, penumbraKm } = shadowRadii(sun.distanceApprox(t), moonDistanceKm);
 
-    return classifyLunarEclipse(offsetDeg, offsetDeg * DEG_TO_RAD * moonDistanceKm, direction, umbra, penumbra);
+    return classifyLunarEclipse(offsetDeg, offsetDeg * DEG_TO_RAD * moonDistanceKm, direction, umbraKm, penumbraKm);
 }

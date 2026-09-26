@@ -98,3 +98,8 @@ test("modifiedJulianDay applies the time zone offset", () => {
 test("apparentSiderealTime matches Meeus' worked example 12.a", () => {
     expect(apparentSiderealTime(utc(1987, 4, 10))).toBeCloseTo((13 + 10 / 60 + 46.1351 / 3600) * 15, 5);
 });
+
+test("julianEphemerisDay takes a Julian Day in UT as well as a date", () => {
+    const time = utc(2026, 8, 12, 18);
+    expect(julianEphemerisDay(julianDayUT(time))).toBe(julianEphemerisDay(time));
+});

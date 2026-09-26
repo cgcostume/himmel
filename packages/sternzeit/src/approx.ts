@@ -1,4 +1,4 @@
-// biome-ignore-all assist/source/organizeImports: exports are hand-grouped by domain, not alphabetical, mirroring index.ts
+// biome-ignore-all assist/source/organizeImports: exports are hand-grouped by domain, as in index.ts
 import * as earthImpl from "./earth.js";
 import * as moonImpl from "./moon.js";
 import * as sunImpl from "./sun.js";
@@ -66,17 +66,20 @@ export const earth = {
     horizonDip: earthImpl.horizonDipApprox,
 };
 
-// Sun. Same shape as the precise `sun` namespace in `index.ts`, minus `center`/`trueAnomaly`.
+// Sun. Same shape as the precise `sun` namespace in `index.ts`.
 export const sun = {
     MEAN_RADIUS_KM: sunImpl.MEAN_RADIUS_KM,
     meanAnomaly: sunImpl.meanAnomalyApprox,
     meanLongitude: sunImpl.meanLongitudeApprox,
+    equationOfCenter: sunImpl.equationOfCenterApprox,
+    trueAnomaly: sunImpl.trueAnomalyApprox,
     trueLongitude: sunImpl.trueLongitudeApprox,
     apparentLongitude: sunImpl.apparentLongitudeApprox,
     apparentPosition: sunImpl.apparentPositionApprox,
     equatorialHorizontalParallax: sunImpl.equatorialHorizontalParallaxApprox,
     topocentricPosition: sunImpl.topocentricPositionApprox,
     horizontalPosition: sunImpl.horizontalPositionApprox,
+    direction: sunImpl.directionApprox,
     distance: sunImpl.distanceApprox,
     apparentAngularDiameter: sunImpl.apparentAngularDiameterApprox,
 };
@@ -97,6 +100,7 @@ export const moon = {
     equatorialHorizontalParallax: moonImpl.equatorialHorizontalParallaxApprox,
     topocentricPosition: moonImpl.topocentricPositionApprox,
     horizontalPosition: moonImpl.horizontalPositionApprox,
+    direction: moonImpl.directionApprox,
     distance: moonImpl.distanceApprox,
     apparentAngularDiameter: moonImpl.apparentAngularDiameterApprox,
     opticalLibrations: moonImpl.opticalLibrationsApprox,

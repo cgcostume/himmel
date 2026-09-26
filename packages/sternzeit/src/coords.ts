@@ -1,6 +1,5 @@
 // Terms used here are explained in the himmelszelt site's glossary (site/src/data/glossary.json).
 import { DEG_TO_RAD, normalizeDegrees, RAD_TO_DEG } from "./math.js";
-import type { JulianDay } from "./time.js";
 
 export interface EquatorialCoords {
     /** Right ascension (α), in degrees: angle east of the vernal equinox along the celestial equator. */
@@ -40,25 +39,24 @@ export function eclipticalToEquatorial(ecl: EclipticalCoords, obliquity: number)
 }
 
 /**
- * Equatorial to horizontal coordinates, per Meeus 13.5, 13.6.
- * `observersLongitude` is positive east (standard geographic convention: LST = GST + east longitude),
- * verified against the 2024-04-08 total solar eclipse via eclipse.ts's solarEclipseState. Meeus' own
- * azimuth formula is measured westward from south; 180 degrees is added below to return the compass
- * convention (from north through east) instead, matching every other azimuth a renderer or map expects.
+ * Equatorial to horizontal coordinates, per Meeus 13.5, 13.6. `siderealTime` is Greenwich's, in degrees: the apparent
+ * one for an apparent position. `longitude` is positive east, the geographic convention, so the local sidereal time is
+ * Greenwich's plus it. Meeus measures the azimuth westward from south; 180° is added to return the compass azimuth from
+ * north through east instead, the one every renderer and map expects.
  */
 export function equatorialToHorizontal(
     equ: EquatorialCoords,
-    siderealTime: JulianDay,
-    observersLatitude: number,
-    observersLongitude: number,
+    siderealTime: number,
+    latitude: number,
+    longitude: number,
 ): HorizontalCoords {
     // Local hour angle: H = θ - α (Meeus ch. 13).
-    const H = (siderealTime + observersLongitude - equ.rightAscension) * DEG_TO_RAD;
+    const H = (siderealTime + longitude - equ.rightAscension) * DEG_TO_RAD;
     const declination = equ.declination * DEG_TO_RAD;
 
     const cosH = Math.cos(H);
-    const sinLat = Math.sin(observersLatitude * DEG_TO_RAD);
-    const cosLat = Math.cos(observersLatitude * DEG_TO_RAD);
+    const sinLat = Math.sin(latitude * DEG_TO_RAD);
+    const cosLat = Math.cos(latitude * DEG_TO_RAD);
 
     return {
         altitude: Math.asin(sinLat * Math.sin(declination) + cosLat * Math.cos(declination) * cosH) * RAD_TO_DEG,
@@ -94,13 +92,13 @@ export function observerGeocentric(latitude: number, observerHeightM = 0): { rho
 export function applyParallax(
     position: EquatorialCoords,
     parallax: number,
-    siderealTime: JulianDay,
-    observersLatitude: number,
-    observersLongitude: number,
+    siderealTime: number,
+    latitude: number,
+    longitude: number,
     observerHeightM = 0,
 ): EquatorialCoords {
-    const H = (siderealTime + observersLongitude - position.rightAscension) * DEG_TO_RAD;
-    const { rhoSinPhi, rhoCosPhi } = observerGeocentric(observersLatitude, observerHeightM);
+    const H = (siderealTime + longitude - position.rightAscension) * DEG_TO_RAD;
+    const { rhoSinPhi, rhoCosPhi } = observerGeocentric(latitude, observerHeightM);
     const pi = parallax * DEG_TO_RAD;
     const delta = position.declination * DEG_TO_RAD;
 

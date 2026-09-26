@@ -1,4 +1,4 @@
-import { deltaT, fromDate, julianDayUT } from "@himmelszelt/sternzeit";
+import { fromDate, julianDayUT, julianEphemerisDay } from "@himmelszelt/sternzeit";
 
 /**
  * The one moment and place the whole page shows. Every set of controls writes here, and the tables and the scene
@@ -29,4 +29,4 @@ export function julianDayNow() {
 state.jd = julianDayNow();
 
 /** The page's moments are UT; the orbits take ephemeris time, a minute or so ahead today (see deltaT). */
-export const ephemerisDay = (jd) => jd + deltaT(jd) / 86_400;
+export const ephemerisDay = (jd) => julianEphemerisDay(jd);

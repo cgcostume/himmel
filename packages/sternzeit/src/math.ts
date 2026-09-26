@@ -1,7 +1,9 @@
+/** The integer part, truncated towards zero, as Meeus' INT. */
 export function toInt(value: number): number {
     return Math.trunc(value);
 }
 
+/** The fractional part, with the sign of `value`. */
 export function frac(value: number): number {
     return value - Math.trunc(value);
 }
@@ -16,7 +18,9 @@ export function flatTable(rows: readonly (readonly number[])[]): Float64Array {
     return Float64Array.from(rows.flat());
 }
 
+/** Multiply degrees by this for radians, and radians by {@link RAD_TO_DEG} for degrees. */
 export const DEG_TO_RAD = Math.PI / 180;
+/** Multiply radians by this for degrees. */
 export const RAD_TO_DEG = 180 / Math.PI;
 
 /** Normalizes an angle in degrees to the range [0, 360). */
@@ -29,6 +33,7 @@ export function dayFraction(hour: number, minute: number, second: number): numbe
     return (hour + (minute + second / 60) / 60) / 24;
 }
 
+/** Arcseconds to degrees. */
 export function arcsecondsToDegrees(arcseconds: number): number {
     return arcseconds / 3600;
 }

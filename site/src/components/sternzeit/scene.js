@@ -27,7 +27,7 @@ const SUN_DIST = 460;
 // eclipses does in reality. SUN_R is only a reference size, chosen to read well at this scene's scale, that
 // APPARENT_SIZE_SCALE is derived from so the sun starts out at roughly its old, hand-picked diameter.
 const SUN_R = 32;
-const APPARENT_SIZE_SCALE = (SUN_R * 2) / (precise.sun.apparentAngularDiameter(precise.J2000) * precise.RAD_TO_DEG);
+const APPARENT_SIZE_SCALE = (SUN_R * 2) / precise.sun.apparentAngularDiameter(precise.J2000);
 
 const KM_TO_SCENE = EARTH_R / precise.earth.MEAN_RADIUS_KM;
 const ATMOSPHERE_SHELL_DIAMETER = 2 * (EARTH_R + precise.earth.ATMOSPHERE_THICKNESS_KM * KM_TO_SCENE);
@@ -263,7 +263,7 @@ const sunRays = Array.from(
 const moonAnchor = new Anchor({ addTo: illustration });
 const moonDisc = new Ellipse({
     addTo: moonAnchor,
-    diameter: APPARENT_SIZE_SCALE * precise.moon.apparentAngularDiameter(precise.J2000) * precise.RAD_TO_DEG,
+    diameter: APPARENT_SIZE_SCALE * precise.moon.apparentAngularDiameter(precise.J2000),
     color: MOON_INK,
     stroke: 1,
     fill: false,
@@ -501,7 +501,7 @@ function frame() {
 
     sunAnchor.translate = sunPos;
     sunDisc.rotate = billboardRotate(rotX, rotY);
-    sunDisc.diameter = APPARENT_SIZE_SCALE * precise.sun.apparentAngularDiameter(ephemerisDay(jd)) * precise.RAD_TO_DEG;
+    sunDisc.diameter = APPARENT_SIZE_SCALE * precise.sun.apparentAngularDiameter(ephemerisDay(jd));
     sunDisc.updatePath();
     const sunRayInner = sunDisc.diameter / 2 + SUN_RAY_GAP;
     const sunRayOuter = sunRayInner + SUN_RAY_LENGTH;
@@ -515,8 +515,7 @@ function frame() {
     });
     moonAnchor.translate = moonPos;
     moonDisc.rotate = billboardRotate(rotX, rotY);
-    moonDisc.diameter =
-        APPARENT_SIZE_SCALE * precise.moon.apparentAngularDiameter(ephemerisDay(jd)) * precise.RAD_TO_DEG;
+    moonDisc.diameter = APPARENT_SIZE_SCALE * precise.moon.apparentAngularDiameter(ephemerisDay(jd));
     moonDisc.updatePath();
     atmosphereShell.rotate = billboardRotate(rotX, rotY);
     // observerPos already has magnitude EARTH_R (sphericalToVector's radius arg), so this only needs a

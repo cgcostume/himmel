@@ -26,8 +26,6 @@ const UNITS = {
     distance: "km",
     viewDistanceWithinAtmosphere: "km",
     orbitEccentricity: "",
-    apparentAngularSunDiameter: "rad",
-    apparentAngularMoonDiameter: "rad",
     "solar.phase": "",
     "solar.linearPhase": "",
     "lunar.axisOffsetKm": "km",
@@ -37,6 +35,7 @@ const UNITS = {
     "lunar.penumbraRadiusKm": "km",
     illuminatedFraction: "",
     sunDirection: "",
+    direction: "",
     earthshine: "",
 };
 const DEFAULT_UNIT = "deg";
@@ -86,6 +85,10 @@ const DESCRIPTIONS = {
         "How far a line of sight towards the Sun travels through the atmosphere, in kilometers: to its top, or to the ground if the Sun is below the horizon.",
     ],
     distance: ["Distance", "Distance from Earth's center to the body's center, in kilometers."],
+    direction: [
+        "Direction",
+        "Unit vector from the observer to the body, in the observer's ENU frame (x east, y north, z up): what a renderer places or lights it by.",
+    ],
     sunDirection: [
         "Sun direction from the Moon",
         "Unit vector from the Moon's center to the Sun, in the observer's ENU frame (x east, y north, z up): the light to shade the Moon with.",
@@ -165,6 +168,7 @@ const CALL_OVERRIDES = {
     topocentricPosition: (fn, jd) => fn(precise.fromJulianDay(jd), state.latitude, state.longitude, state.heightM),
     parallacticAngle: (fn, jd) => fn(precise.fromJulianDay(jd), state.latitude, state.longitude, state.heightM),
     sunDirection: (fn, jd) => fn(precise.fromJulianDay(jd), state.latitude, state.longitude, state.heightM),
+    direction: (fn, jd) => fn(precise.fromJulianDay(jd), state.latitude, state.longitude, state.heightM),
     airPressureRatio: (fn) => fn(state.heightM),
     horizonDip: (fn) => fn(state.heightM),
     // The time functions take the moment itself, as a date; deltaT takes its Julian Day in UT.

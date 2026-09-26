@@ -17,14 +17,14 @@ export const ATMOSPHERE_THICKNESS_NON_UNIFORM_KM = 85.0;
 /** Faintest apparent magnitude generally visible to the naked eye. http://www.astronomynotes.com/starprop/s4.htm */
 export const APPARENT_MAGNITUDE_LIMIT = 6.5;
 
-/** Eccentricity of Earth's orbit around the Sun, per Meeus 25.4. */
+/** Eccentricity of Earth's orbit around the Sun, dimensionless (0 for a circle), per Meeus 25.4. */
 export function orbitEccentricity(t: JulianDay): number {
     const T = julianCenturiesSinceStandardEquinox(t);
     return polynomial(T, 0.016708634, -0.000042037, -0.0000001267);
 }
 
-/** Constant regardless of `t` in this approximation; kept as a parameter to match `orbitEccentricity`'s
- *  shape so switching the import is the only thing a caller has to change. http://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html */
+/** Constant regardless of `t` in this approximation, but with `orbitEccentricity`'s signature, so switching the import
+ *  is the only change a caller makes. http://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html */
 export function orbitEccentricityApprox(_t: JulianDay): number {
     return 0.01671022;
 }
@@ -95,10 +95,12 @@ export function obliquityNutationApprox(t: JulianDay): number {
     );
 }
 
+/** True obliquity of the ecliptic (ε = ε0 + Δε), in degrees: the mean one plus the nutation in obliquity (ch. 22). */
 export function trueObliquity(t: JulianDay): number {
     return meanObliquity(t) + obliquityNutation(t);
 }
 
+/** Approximation of {@link trueObliquity}, from the approximate chain. */
 export function trueObliquityApprox(t: JulianDay): number {
     return meanObliquityApprox(t) + obliquityNutationApprox(t);
 }
@@ -113,7 +115,7 @@ export function meanObliquity(t: JulianDay): number {
     return arcsecondsToDegrees(23 * 3600 + 26 * 60 + 21.448) + arcsecondsToDegrees(e0);
 }
 
-/** Approximation per Jensen et al. 2001. */
+/** Approximation of {@link meanObliquity} per Jensen et al. 2001. */
 export function meanObliquityApprox(t: JulianDay): number {
     const T = julianCenturiesSinceStandardEquinox(t);
     return (0.409093 - 0.000227 * T) * RAD_TO_DEG;
@@ -132,7 +134,7 @@ export function airPressureRatio(observerHeightM: number): number {
     return Math.exp(-observerHeightM / PRESSURE_SCALE_HEIGHT_M);
 }
 
-/** Local conditions at the observer. Both default to the ones Bennett's formula itself assumes. */
+/** Local conditions at the observer. Both default to the ones both refraction fits assume: sea level and 10 °C. */
 export interface RefractionConditions {
     /** Observer height above sea level, in meters (not to be confused with `altitude`, a sky angle). */
     observerHeightM?: number;
@@ -239,8 +241,8 @@ function rayThroughShell(y: number, observerHeightM: number): number {
 
 /**
  * Dip of the horizon, in degrees: how far below the true horizontal the visible horizon lies for an observer
- * `observerHeightM` meters above the ground, from the tangent to a spherical Earth, `acos(R / (R + h))`. Geometric only:
- * terrestrial refraction, which lifts the visible horizon by roughly a tenth of that, is left out.
+ * `observerHeightM` meters above the ground, from the tangent to a spherical Earth, `acos(R / (R + h))`. Geometric
+ * only: terrestrial refraction, which lifts the visible horizon by roughly a tenth of that, is left out.
  */
 export function horizonDip(observerHeightM: number): number {
     const R = MEAN_RADIUS_KM * 1000;

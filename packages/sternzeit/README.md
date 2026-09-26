@@ -29,6 +29,18 @@ coordinates), the B-V to color-temperature to sRGB colorimetry, apparent
 magnitude to linear radiance, and an optionally importable loader for the
 ~290 KB binary catalog. `src/stars.ts` sketches the intended surface.
 
+## Conventions
+
+- Angles are in degrees, everywhere: inputs, results and fields.
+- Other units are part of the name wherever a value is held without its docs at hand: constants
+  (`MEAN_RADIUS_KM`), parameters (`observerHeightM`, `temperatureC`) and fields (`axisOffsetKm`). A function's
+  docstring gives the unit of what it returns (`moon.distance`, in kilometers).
+- Longitudes are positive east. Azimuths are compass azimuths, from north through east.
+- Directions are unit vectors in the observer's ENU frame: x east, y north, z up. A y-up engine takes them as
+  `(x, z, -y)`.
+- Functions of a date and time take it in UT, as an `AstronomicalTime`; functions of a bare Julian Day take ephemeris
+  time (TT). `julianEphemerisDay` converts either to it.
+
 ## References
 
 osgHimmel itself originated as [Daniel Limberger](https://daniellimberger.de)'s (né Müller) master's thesis at

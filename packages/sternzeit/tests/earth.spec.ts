@@ -25,10 +25,10 @@ test('approx nutation stays within Meeus\' stated 0.5" and 0.1" over a century',
     }
 });
 
-test("approx namespaces have the precise ones' names, but for the Sun's equation of the center", () => {
+test("approx namespaces have exactly the precise ones' names", () => {
     const pairs = [
         [precise.earth, approx.earth, []],
-        [precise.sun, approx.sun, ["center", "trueAnomaly"]],
+        [precise.sun, approx.sun, []],
         [precise.moon, approx.moon, []],
         [precise.eclipse, approx.eclipse, []],
     ] as const;

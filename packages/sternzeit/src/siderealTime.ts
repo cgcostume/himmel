@@ -41,7 +41,7 @@ export function apparentSiderealTime(time: AstronomicalTime): number {
     );
 }
 
-/** The same with the approximate nutation and obliquity. */
+/** {@link apparentSiderealTime} with the approximate nutation and obliquity. */
 export function apparentSiderealTimeApprox(time: AstronomicalTime): number {
     const t = julianEphemerisDay(time);
     return normalizeDegrees(
