@@ -10,7 +10,12 @@ import { ephemerisDay, onChange, state } from "./state.js";
 // Unit of each export's return value (or of an object return's fields, which all share one unit here).
 // Anything not listed defaults to degrees, the overwhelming majority.
 const UNITS = {
+    julianDayUT: "jd",
+    julianEphemerisDay: "jd",
+    modifiedJulianDay: "d",
+    deltaT: "s",
     MEAN_RADIUS_KM: "km",
+    EQUATORIAL_RADIUS_KM: "km",
     MEAN_SYNODIC_MONTH: "d",
     MEAN_NEW_MOON: "jd",
     ATMOSPHERE_THICKNESS_KM: "km",
@@ -39,7 +44,15 @@ const DEFAULT_UNIT = "deg";
 // Title and description for rows the glossary has no entry for (see glossary-map.js), shown in the same tooltip
 // style as glossary terms. Keyed by name or "name.field".
 const DESCRIPTIONS = {
+    modifiedJulianDay: [
+        "Modified Julian Day",
+        "The Julian Day minus 2,400,000.5: days since midnight of 1858 November 17, a smaller number that starts at midnight.",
+    ],
     MEAN_RADIUS_KM: ["Mean radius", "The body's mean radius, in kilometers."],
+    EQUATORIAL_RADIUS_KM: [
+        "Equatorial radius",
+        "Earth's equatorial radius on the IAU 1976 ellipsoid, in kilometers: what parallaxes are measured against.",
+    ],
     MEAN_SYNODIC_MONTH: [
         "Mean synodic month",
         "Mean length of a lunation, new moon to new moon, in days. The true interval swings about half a day either side of it.",
@@ -93,6 +106,8 @@ const DESCRIPTIONS = {
 
 // Row-specific context shown beneath the glossary definition, e.g. what a row is evaluated for here.
 const NOTES = {
+    julianDayUT: "Here: the chosen moment, in UT.",
+    julianEphemerisDay: "Here: the chosen moment moved on by ΔT, the Julian Day the orbits are computed at.",
     atmosphericRefraction:
         "Here: from the Sun's true altitude right now, at the observer's height; n/a once it is more than 1° below the horizon.",
     atmosphericRefractionFromApparent:
@@ -152,6 +167,13 @@ const CALL_OVERRIDES = {
     sunDirection: (fn, jd) => fn(precise.fromJulianDay(jd), state.latitude, state.longitude, state.heightM),
     airPressureRatio: (fn) => fn(state.heightM),
     horizonDip: (fn) => fn(state.heightM),
+    // The time functions take the moment itself, as a date; deltaT takes its Julian Day in UT.
+    julianDayUT: (fn, jd) => fn(precise.fromJulianDay(jd)),
+    julianEphemerisDay: (fn, jd) => fn(precise.fromJulianDay(jd)),
+    modifiedJulianDay: (fn, jd) => fn(precise.fromJulianDay(jd)),
+    siderealTime: (fn, jd) => fn(precise.fromJulianDay(jd)),
+    apparentSiderealTime: (fn, jd) => fn(precise.fromJulianDay(jd)),
+    deltaT: (fn, jd) => fn(jd),
     // lunar takes just jd like the fn(jd) default already handles; only solar needs observer location too.
     solar: (fn, jd) => fn(precise.fromJulianDay(jd), state.latitude, state.longitude, state.heightM),
 };
@@ -164,9 +186,11 @@ const DECIMALS = 4;
 // of the decimal point, so the fixed-width decimal tail every row ends with stays aligned regardless.
 function formatDecimal(n, unit) {
     const sign = n < 0 ? "-" : " ";
+    // A Julian Day's fourth decimal is almost nine seconds; six resolve ΔT's minute to a tenth of a second.
+    const decimals = unit === "jd" ? 6 : DECIMALS;
     const formatted = Math.abs(n).toLocaleString("en-US", {
-        minimumFractionDigits: DECIMALS,
-        maximumFractionDigits: DECIMALS,
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
         useGrouping: unit === "km",
     });
     return sign + formatted;
@@ -289,11 +313,23 @@ function computeRows(names, preciseNs, approxNs, jd) {
     });
 }
 
-// biome-ignore lint/performance/noDynamicNamespaceImportAccess: the tables list every export, so it needs the whole namespace anyway
-const namespacesOf = (domainName) => [precise[domainName], approx[domainName]];
+// The time functions are top-level exports, not a namespace, so the table gathers them into one.
+const TIME_EXPORTS = [
+    "julianDayUT",
+    "julianEphemerisDay",
+    "deltaT",
+    "modifiedJulianDay",
+    "siderealTime",
+    "apparentSiderealTime",
+];
+const pick = (module) => Object.fromEntries(TIME_EXPORTS.map((name) => [name, module[name]]));
+const namespacesOf = (domainName) =>
+    // biome-ignore lint/performance/noDynamicNamespaceImportAccess: the tables list every export, so it needs the whole namespace anyway
+    domainName === "time" ? [pick(precise), pick(approx)] : [precise[domainName], approx[domainName]];
 
 function renderDomain(domainName, jd, open) {
     const [preciseNs, approxNs] = namespacesOf(domainName);
+    const label = domainName === "time" ? "time" : `${domainName}.*`;
     // Not alphabetized: preserves each namespace's own hand-grouped declaration order (index.ts/approx.ts),
     // e.g. apparentPosition/equatorialHorizontalParallax/topocentricPosition/horizontalPosition stay adjacent
     // as a pipeline, which sorting would scatter (a.../e.../h.../t...).
@@ -306,11 +342,11 @@ function renderDomain(domainName, jd, open) {
         `<button type="button" class="value-swap" title="Show the ${other} values">${other}</button>`;
     return `
         <details class="table-fold"${open ? " open" : ""}>
-            <summary>${domainName}.* <span class="note">${rows.length} values</span></summary>
+            <summary>${label} <span class="note">${rows.length} values</span></summary>
             <p class="table-note note">Every card gives the precise value and, dimmed, the one the approximate math arrives at.</p>
             <table>
                 <colgroup><col class="name" /><col class="unit" /><col class="value" /><col class="approx" /></colgroup>
-                <thead><tr><th>${domainName}.*</th><th>unit</th><th class="value">precise${swap("approx")}</th><th class="value approx">approx${swap("precise")}</th></tr></thead>
+                <thead><tr><th>${label}</th><th>unit</th><th class="value">precise${swap("approx")}</th><th class="value approx">approx${swap("precise")}</th></tr></thead>
                 <tbody>${rows.join("")}</tbody>
             </table>
         </details>

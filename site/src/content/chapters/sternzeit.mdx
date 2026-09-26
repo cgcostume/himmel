@@ -96,6 +96,9 @@ const theta = siderealTime(time); // Greenwich mean sidereal, in deg
 const date = toDate(fromJulianDay(jd)); // and back to a Date
 ```
 
+<Table domain="time" />
+<Controls />
+
 ## Earth, the platform we observe from
 
 Earth's rotation axis is tilted against the plane of its orbit by about 23.4°, the
@@ -196,8 +199,8 @@ most here.
 <Controls />
 
 The rows after `distance` are for rendering the Moon rather than locating it. The Moon always shows the same face,
-almost: tilted orbit and varying speed let us peek a few degrees around its edges over a month, the
-<Term of="Libration">optical libration</Term>. The <Term of="Position angle of axis">position angle of the axis</Term>
+almost: tilted orbit and varying speed let us peek a few degrees around its edges over a month, the optical
+<Term of="Libration">libration</Term>, and the Moon's own slight wobble adds a few hundredths of a degree. The <Term of="Position angle of axis">position angle of the axis</Term>
 says how the Moon's north pole is oriented on the sky, and the <Term of="Parallactic angle">parallactic angle</Term>
 how that sky direction relates to your local "up". Together they determine how the Moon's surface, and its lit
 crescent, appear rotated for you.
@@ -257,7 +260,7 @@ Every quantity comes in two variants. The **precise** one follows Jean Meeus' _A
 night sky model of Jensen et al. <Cite id="jensen2001" />, with far fewer terms. Both columns sit side by side in the
 tables; hover an approximate value to see how far off it is.
 
-For most rendering, the approximation is plenty. Over a year, the Sun's approximate altitude stays within 0.004° of the
+For most rendering, the approximation is plenty. Over a year, the Sun's approximate altitude stays within 0.002° of the
 precise one, invisible next to a disc half a degree wide. The Moon's can be off by almost a tenth of a degree, a fifth
 of its diameter: fine for a sky dome, not for an eclipse. That is what the precise variant is for, along with the exact
 moment of sunset or a telescope view. Both live behind the same names, so switching is a change of import path.

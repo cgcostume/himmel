@@ -19,7 +19,7 @@ export function onChange(listener) {
 }
 
 /** Seconds, the finest step any control offers; "now" and stepping snap to it. */
-const JD_MIN_STEP = 1 / 86400;
+const JD_MIN_STEP = 1 / 86_400;
 
 export function julianDayNow() {
     const jd = julianDayUT(fromDate(new Date()));
@@ -29,4 +29,4 @@ export function julianDayNow() {
 state.jd = julianDayNow();
 
 /** The page's moments are UT; the orbits take ephemeris time, a minute or so ahead today (see deltaT). */
-export const ephemerisDay = (jd) => jd + deltaT(jd) / 86400;
+export const ephemerisDay = (jd) => jd + deltaT(jd) / 86_400;

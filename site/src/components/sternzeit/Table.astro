@@ -4,7 +4,7 @@ import { GLOSSARY_TERMS } from "./glossary-map.js";
 import "./sternzeit.css";
 
 interface Props {
-    domain: "earth" | "sun" | "moon" | "eclipse";
+    domain: "time" | "earth" | "sun" | "moon" | "eclipse";
 }
 const { domain } = Astro.props;
 // Fails the build on a row mapped to a term the glossary doesn't have.

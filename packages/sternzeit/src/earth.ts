@@ -31,172 +31,128 @@ export function orbitEccentricityApprox(_t: JulianDay): number {
     return 0.01671022;
 }
 
-/** Nutation in longitude (Δψ), in degrees, per Meeus' "Astronomical Algorithms" (21.A). */
-export function longitudeNutation(t: JulianDay): number {
+/**
+ * The 63 periodic terms of the IAU 1980 nutation, per Meeus' "Astronomical Algorithms" (table 22.A): the multiples of
+ * D, M, M', F and Ω in the argument, then the coefficients of sin (Δψ) and cos (Δε), in 0.0001", each with its T term.
+ */
+// biome-ignore format: one term per row, as in the book
+const NUTATION_TERMS: readonly (readonly [number, number, number, number, number, number, number, number, number])[] = [
+    [0, 0, 0, 0, 1, -171996, -174.2, 92025, 8.9],
+    [-2, 0, 0, 2, 2, -13187, -1.6, 5736, -3.1],
+    [0, 0, 0, 2, 2, -2274, -0.2, 977, -0.5],
+    [0, 0, 0, 0, 2, 2062, 0.2, -895, 0.5],
+    [0, 1, 0, 0, 0, 1426, -3.4, 54, -0.1],
+    [0, 0, 1, 0, 0, 712, 0.1, -7, 0],
+    [-2, 1, 0, 2, 2, -517, 1.2, 224, -0.6],
+    [0, 0, 0, 2, 1, -386, -0.4, 200, 0],
+    [0, 0, 1, 2, 2, -301, 0, 129, -0.1],
+    [-2, -1, 0, 2, 2, 217, -0.5, -95, 0.3],
+    [-2, 0, 1, 0, 0, -158, 0, 0, 0],
+    [-2, 0, 0, 2, 1, 129, 0.1, -70, 0],
+    [0, 0, -1, 2, 2, 123, 0, -53, 0],
+    [2, 0, 0, 0, 0, 63, 0, 0, 0],
+    [0, 0, 1, 0, 1, 63, 0.1, -33, 0],
+    [2, 0, -1, 2, 2, -59, 0, 26, 0],
+    [0, 0, -1, 0, 1, -58, -0.1, 32, 0],
+    [0, 0, 1, 2, 1, -51, 0, 27, 0],
+    [-2, 0, 2, 0, 0, 48, 0, 0, 0],
+    [0, 0, -2, 2, 1, 46, 0, -24, 0],
+    [2, 0, 0, 2, 2, -38, 0, 16, 0],
+    [0, 0, 2, 2, 2, -31, 0, 13, 0],
+    [0, 0, 2, 0, 0, 29, 0, 0, 0],
+    [-2, 0, 1, 2, 2, 29, 0, -12, 0],
+    [0, 0, 0, 2, 0, 26, 0, 0, 0],
+    [-2, 0, 0, 2, 0, -22, 0, 0, 0],
+    [0, 0, -1, 2, 1, 21, 0, -10, 0],
+    [0, 2, 0, 0, 0, 17, -0.1, 0, 0],
+    [2, 0, -1, 0, 1, 16, 0, -8, 0],
+    [-2, 2, 0, 2, 2, -16, 0.1, 7, 0],
+    [0, 1, 0, 0, 1, -15, 0, 9, 0],
+    [-2, 0, 1, 0, 1, -13, 0, 7, 0],
+    [0, -1, 0, 0, 1, -12, 0, 6, 0],
+    [0, 0, 2, -2, 0, 11, 0, 0, 0],
+    [2, 0, -1, 2, 1, -10, 0, 5, 0],
+    [2, 0, 1, 2, 2, -8, 0, 3, 0],
+    [0, 1, 0, 2, 2, 7, 0, -3, 0],
+    [-2, 1, 1, 0, 0, -7, 0, 0, 0],
+    [0, -1, 0, 2, 2, -7, 0, 3, 0],
+    [2, 0, 0, 2, 1, -7, 0, 3, 0],
+    [2, 0, 1, 0, 0, 6, 0, 0, 0],
+    [-2, 0, 2, 2, 2, 6, 0, -3, 0],
+    [-2, 0, 1, 2, 1, 6, 0, -3, 0],
+    [2, 0, -2, 0, 1, -6, 0, 3, 0],
+    [2, 0, 0, 0, 1, -6, 0, 3, 0],
+    [0, -1, 1, 0, 0, 5, 0, 0, 0],
+    [-2, -1, 0, 2, 1, -5, 0, 3, 0],
+    [-2, 0, 0, 0, 1, -5, 0, 3, 0],
+    [0, 0, 2, 2, 1, -5, 0, 3, 0],
+    [-2, 0, 2, 0, 1, 4, 0, 0, 0],
+    [-2, 1, 0, 2, 1, 4, 0, 0, 0],
+    [0, 0, 1, -2, 0, 4, 0, 0, 0],
+    [-1, 0, 1, 0, 0, -4, 0, 0, 0],
+    [-2, 1, 0, 0, 0, -4, 0, 0, 0],
+    [1, 0, 0, 0, 0, -4, 0, 0, 0],
+    [0, 0, 1, 2, 0, 3, 0, 0, 0],
+    [0, 0, -2, 2, 2, -3, 0, 0, 0],
+    [-1, -1, 1, 0, 0, -3, 0, 0, 0],
+    [0, 1, 1, 0, 0, -3, 0, 0, 0],
+    [0, -1, 1, 2, 2, -3, 0, 0, 0],
+    [2, -1, -1, 2, 2, -3, 0, 0, 0],
+    [0, 0, 3, 2, 2, -3, 0, 0, 0],
+    [2, -1, 0, 2, 2, -3, 0, 0, 0],
+];
+
+/** Nutation in longitude (Δψ) and in obliquity (Δε), in degrees, summed over {@link NUTATION_TERMS} with the
+ *  arguments of Meeus' chapter 22, which differ slightly from the Moon's own mean elements of chapter 47. */
+function nutation(t: JulianDay): { longitude: number; obliquity: number } {
     const T = julianCenturiesSinceStandardEquinox(t);
+    const D = (297.85036 + T * (445267.11148 + T * (-0.0019142 + T / 189474))) * DEG_TO_RAD;
+    const M = (357.52772 + T * (35999.05034 + T * (-0.0001603 - T / 300000))) * DEG_TO_RAD;
+    const Mm = (134.96298 + T * (477198.867398 + T * (0.0086972 + T / 56250))) * DEG_TO_RAD;
+    const F = (93.27191 + T * (483202.017538 + T * (-0.0036825 + T / 327270))) * DEG_TO_RAD;
+    const O = (125.04452 + T * (-1934.136261 + T * (0.0020708 + T / 450000))) * DEG_TO_RAD;
 
-    const sM = sun.meanAnomaly(t) * DEG_TO_RAD;
+    let psi = 0;
+    let eps = 0;
+    for (const [d, m, mm, f, o, s0, s1, c0, c1] of NUTATION_TERMS) {
+        const argument = d * D + m * M + mm * Mm + f * F + o * O;
+        psi += (s0 + s1 * T) * Math.sin(argument);
+        eps += (c0 + c1 * T) * Math.cos(argument);
+    }
 
-    const mM = moon.meanAnomaly(t) * DEG_TO_RAD;
-    const mD = moon.meanElongation(t) * DEG_TO_RAD;
-    const mF = moon.meanArgumentOfLatitude(t) * DEG_TO_RAD;
-    const O = moon.meanAscendingNodeLongitude(t) * DEG_TO_RAD;
-
-    let Dr = 0.0;
-
-    Dr -= (17.1996 - 0.01742 * T) * Math.sin(O);
-    Dr -= (1.3187 - 0.00016 * T) * Math.sin(-2 * mD + 2 * mF + 2 * O);
-    Dr -= (0.2274 - 0.00002 * T) * Math.sin(2 * mF + 2 * O);
-    Dr += (0.2062 + 0.00002 * T) * Math.sin(2 * O);
-    Dr += (0.1426 - 0.00034 * T) * Math.sin(sM);
-    Dr += (0.0712 + 0.00001 * T) * Math.sin(mM);
-    Dr += (0.0517 + 0.00012 * T) * Math.sin(-2 * mD + sM + 2 * mF + 2 * O);
-    Dr -= (0.0386 - 0.00004 * T) * Math.sin(2 * mF + O);
-    Dr -= 0.0301 * Math.sin(mM + 2 * mF + 2 * O);
-    Dr += (0.0217 - 0.00005 * T) * Math.sin(-2 * mD - sM + 2 * mF + 2 * O);
-    Dr -= 0.0158 * Math.sin(-2 * mD + mM);
-    Dr += (0.0129 + 0.00001 * T) * Math.sin(-2 * mD + 2 * mF + O);
-    Dr += 0.0123 * Math.sin(-mM + 2 * mF + 2 * O);
-    Dr += 0.0063 * Math.sin(2 * mD);
-    Dr += (0.0063 + 0.00001 * T) * Math.sin(mM + O);
-    Dr -= 0.0059 * Math.sin(2 * mD - mM + 2 * mF + 2 * O);
-    Dr -= (0.0058 - 0.00001 * T) * Math.sin(-mM + O);
-    Dr -= 0.0051 * Math.sin(mM + 2 * mF + O);
-    Dr += 0.0048 * Math.sin(-2 * mD + 2 * mM);
-    Dr += 0.0046 * Math.sin(-2 * mM + 2 * mF + O);
-    Dr -= 0.0038 * Math.sin(2 * mD + 2 * mF + 2 * O);
-    Dr -= 0.0031 * Math.sin(2 * mM + 2 * mF + 2 * O);
-    Dr += 0.0029 * Math.sin(2 * mM);
-    Dr += 0.0029 * Math.sin(2 * mD + mM + 2 * mF + 2 * O);
-    Dr += 0.0026 * Math.sin(2 * mF);
-    Dr -= 0.0022 * Math.sin(-2 * mD + 2 * mF);
-    Dr += 0.0021 * Math.sin(-mM + 2 * mF + O);
-    Dr += (0.0017 - 0.00001 * T) * Math.sin(2 * sM);
-    Dr += 0.0016 * Math.sin(2 * mD - mM + O);
-    Dr -= (0.0016 + 0.00001 * T) * Math.sin(-2 * mD + 2 * sM + 2 * mF + 2 * O);
-    Dr -= 0.0015 * Math.sin(sM + O);
-    Dr -= 0.0013 * Math.sin(-2 * mD + mM + O);
-    Dr -= 0.0012 * Math.sin(-sM + O);
-    Dr += 0.0011 * Math.sin(2 * mM - 2 * mF);
-    Dr -= 0.001 * Math.sin(2 * mD - mM + 2 * mF + O);
-    Dr -= 0.0008 * Math.sin(2 * mD + mM + 2 * mF + 2 * O);
-    Dr += 0.0007 * Math.sin(sM + 2 * mF + 2 * O);
-    Dr += 0.0007 * Math.sin(-2 * mD + sM + mM);
-    Dr -= 0.0007 * Math.sin(-sM + 2 * mF + 2 * O);
-    Dr -= 0.0007 * Math.sin(2 * mD + 2 * mF + O);
-    Dr += 0.0006 * Math.sin(2 * mD + mM);
-    Dr += 0.0006 * Math.sin(-2 * mD + 2 * mM + 2 * mF + 2 * O);
-    Dr += 0.0006 * Math.sin(-2 * mD + mM + 2 * mF + O);
-    Dr -= 0.0006 * Math.sin(2 * mD - 2 * mM + O);
-    Dr -= 0.0006 * Math.sin(2 * mD + O);
-    Dr += 0.0005 * Math.sin(-sM + mM);
-    Dr += 0.0005 * Math.sin(-2 * mD - sM + 2 * mF + O);
-    Dr -= 0.0005 * Math.sin(-2 * mD + O);
-    Dr -= 0.0005 * Math.sin(2 * mM + 2 * mF + O);
-    Dr += 0.0004 * Math.sin(-2 * mD + 2 * mM + O);
-    Dr += 0.0004 * Math.sin(-2 * mD + sM + 2 * mF + O);
-    Dr += 0.0004 * Math.sin(mM - 2 * mF);
-    Dr -= 0.0004 * Math.sin(-mD + mM);
-    Dr -= 0.0004 * Math.sin(-2 * mD + sM);
-    Dr -= 0.0004 * Math.sin(mD);
-    Dr += 0.0003 * Math.sin(mM + 2 * mF);
-    Dr -= 0.0003 * Math.sin(-2 * mM + 2 * mF + 2 * O);
-    Dr -= 0.0003 * Math.sin(-mD - sM + mM);
-    Dr -= 0.0003 * Math.sin(sM + mM);
-    Dr -= 0.0003 * Math.sin(-sM + mM + 2 * mF + 2 * O);
-    Dr -= 0.0003 * Math.sin(2 * mD - sM - mM + 2 * mF + 2 * O);
-    Dr -= 0.0003 * Math.sin(3 * mM + 2 * mF + 2 * O);
-    Dr -= 0.0003 * Math.sin(2 * mD - sM + 2 * mF + 2 * O);
-
-    return arcsecondsToDegrees(Dr);
+    return { longitude: arcsecondsToDegrees(psi * 0.0001), obliquity: arcsecondsToDegrees(eps * 0.0001) };
 }
 
-/**
- * Approximate nutation in longitude (Δψ), in degrees, per Jensen et al.,
- * "A Physically-Based Night Sky Model" (2001).
- */
+/** Nutation in longitude (Δψ), in degrees, per Meeus' "Astronomical Algorithms" (table 22.A). */
+export function longitudeNutation(t: JulianDay): number {
+    return nutation(t).longitude;
+}
+
+/** Approximate nutation in longitude (Δψ), in degrees, from its four largest terms, per Meeus' "Astronomical
+ *  Algorithms" (ch. 22): within 0.5". L and L' are the Sun's and the Moon's mean longitudes. */
 export function longitudeNutationApprox(t: JulianDay): number {
-    const sM = sun.meanAnomalyApprox(t) * DEG_TO_RAD;
-    const mM = moon.meanAnomalyApprox(t) * DEG_TO_RAD;
+    const L = sun.meanLongitudeApprox(t) * DEG_TO_RAD;
+    const Lm = moon.meanLongitudeApprox(t) * DEG_TO_RAD;
     const O = moon.meanAscendingNodeLongitudeApprox(t) * DEG_TO_RAD;
 
-    return (
-        -arcsecondsToDegrees(17.2) * Math.sin(O) -
-        arcsecondsToDegrees(1.32) * Math.sin(2.0 * sM) -
-        arcsecondsToDegrees(0.23) * Math.sin(2.0 * mM) +
-        arcsecondsToDegrees(0.21) * Math.sin(2.0 * O)
+    return arcsecondsToDegrees(
+        -17.2 * Math.sin(O) - 1.32 * Math.sin(2 * L) - 0.23 * Math.sin(2 * Lm) + 0.21 * Math.sin(2 * O),
     );
 }
 
-/** Nutation in obliquity (Δε), in degrees, per Meeus' "Astronomical Algorithms" (21.A). */
+/** Nutation in obliquity (Δε), in degrees, per Meeus' "Astronomical Algorithms" (table 22.A). */
 export function obliquityNutation(t: JulianDay): number {
-    const T = julianCenturiesSinceStandardEquinox(t);
-
-    const sM = sun.meanAnomaly(t) * DEG_TO_RAD;
-
-    const mM = moon.meanAnomaly(t) * DEG_TO_RAD;
-    const mD = moon.meanElongation(t) * DEG_TO_RAD;
-    const mF = moon.meanArgumentOfLatitude(t) * DEG_TO_RAD;
-    const O = moon.meanAscendingNodeLongitude(t) * DEG_TO_RAD;
-
-    let De = 0.0;
-
-    De += (9.2025 + 0.00089 * T) * Math.cos(O);
-    De += (0.5736 - 0.00031 * T) * Math.cos(-2 * mD + 2 * mF + 2 * O);
-    De += (0.0977 - 0.00005 * T) * Math.cos(2 * mF + 2 * O);
-    De -= (0.0895 + 0.00005 * T) * Math.cos(2 * O);
-    De += (0.0054 - 0.00001 * T) * Math.cos(sM);
-    De -= 0.0007 * Math.cos(mM);
-    De += (0.0224 - 0.00006 * T) * Math.cos(-2 * mD + sM + 2 * mF + 2 * O);
-    De += 0.02 * Math.cos(2 * mF + O);
-    De += (0.0129 - 0.00001 * T) * Math.cos(mM + 2 * mF + 2 * O);
-    De -= (0.0095 + 0.00003 * T) * Math.cos(-2 * mD - sM + 2 * mF + 2 * O);
-    De -= 0.007 * Math.cos(-2 * mD + 2 * mF + O);
-    De -= 0.0053 * Math.cos(-mM + 2 * mF + 2 * O);
-    De -= 0.0033 * Math.cos(mM + O);
-    De += 0.0026 * Math.cos(2 * mD - mM + 2 * mF + 2 * O);
-    De += 0.0032 * Math.cos(-mM + O);
-    De += 0.0027 * Math.cos(mM + 2 * mF + O);
-    De -= 0.0024 * Math.cos(-2 * mM + 2 * mF + O);
-    De += 0.0016 * Math.cos(2 * mD + 2 * mF + 2 * O);
-    De += 0.0013 * Math.cos(2 * mM + 2 * mF + 2 * O);
-    De -= 0.0012 * Math.cos(2 * mD + mM + 2 * mF + 2 * O);
-    De -= 0.001 * Math.cos(-mM + 2 * mF + O);
-    De -= 0.0008 * Math.cos(2 * mD - mM + O);
-    De += 0.0007 * Math.cos(-2 * mD + 2 * sM + 2 * mF + 2 * O);
-    De += 0.0009 * Math.cos(sM + O);
-    De += 0.0007 * Math.cos(-2 * mD + mM + O);
-    De += 0.0006 * Math.cos(-sM + O);
-    De += 0.0005 * Math.cos(2 * mD - mM + 2 * mF + O);
-    De += 0.0003 * Math.cos(2 * mD + mM + 2 * mF + 2 * O);
-    De -= 0.0003 * Math.cos(sM + 2 * mF + 2 * O);
-    De += 0.0003 * Math.cos(-sM + 2 * mF + 2 * O);
-    De += 0.0003 * Math.cos(2 * mD + 2 * mF + O);
-    De -= 0.0003 * Math.cos(-2 * mD + 2 * mM + 2 * mF + 2 * O);
-    De -= 0.0003 * Math.cos(-2 * mD + mM + 2 * mF + O);
-    De += 0.0003 * Math.cos(2 * mD - 2 * mM + O);
-    De += 0.0003 * Math.cos(2 * mD + O);
-    De += 0.0003 * Math.cos(-2 * mD - sM + 2 * mF + O);
-    De += 0.0003 * Math.cos(-2 * mD + O);
-    De += 0.0003 * Math.cos(2 * mM + 2 * mF + O);
-
-    return arcsecondsToDegrees(De);
+    return nutation(t).obliquity;
 }
 
-/**
- * Approximate nutation in obliquity (Δε), in degrees, per Jensen et al.,
- * "A Physically-Based Night Sky Model" (2001).
- */
+/** Approximate nutation in obliquity (Δε), in degrees, from the same four terms: within 0.1". */
 export function obliquityNutationApprox(t: JulianDay): number {
+    const L = sun.meanLongitudeApprox(t) * DEG_TO_RAD;
+    const Lm = moon.meanLongitudeApprox(t) * DEG_TO_RAD;
     const O = moon.meanAscendingNodeLongitudeApprox(t) * DEG_TO_RAD;
-    const Ls = sun.meanAnomalyApprox(t) * DEG_TO_RAD;
-    const Lm = moon.meanAnomalyApprox(t) * DEG_TO_RAD;
 
-    return (
-        arcsecondsToDegrees(9.2) * Math.cos(O) +
-        arcsecondsToDegrees(0.57) * Math.cos(2.0 * Ls) +
-        arcsecondsToDegrees(0.1) * Math.cos(2.0 * Lm) -
-        arcsecondsToDegrees(0.09) * Math.cos(2.0 * O)
+    return arcsecondsToDegrees(
+        9.2 * Math.cos(O) + 0.57 * Math.cos(2 * L) + 0.1 * Math.cos(2 * Lm) - 0.09 * Math.cos(2 * O),
     );
 }
 

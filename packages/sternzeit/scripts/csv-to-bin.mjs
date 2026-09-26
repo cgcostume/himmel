@@ -1,9 +1,6 @@
 #!/usr/bin/env node
-// Dev script: converts src/data/brightstars.csv into the binary asset
-// consumed at runtime (src/data/brightstars.bin), a flat little-endian
-// Float32Array, matching the original C++ `float` precision. Not part of
-// the published package's runtime. Run via `pnpm generate:catalog`
-// whenever brightstars.csv changes.
+// Dev script: converts src/data/brightstars.csv into src/data/brightstars.bin, a flat little-endian Float32Array as
+// precise as the original C++ `float`s. Run via `pnpm generate:catalog` whenever the CSV changes.
 
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

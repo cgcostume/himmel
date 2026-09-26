@@ -3,6 +3,7 @@ import * as earthImpl from "./earth.js";
 import * as moonImpl from "./moon.js";
 import * as sunImpl from "./sun.js";
 import * as eclipseImpl from "./eclipse.js";
+import { EQUATORIAL_RADIUS_KM } from "./coords.js";
 
 // Math auxiliaries, same in both entry points (no precise/approx distinction applies to these).
 export {
@@ -38,13 +39,17 @@ export {
 } from "./time.js"; // Julian Day conversions
 
 // Sidereal time.
-export { meanSiderealTimeApprox as siderealTime } from "./siderealTime.js";
+export {
+    meanSiderealTimeApprox as siderealTime,
+    apparentSiderealTimeApprox as apparentSiderealTime,
+} from "./siderealTime.js";
 
 // Earth. Same shape as the precise `earth` namespace in `index.ts`, minus `viewDistanceWithinAtmosphere`'s
 // refraction flag. MEAN_RADIUS_KM/ATMOSPHERE_THICKNESS_KM/ATMOSPHERE_THICKNESS_NON_UNIFORM_KM/
 // APPARENT_MAGNITUDE_LIMIT/atmosphericRefraction have no approximate variant, same values either way.
 export const earth = {
     MEAN_RADIUS_KM: earthImpl.MEAN_RADIUS_KM,
+    EQUATORIAL_RADIUS_KM,
     ATMOSPHERE_THICKNESS_KM: earthImpl.ATMOSPHERE_THICKNESS_KM,
     ATMOSPHERE_THICKNESS_NON_UNIFORM_KM: earthImpl.ATMOSPHERE_THICKNESS_NON_UNIFORM_KM,
     APPARENT_MAGNITUDE_LIMIT: earthImpl.APPARENT_MAGNITUDE_LIMIT,
@@ -61,12 +66,13 @@ export const earth = {
     horizonDip: earthImpl.horizonDipApprox,
 };
 
-// Sun. Same shape as the precise `sun` namespace in `index.ts`, minus `center`/`trueAnomaly`/`trueLongitude`
-// (no approximate variant of those exists).
+// Sun. Same shape as the precise `sun` namespace in `index.ts`, minus `center`/`trueAnomaly`.
 export const sun = {
     MEAN_RADIUS_KM: sunImpl.MEAN_RADIUS_KM,
     meanAnomaly: sunImpl.meanAnomalyApprox,
     meanLongitude: sunImpl.meanLongitudeApprox,
+    trueLongitude: sunImpl.trueLongitudeApprox,
+    apparentLongitude: sunImpl.apparentLongitudeApprox,
     apparentPosition: sunImpl.apparentPositionApprox,
     equatorialHorizontalParallax: sunImpl.equatorialHorizontalParallaxApprox,
     topocentricPosition: sunImpl.topocentricPositionApprox,
@@ -94,6 +100,7 @@ export const moon = {
     distance: moonImpl.distanceApprox,
     apparentAngularDiameter: moonImpl.apparentAngularDiameterApprox,
     opticalLibrations: moonImpl.opticalLibrationsApprox,
+    librations: moonImpl.librationsApprox,
     parallacticAngle: moonImpl.parallacticAngleApprox,
     positionAngleOfAxis: moonImpl.positionAngleOfAxisApprox,
     phaseAngle: moonImpl.phaseAngleApprox,

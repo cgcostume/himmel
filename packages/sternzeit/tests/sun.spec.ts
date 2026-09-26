@@ -35,12 +35,23 @@ test("sun.apparentPosition matches Meeus' worked example 25.a", () => {
     expect(equ.declination).toBeCloseTo(-7.78507, 3);
 });
 
+// 25.a takes the nutation from its largest term only; the full series moves λ by 0.0003°.
+test("sun.apparentLongitude matches Meeus' worked example 25.a", () => {
+    expect(precise.sun.apparentLongitude(JDE)).toBeCloseTo(199.90895, 3);
+    expect(approx.sun.apparentLongitude(JDE)).toBeCloseTo(199.90895, 2);
+});
+
 test("approx.sun.apparentPosition roughly agrees with the precise result", () => {
     const preciseEqu = precise.sun.apparentPosition(JDE);
     const approxEqu = approx.sun.apparentPosition(JDE);
 
     expect(approxEqu.rightAscension).toBeCloseTo(preciseEqu.rightAscension, 0);
     expect(approxEqu.declination).toBeCloseTo(preciseEqu.declination, 0);
+});
+
+test('sun.equatorialHorizontalParallax is 8.794" at 1 AU, scaled by the distance (Meeus 40.1)', () => {
+    const au = precise.sun.distance(JDE) / precise.ASTRONOMICAL_UNIT_KM;
+    expect(precise.sun.equatorialHorizontalParallax(JDE) * 3600).toBeCloseTo(8.794 / au, 3);
 });
 
 test("sun.equatorialHorizontalParallax is on the order of the Sun's real ~8.8 arcsecond parallax", () => {

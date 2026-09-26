@@ -7,8 +7,8 @@ import "./export.js";
 const DEG = precise.DEG_TO_RAD;
 // The Moon's disc at perigee gets this radius in the 200 x 200 viewBox; smaller at any other distance.
 const PERIGEE_RADIUS = 72;
-const PERIGEE_KM = 356500;
-const APOGEE_KM = 406700;
+const PERIGEE_KM = 356_500;
+const APOGEE_KM = 406_700;
 const radiusAt = (km) => Math.asin(precise.moon.MEAN_RADIUS_KM / km);
 const UNITS_PER_RADIAN = PERIGEE_RADIUS / radiusAt(PERIGEE_KM);
 // Selenographic grid spacing, in degrees.
@@ -72,7 +72,7 @@ function render() {
     const unitsPerPx = 200 / (svgEl.clientWidth || 200);
     const time = precise.fromJulianDay(jd);
     const radius = (precise.moon.apparentAngularDiameter(ephemerisDay(jd)) / 2) * UNITS_PER_RADIAN;
-    const { longitude: l, latitude: b } = precise.moon.opticalLibrations(ephemerisDay(jd));
+    const { longitude: l, latitude: b } = precise.moon.librations(ephemerisDay(jd));
     const axis = precise.moon.positionAngleOfAxis(ephemerisDay(jd));
     const parallactic = precise.moon.parallacticAngle(time, latitude, longitude);
     const horizontal = precise.moon.horizontalPosition(time, latitude, longitude, state.heightM);

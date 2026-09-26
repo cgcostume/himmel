@@ -168,7 +168,9 @@ function classifyLunarEclipse(
  * whether it's *visible* does (the Moon needs to be above the local horizon, see moon.horizontalPosition).
  */
 export function lunarEclipseState(t: JulianDay): LunarEclipseState {
-    const shadowAxisLongitude = normalizeDegrees(sun.trueLongitude(t) + 180);
+    // The shadow points away from the apparent Sun: aberration is the light time the shadow's light was underway, and
+    // both longitudes are then referred to the true equinox of the date.
+    const shadowAxisLongitude = normalizeDegrees(sun.apparentLongitude(t) + 180);
     const moonPosition = moon.position(t);
     const offsetDeg = angularSeparation(moonPosition.longitude, moonPosition.latitude, shadowAxisLongitude, 0);
     const direction = positionAngle(shadowAxisLongitude, 0, moonPosition.longitude, moonPosition.latitude);
@@ -180,9 +182,7 @@ export function lunarEclipseState(t: JulianDay): LunarEclipseState {
 }
 
 export function lunarEclipseStateApprox(t: JulianDay): LunarEclipseState {
-    // sun.ts has no trueLongitudeApprox (see approx.ts); meanLongitude ignores the equation of the center
-    // (up to ~2 degrees), matching this variant's already-reduced precision elsewhere.
-    const shadowAxisLongitude = normalizeDegrees(sun.meanLongitudeApprox(t) + 180);
+    const shadowAxisLongitude = normalizeDegrees(sun.apparentLongitudeApprox(t) + 180);
     const moonPosition = moon.positionApprox(t);
     const offsetDeg = angularSeparation(moonPosition.longitude, moonPosition.latitude, shadowAxisLongitude, 0);
     const direction = positionAngle(shadowAxisLongitude, 0, moonPosition.longitude, moonPosition.latitude);

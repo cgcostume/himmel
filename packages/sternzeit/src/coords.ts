@@ -68,8 +68,10 @@ export function equatorialToHorizontal(
     };
 }
 
-/** Earth's equatorial radius and polar to equatorial axis ratio (b/a) of the IAU 1976 ellipsoid, as in Meeus' chapter 11. */
-const EQUATORIAL_RADIUS_M = 6378140;
+/** Earth's equatorial radius (a) of the IAU 1976 ellipsoid, in kilometers, as in Meeus' chapter 11. Parallaxes are
+ *  defined against it, not against the mean radius. */
+export const EQUATORIAL_RADIUS_KM = 6378.14;
+/** Polar to equatorial axis ratio (b/a) of the same ellipsoid. */
 const POLAR_AXIS_RATIO = 0.99664719;
 
 /** The observer's geocentric position (ρ sin φ', ρ cos φ') in Earth equatorial radii, on the ellipsoid and
@@ -77,7 +79,7 @@ const POLAR_AXIS_RATIO = 0.99664719;
 export function observerGeocentric(latitude: number, observerHeightM = 0): { rhoSinPhi: number; rhoCosPhi: number } {
     const phi = latitude * DEG_TO_RAD;
     const u = Math.atan(POLAR_AXIS_RATIO * Math.tan(phi));
-    const h = observerHeightM / EQUATORIAL_RADIUS_M;
+    const h = observerHeightM / (EQUATORIAL_RADIUS_KM * 1000);
     return {
         rhoSinPhi: POLAR_AXIS_RATIO * Math.sin(u) + h * Math.sin(phi),
         rhoCosPhi: Math.cos(u) + h * Math.cos(phi),

@@ -2,6 +2,11 @@
 // "name.field". Rows listed here show the glossary definition as their tooltip, the same one as in the text;
 // Table.astro checks every name at build time, so a typo fails the build.
 export const GLOSSARY_TERMS = {
+    julianDayUT: "Julian Day",
+    julianEphemerisDay: "Delta T",
+    deltaT: "Delta T",
+    siderealTime: "Sidereal time",
+    apparentSiderealTime: "Sidereal time",
     atmosphericRefraction: "Atmospheric refraction",
     atmosphericRefractionFromApparent: "Atmospheric refraction",
     orbitEccentricity: "Orbital eccentricity",
@@ -14,6 +19,7 @@ export const GLOSSARY_TERMS = {
     center: "Equation of the center",
     trueAnomaly: "True anomaly",
     trueLongitude: "True longitude",
+    apparentLongitude: "Apparent position",
     apparentPosition: "Apparent position",
     equatorialHorizontalParallax: "Parallax",
     topocentricPosition: "Parallax",
@@ -24,6 +30,7 @@ export const GLOSSARY_TERMS = {
     meanAscendingNodeLongitude: "Longitude of the ascending node",
     position: "Ecliptic coordinates",
     opticalLibrations: "Libration",
+    librations: "Libration",
     parallacticAngle: "Parallactic angle",
     positionAngleOfAxis: "Position angle of axis",
     phaseAngle: "Phase angle",

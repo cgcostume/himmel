@@ -7,6 +7,37 @@ test("earth.meanObliquity matches the standard J2000.0 value (23°26'21.448\")",
     expect(precise.earth.meanObliquity(precise.J2000)).toBeCloseTo(23 + 26 / 60 + 21.448 / 3600, 9);
 });
 
+// Meeus, "Astronomical Algorithms", example 22.a (1987-04-10.0 TD).
+test("earth nutation matches Meeus' worked example 22.a", () => {
+    const t = 2446895.5;
+    expect(precise.earth.longitudeNutation(t) * 3600).toBeCloseTo(-3.788, 3);
+    expect(precise.earth.obliquityNutation(t) * 3600).toBeCloseTo(9.443, 2);
+});
+
+test('approx nutation stays within Meeus\' stated 0.5" and 0.1" over a century', () => {
+    for (let t = precise.J2000; t < precise.J2050 + 18262; t += 17.3) {
+        expect(Math.abs(approx.earth.longitudeNutation(t) - precise.earth.longitudeNutation(t)) * 3600).toBeLessThan(
+            0.5,
+        );
+        expect(Math.abs(approx.earth.obliquityNutation(t) - precise.earth.obliquityNutation(t)) * 3600).toBeLessThan(
+            0.1,
+        );
+    }
+});
+
+test("approx namespaces have the precise ones' names, but for the Sun's equation of the center", () => {
+    const pairs = [
+        [precise.earth, approx.earth, []],
+        [precise.sun, approx.sun, ["center", "trueAnomaly"]],
+        [precise.moon, approx.moon, []],
+        [precise.eclipse, approx.eclipse, []],
+    ] as const;
+    for (const [p, a, preciseOnly] of pairs) {
+        expect(Object.keys(p).filter((key) => !(key in a))).toEqual(preciseOnly);
+        expect(Object.keys(a).filter((key) => !(key in p))).toEqual([]);
+    }
+});
+
 test("earth.orbitEccentricityApprox is the constant from the approximate model", () => {
     expect(approx.earth.orbitEccentricity(precise.J2000)).toBeCloseTo(0.01671022, 8);
 });

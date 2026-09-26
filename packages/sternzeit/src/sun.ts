@@ -1,15 +1,15 @@
 // Terms used here are explained in the himmelszelt site's glossary (site/src/data/glossary.json).
 import {
     applyParallax,
+    EQUATORIAL_RADIUS_KM,
     type EquatorialCoords,
     eclipticalToEquatorial,
     equatorialToHorizontal,
     type HorizontalCoords,
 } from "./coords.js";
 import * as earth from "./earth.js";
-import { meanAnomaly, meanAnomalyApprox, meanAscendingNodeLongitude } from "./elements.js";
 import { ASTRONOMICAL_UNIT_KM, DEG_TO_RAD, normalizeDegrees, RAD_TO_DEG } from "./math.js";
-import { meanSiderealTime, meanSiderealTimeApprox } from "./siderealTime.js";
+import { apparentSiderealTime, apparentSiderealTimeApprox } from "./siderealTime.js";
 import {
     type AstronomicalTime,
     type JulianDay,
@@ -18,14 +18,28 @@ import {
 } from "./time.js";
 
 /** http://nssdc.gsfc.nasa.gov/planetary/factsheet/sunfact.html */
-export const MEAN_RADIUS_KM = 0.696e6;
+export const MEAN_RADIUS_KM = 696_000;
 
-// Mean anomaly (see elements.ts for why it lives there, not here).
-export { meanAnomaly, meanAnomalyApprox };
+/** Mean anomaly (M), in degrees, per Meeus' "Astronomical Algorithms" (47.3), the one the Moon's series take too. */
+export function meanAnomaly(t: JulianDay): number {
+    const T = julianCenturiesSinceStandardEquinox(t);
+    const M = 357.5291092 + T * (35999.0502909 + T * (-0.0001536 + T * (1.0 / 24490000.0)));
 
+    return normalizeDegrees(M);
+}
+
+/** ("A Physically-Based Night Sky Model" - 2001 - Wann Jensen et al.) */
+export function meanAnomalyApprox(t: JulianDay): number {
+    const T = julianCenturiesSinceStandardEquinox(t);
+    const M = (6.24 + 628.302 * T) * RAD_TO_DEG;
+
+    return normalizeDegrees(M);
+}
+
+/** Geometric mean longitude (L0), referred to the mean equinox of the date, in degrees, per Meeus (25.2). */
 export function meanLongitude(t: JulianDay): number {
     const T = julianCenturiesSinceStandardEquinox(t);
-    const L0 = 280.46645 + T * (36000.76983 + T * 0.0003032);
+    const L0 = 280.46646 + T * (36000.76983 + T * 0.0003032);
 
     return normalizeDegrees(L0);
 }
@@ -37,15 +51,15 @@ export function meanLongitudeApprox(t: JulianDay): number {
     return normalizeDegrees(L0);
 }
 
-/** Equation of the center (AA p152). */
+/** Equation of the center (C), in degrees, per Meeus' "Astronomical Algorithms" (25.4). */
 export function center(t: JulianDay): number {
     const T = julianCenturiesSinceStandardEquinox(t);
     const M = meanAnomaly(t) * DEG_TO_RAD;
 
     return (
-        (1.9146 - T * (0.004817 - T * 0.000014)) * Math.sin(M) +
+        (1.914602 - T * (0.004817 + T * 0.000014)) * Math.sin(M) +
         (0.019993 - T * 0.000101) * Math.sin(2.0 * M) +
-        0.00029 * Math.sin(3.0 * M)
+        0.000289 * Math.sin(3.0 * M)
     );
 }
 
@@ -59,38 +73,48 @@ export function trueLongitude(t: JulianDay): number {
     return meanLongitude(t) + center(t);
 }
 
-export function apparentPosition(t: JulianDay): EquatorialCoords {
-    const O = meanAscendingNodeLongitude(t) * DEG_TO_RAD;
-    const e = (earth.trueObliquity(t) + 0.00256 * Math.cos(O)) * DEG_TO_RAD;
-    const l = (trueLongitude(t) - 0.00569 - 0.00478 * Math.sin(O)) * DEG_TO_RAD;
-
-    const sinl = Math.sin(l);
-
-    return {
-        rightAscension: normalizeDegrees(Math.atan2(Math.cos(e) * sinl, Math.cos(l)) * RAD_TO_DEG),
-        declination: Math.asin(Math.sin(e) * sinl) * RAD_TO_DEG,
-    };
-}
-
-/** ("A Physically-Based Night Sky Model" - 2001 - Wann Jensen et al.) */
-export function apparentPositionApprox(t: JulianDay): EquatorialCoords {
+/** Geometric longitude from the approximate mean elements and equation of the center, per Jensen et al., "A
+ *  Physically-Based Night Sky Model" (2001): the counterpart of {@link trueLongitude}. */
+export function trueLongitudeApprox(t: JulianDay): number {
     const T = julianCenturiesSinceStandardEquinox(t);
     const M = meanAnomalyApprox(t) * DEG_TO_RAD;
+    const L = 4.895048 + 628.331951 * T + (0.033417 - 0.000084 * T) * Math.sin(M) + 0.000351 * Math.sin(2 * M);
 
-    const longitude =
-        (4.895048 + 628.331951 * T + (0.033417 - 0.000084 * T) * Math.sin(M) + 0.000351 * Math.sin(2 * M)) * RAD_TO_DEG;
-
-    return eclipticalToEquatorial({ longitude, latitude: 0 }, earth.trueObliquityApprox(t));
+    return normalizeDegrees(L * RAD_TO_DEG);
 }
 
-/** Equatorial horizontal parallax (π), in degrees, per Meeus' "Astronomical Algorithms" (40.6). Tiny (~8.8")
- *  compared to the Moon's, but applying it keeps sun/moon topocentric positions on the same footing. */
+/**
+ * Apparent longitude (λ), in degrees: the true longitude moved to the true equinox of the date by the nutation in
+ * longitude and back by the aberration, 20.4898" / R with R in AU, per Meeus' "Astronomical Algorithms" (ch. 25).
+ */
+export function apparentLongitude(t: JulianDay): number {
+    const R = distance(t) / ASTRONOMICAL_UNIT_KM;
+    return normalizeDegrees(trueLongitude(t) + earth.longitudeNutation(t) - 20.4898 / 3600 / R);
+}
+
+export function apparentLongitudeApprox(t: JulianDay): number {
+    const R = distanceApprox(t) / ASTRONOMICAL_UNIT_KM;
+    return normalizeDegrees(trueLongitudeApprox(t) + earth.longitudeNutationApprox(t) - 20.4898 / 3600 / R);
+}
+
+/** Apparent equatorial position: the apparent longitude at the true obliquity, per Meeus' "Astronomical Algorithms"
+ *  (ch. 25). Geocentric; the Sun's ecliptical latitude stays below 1.2" and is left out. */
+export function apparentPosition(t: JulianDay): EquatorialCoords {
+    return eclipticalToEquatorial({ longitude: apparentLongitude(t), latitude: 0 }, earth.trueObliquity(t));
+}
+
+export function apparentPositionApprox(t: JulianDay): EquatorialCoords {
+    return eclipticalToEquatorial({ longitude: apparentLongitudeApprox(t), latitude: 0 }, earth.trueObliquityApprox(t));
+}
+
+/** Equatorial horizontal parallax (π), in degrees, per Meeus' "Astronomical Algorithms" (40.1): 8.794" at 1 AU.
+ *  Tiny compared to the Moon's, but applying it keeps sun/moon topocentric positions on the same footing. */
 export function equatorialHorizontalParallax(t: JulianDay): number {
-    return Math.asin(earth.MEAN_RADIUS_KM / distance(t)) * RAD_TO_DEG;
+    return Math.asin(EQUATORIAL_RADIUS_KM / distance(t)) * RAD_TO_DEG;
 }
 
 export function equatorialHorizontalParallaxApprox(t: JulianDay): number {
-    return Math.asin(earth.MEAN_RADIUS_KM / distanceApprox(t)) * RAD_TO_DEG;
+    return Math.asin(EQUATORIAL_RADIUS_KM / distanceApprox(t)) * RAD_TO_DEG;
 }
 
 /** The Sun's topocentric equatorial position: apparentPosition corrected for an observer's parallax. See
@@ -104,7 +128,7 @@ export function topocentricPosition(
     observerHeightM = 0,
 ): EquatorialCoords {
     const t = julianEphemerisDay(time);
-    const s = meanSiderealTime(time);
+    const s = apparentSiderealTime(time);
 
     return applyParallax(apparentPosition(t), equatorialHorizontalParallax(t), s, latitude, longitude, observerHeightM);
 }
@@ -116,7 +140,7 @@ export function topocentricPositionApprox(
     observerHeightM = 0,
 ): EquatorialCoords {
     const t = julianEphemerisDay(time);
-    const s = meanSiderealTimeApprox(time);
+    const s = apparentSiderealTimeApprox(time);
 
     return applyParallax(
         apparentPositionApprox(t),
@@ -134,7 +158,7 @@ export function horizontalPosition(
     longitude: number,
     observerHeightM = 0,
 ): HorizontalCoords {
-    const s = meanSiderealTime(time);
+    const s = apparentSiderealTime(time);
 
     return equatorialToHorizontal(
         topocentricPosition(time, latitude, longitude, observerHeightM),
@@ -150,7 +174,7 @@ export function horizontalPositionApprox(
     longitude: number,
     observerHeightM = 0,
 ): HorizontalCoords {
-    const s = meanSiderealTimeApprox(time);
+    const s = apparentSiderealTimeApprox(time);
 
     return equatorialToHorizontal(
         topocentricPositionApprox(time, latitude, longitude, observerHeightM),

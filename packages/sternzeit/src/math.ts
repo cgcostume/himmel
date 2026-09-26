@@ -54,4 +54,4 @@ export function positionAngle(longitude1: number, latitude1: number, longitude2:
 }
 
 /** Mean distance from Earth to Sun, in kilometers: multiply an AU value by this to convert to km. */
-export const ASTRONOMICAL_UNIT_KM = 149598000;
+export const ASTRONOMICAL_UNIT_KM = 149_598_000;

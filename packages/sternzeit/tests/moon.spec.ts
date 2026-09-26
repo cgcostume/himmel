@@ -6,29 +6,45 @@ import * as precise from "../src/index.js";
 const JDE = 2448724.5;
 
 test("moon.meanLongitude matches Meeus' worked example 47.a", () => {
-    expect(precise.moon.meanLongitude(JDE)).toBeCloseTo(134.290182, 3);
+    expect(precise.moon.meanLongitude(JDE)).toBeCloseTo(134.290182, 6);
 });
 
 test("moon.meanElongation matches Meeus' worked example 47.a", () => {
-    expect(precise.moon.meanElongation(JDE)).toBeCloseTo(113.842304, 3);
+    expect(precise.moon.meanElongation(JDE)).toBeCloseTo(113.842304, 6);
 });
 
 test("moon.meanAnomaly matches Meeus' worked example 47.a", () => {
-    expect(precise.moon.meanAnomaly(JDE)).toBeCloseTo(5.150833, 3);
+    expect(precise.moon.meanAnomaly(JDE)).toBeCloseTo(5.150833, 6);
 });
 
 test("moon.meanArgumentOfLatitude matches Meeus' worked example 47.a", () => {
-    expect(precise.moon.meanArgumentOfLatitude(JDE)).toBeCloseTo(219.889721, 3);
+    expect(precise.moon.meanArgumentOfLatitude(JDE)).toBeCloseTo(219.889721, 6);
 });
 
+// Meeus' λ = 133.162655° is referred to the mean equinox; position adds the nutation, Δψ = 0.004610°.
 test("moon.position matches Meeus' worked example 47.a", () => {
     const ecl = precise.moon.position(JDE);
-    expect(ecl.longitude).toBeCloseTo(133.16265, 2);
-    expect(ecl.latitude).toBeCloseTo(-3.22913, 2);
+    expect(ecl.longitude).toBeCloseTo(133.162655 + 0.00461, 5);
+    expect(ecl.latitude).toBeCloseTo(-3.229126, 6);
 });
 
 test("moon.distance matches Meeus' worked example 47.a", () => {
-    expect(precise.moon.distance(JDE)).toBeCloseTo(368409.7, 0);
+    expect(precise.moon.distance(JDE)).toBeCloseTo(368409.7, 1);
+});
+
+test("moon.equatorialHorizontalParallax matches Meeus' worked example 47.a", () => {
+    expect(precise.moon.equatorialHorizontalParallax(JDE)).toBeCloseTo(0.99199, 5);
+});
+
+// Meeus, example 53.a (the same instant): l' = -1.206°, b' = 4.194°, l'' = -0.025°, b'' = 0.006°, P = 15.08°.
+test("moon librations and positionAngleOfAxis match Meeus' worked example 53.a", () => {
+    const optical = precise.moon.opticalLibrations(JDE);
+    expect(optical.longitude).toBeCloseTo(-1.206, 3);
+    expect(optical.latitude).toBeCloseTo(4.194, 3);
+    const total = precise.moon.librations(JDE);
+    expect(total.longitude - optical.longitude).toBeCloseTo(-0.025, 3);
+    expect(total.latitude - optical.latitude).toBeCloseTo(0.006, 3);
+    expect(precise.moon.positionAngleOfAxis(JDE)).toBeCloseTo(15.08, 2);
 });
 
 test("approx.moon.position roughly agrees with the precise result", () => {

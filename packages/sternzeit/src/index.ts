@@ -3,6 +3,7 @@ import * as earthImpl from "./earth.js";
 import * as moonImpl from "./moon.js";
 import * as sunImpl from "./sun.js";
 import * as eclipseImpl from "./eclipse.js";
+import { EQUATORIAL_RADIUS_KM } from "./coords.js";
 
 // Math auxiliaries, generic enough to be useful to any consumer, not just internally.
 export {
@@ -38,11 +39,12 @@ export {
 } from "./time.js"; // Julian Day conversions
 
 // Sidereal time.
-export { meanSiderealTime as siderealTime } from "./siderealTime.js";
+export { meanSiderealTime as siderealTime, apparentSiderealTime } from "./siderealTime.js";
 
 // Earth.
 export const earth = {
     MEAN_RADIUS_KM: earthImpl.MEAN_RADIUS_KM,
+    EQUATORIAL_RADIUS_KM,
     ATMOSPHERE_THICKNESS_KM: earthImpl.ATMOSPHERE_THICKNESS_KM,
     ATMOSPHERE_THICKNESS_NON_UNIFORM_KM: earthImpl.ATMOSPHERE_THICKNESS_NON_UNIFORM_KM,
     APPARENT_MAGNITUDE_LIMIT: earthImpl.APPARENT_MAGNITUDE_LIMIT,
@@ -67,6 +69,7 @@ export const sun = {
     center: sunImpl.center,
     trueAnomaly: sunImpl.trueAnomaly,
     trueLongitude: sunImpl.trueLongitude,
+    apparentLongitude: sunImpl.apparentLongitude,
     apparentPosition: sunImpl.apparentPosition,
     equatorialHorizontalParallax: sunImpl.equatorialHorizontalParallax,
     topocentricPosition: sunImpl.topocentricPosition,
@@ -94,6 +97,7 @@ export const moon = {
     distance: moonImpl.distance,
     apparentAngularDiameter: moonImpl.apparentAngularDiameter,
     opticalLibrations: moonImpl.opticalLibrations,
+    librations: moonImpl.librations,
     parallacticAngle: moonImpl.parallacticAngle,
     positionAngleOfAxis: moonImpl.positionAngleOfAxis,
     phaseAngle: moonImpl.phaseAngle,

@@ -1,4 +1,5 @@
 // Terms used here are explained in the himmelszelt site's glossary (site/src/data/glossary.json).
+import observedDeltaT from "./data/deltat.json" with { type: "json" };
 import { dayFraction, frac, toInt } from "./math.js";
 
 /** A calendar date/time used for astronomical calculations. */
@@ -30,9 +31,9 @@ export const B1950: JulianDay = 2433282.4235;
 export const STANDARD_EQUINOX: JulianDay = J2000;
 
 /**
- * Julian Day for a given calendar date/time, per Meeus' "Astronomical
- * Algorithms" (ch. 7). Only valid for dates on/after the Gregorian
- * calendar reform (1582-10-15); returns 0 for the few days it skipped.
+ * Julian Day for a given calendar date/time, as given, without applying `utcOffsetSeconds` (see {@link julianDayUT}),
+ * per Meeus' "Astronomical Algorithms" (ch. 7). Dates from 1582-10-15 on are Gregorian, earlier ones Julian, as in
+ * Meeus; the ten days the reform skipped return 0. Valid for years from -4712 on.
  */
 export function julianDay(time: AstronomicalTime): JulianDay {
     let { year, month } = time;
@@ -66,11 +67,31 @@ export function julianDayUT(time: AstronomicalTime): JulianDay {
 /**
  * ΔT = TT - UT, in seconds, at a given Julian Day (UT): how far Earth's slowing, uneven rotation has fallen behind the
  * uniform time the ephemerides run on. About a minute today, hours in antiquity, and unpredictable in detail for the
- * future. Per Espenak & Meeus, "Polynomial Expressions for Delta T", from the Five Millennium Canon of Solar Eclipses
- * (NASA TP-2006-214141), fitted to Morrison & Stephenson (2004). https://eclipse.gsfc.nasa.gov/SEhelp/deltatpoly2004.html
+ * future. Observed values from the IERS since 1962, before that the polynomials of Espenak & Meeus, "Polynomial
+ * Expressions for Delta T", from the Five Millennium Canon of Solar Eclipses (NASA TP-2006-214141), fitted to
+ * Morrison & Stephenson (2004). After the last observation, its recent trend blends into their extrapolation over a
+ * century. https://eclipse.gsfc.nasa.gov/SEhelp/deltatpoly2004.html
  */
 export function deltaT(jd: JulianDay): number {
     const y = 2000 + (jd - J2000) / 365.25;
+    // Observed on January 1 of each year, from the IERS; see scripts/deltat-from-iers.mjs.
+    const observed = (k: number) => observedDeltaT.deltaT[k] as number;
+    const i = y - observedDeltaT.firstYear;
+    const last = observedDeltaT.deltaT.length - 1;
+    if (i < 0) return polynomialDeltaT(y);
+    if (i < last) {
+        const k = Math.floor(i);
+        return observed(k) + (i - k) * (observed(k + 1) - observed(k));
+    }
+    // The trend of the last five years, blended over a century into the polynomials' long-term extrapolation.
+    const years = y - (observedDeltaT.firstYear + last);
+    const trend = observed(last) + (years * (observed(last) - observed(last - 5))) / 5;
+    const w = Math.min(years / 100, 1);
+    return (1 - w) * trend + w * polynomialDeltaT(y);
+}
+
+/** Espenak & Meeus' ΔT at a decimal year, in seconds. */
+function polynomialDeltaT(y: number): number {
     const long = (u: number) => -20 + 32 * u * u;
     const poly = (t: number, ...c: number[]) => c.reduceRight((sum, k) => sum * t + k, 0);
 
@@ -113,7 +134,7 @@ export function deltaT(jd: JulianDay): number {
  *  are computed in. Sidereal time keeps to UT, since it follows Earth's actual rotation. */
 export function julianEphemerisDay(time: AstronomicalTime): JulianDay {
     const jd = julianDayUT(time);
-    return jd + deltaT(jd) / 86400;
+    return jd + deltaT(jd) / 86_400;
 }
 
 /** Julian Day at 0h UT of the same calendar date as `time`. */
@@ -121,16 +142,22 @@ export function julianDay0UT(time: AstronomicalTime): JulianDay {
     return julianDayUT({ ...time, hour: 0, minute: 0, second: 0 });
 }
 
-/** Modified Julian Day (JD - 2400000.5). */
+/** Modified Julian Day (JD - 2400000.5) of `time` converted to UT first. */
 export function modifiedJulianDay(time: AstronomicalTime): JulianDay {
-    return julianDay(time) - 2400000.5;
+    return julianDayUT(time) - 2_400_000.5;
 }
 
-/** Inverse of {@link julianDay}. */
+/** Inverse of {@link julianDayUT}: the instant `jd` (UT) as a calendar date/time in the zone `utcOffsetSeconds`, to the
+ *  millisecond. */
 export function fromJulianDay(jd: JulianDay, utcOffsetSeconds = 0): AstronomicalTime {
-    const shifted = jd + 0.5;
-    const z = toInt(shifted);
-    const f = frac(shifted);
+    const shifted = jd + 0.5 + utcOffsetSeconds / 86_400;
+    let z = toInt(shifted);
+    // Rounded to whole milliseconds, so a round trip does not come back a hair short, e.g. at 11:59:59.999999.
+    let ms = Math.round(frac(shifted) * 86_400_000);
+    if (ms === 86_400_000) {
+        z += 1;
+        ms = 0;
+    }
 
     let a = z;
     if (z >= 2299161) {
@@ -148,11 +175,11 @@ export function fromJulianDay(jd: JulianDay, utcOffsetSeconds = 0): Astronomical
     const month = e < 14 ? e - 1 : e - 13;
     const year = month > 2 ? c - 4716 : c - 4715;
 
-    const h = f * 24;
-    const m = frac(h) * 60;
-    const s = frac(m) * 60.0001;
+    const hour = Math.floor(ms / 3_600_000);
+    const minute = Math.floor((ms % 3_600_000) / 60_000);
+    const second = (ms % 60_000) / 1000;
 
-    return { year, month, day, hour: toInt(h), minute: toInt(m), second: toInt(s), utcOffsetSeconds };
+    return { year, month, day, hour, minute, second, utcOffsetSeconds };
 }
 
 /** A JavaScript `Date` as an AstronomicalTime in the runtime's local time zone, offset included, milliseconds as fractional seconds. */
@@ -189,5 +216,5 @@ export function julianDaysSinceStandardEquinox(jd: JulianDay): number {
 
 /** Julian centuries since the standard equinox (J2000.0). Commonly denoted `T`. */
 export function julianCenturiesSinceStandardEquinox(jd: JulianDay): JulianCenturies {
-    return julianDaysSinceStandardEquinox(jd) / 36525;
+    return julianDaysSinceStandardEquinox(jd) / 36_525;
 }

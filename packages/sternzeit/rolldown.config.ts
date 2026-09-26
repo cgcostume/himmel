@@ -10,5 +10,6 @@ export default defineConfig({
     output: {
         dir: "dist",
         format: "es",
+        cleanDir: true,
     },
 });

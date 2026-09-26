@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { meanSiderealTime } from "../src/siderealTime.js";
+import { apparentSiderealTime, meanSiderealTime } from "../src/siderealTime.js";
 import {
     type AstronomicalTime,
     deltaT,
@@ -9,6 +9,7 @@ import {
     julianDay,
     julianDayUT,
     julianEphemerisDay,
+    modifiedJulianDay,
     toDate,
 } from "../src/time.js";
 
@@ -45,14 +46,55 @@ test("meanSiderealTime matches Meeus' worked examples (12.a/12.b)", () => {
     expect(meanSiderealTime(utc(1987, 4, 10, 19, 21, 0))).toBeCloseTo(128.7378734, 2);
 });
 
-// Espenak & Meeus, "Polynomial Expressions for Delta T": the observed value in 2000 and the fit's own at -500.
-test("deltaT follows the NASA polynomials", () => {
-    expect(deltaT(J2000)).toBeCloseTo(63.86, 1);
-    expect(deltaT(J2000 - 2500 * 365.25)).toBeCloseTo(17203.7, -1);
+const year = (y: number) => J2000 + (y - 2000) * 365.25;
+
+// The IERS values since 1962, and Espenak & Meeus' polynomials around them, meeting without a jump.
+test("deltaT follows the observations and the NASA polynomials", () => {
+    expect(deltaT(year(2000))).toBeCloseTo(63.83, 2);
+    expect(deltaT(year(2020))).toBeCloseTo(69.36, 2);
+    expect(deltaT(year(2020.5))).toBeCloseTo(69.36, 2);
+    expect(deltaT(year(-500))).toBeCloseTo(17203.7, -1);
+    expect(Math.abs(deltaT(year(1962)) - deltaT(year(1962 - 1e-9)))).toBeLessThan(0.02);
+});
+
+// On 2026-08-26 the IERS had 69.18 s.
+test("deltaT continues from the last observation and blends into the NASA extrapolation", () => {
+    const last = 2026;
+    expect(Math.abs(deltaT(year(last)) - deltaT(year(last - 1e-9)))).toBeLessThan(1e-6);
+    expect(deltaT(year(2026.65))).toBeCloseTo(69.18, 0);
+    const u = (2200 - 1820) / 100;
+    expect(deltaT(year(2200))).toBeCloseTo(-20 + 32 * u * u, 6);
 });
 
 test("julianEphemerisDay runs ahead of UT by deltaT", () => {
     const time = { year: 2026, month: 8, day: 12, hour: 18, minute: 0, second: 0, utcOffsetSeconds: 0 };
     const seconds = (julianEphemerisDay(time) - julianDayUT(time)) * 86400;
     expect(seconds).toBeCloseTo(deltaT(julianDayUT(time)), 3);
+});
+
+// Meeus, "Astronomical Algorithms", example 7.b: before the reform, the Julian calendar.
+test("julianDay counts dates before 1582 in the Julian calendar", () => {
+    expect(julianDay(utc(333, 1, 27, 12))).toBe(1842713);
+});
+
+test("fromJulianDay shifts the clock into the requested time zone", () => {
+    const time = fromJulianDay(J2000, 7200);
+    expect(time).toEqual({ year: 2000, month: 1, day: 1, hour: 14, minute: 0, second: 0, utcOffsetSeconds: 7200 });
+    expect(julianDayUT(time)).toBeCloseTo(J2000, 8);
+});
+
+test("fromJulianDay keeps fractional seconds, to the millisecond", () => {
+    const time = { ...utc(2026, 9, 21, 12, 0, 30.75), utcOffsetSeconds: 3600 };
+    expect(fromJulianDay(julianDayUT(time), 3600)).toEqual(time);
+    expect(fromJulianDay(J2000 - 0.0000001)).toEqual(utc(2000, 1, 1, 11, 59, 59.991));
+});
+
+test("modifiedJulianDay applies the time zone offset", () => {
+    const berlin = { ...utc(2000, 1, 1, 14), utcOffsetSeconds: 7200 };
+    expect(modifiedJulianDay(berlin)).toBeCloseTo(51544.5, 8);
+});
+
+// Meeus, example 12.a: 13h10m46.1351s, the mean sidereal time plus Δψ cos ε = -0.2317s.
+test("apparentSiderealTime matches Meeus' worked example 12.a", () => {
+    expect(apparentSiderealTime(utc(1987, 4, 10))).toBeCloseTo((13 + 10 / 60 + 46.1351 / 3600) * 15, 5);
 });

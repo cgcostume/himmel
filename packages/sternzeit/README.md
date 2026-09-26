@@ -14,11 +14,13 @@ New to terms like nutation, obliquity, or libration? The [himmelszelt site](http
 
 ## Status
 
-Julian Day conversions, mean sidereal time, and Sun/Moon/Earth position math
-(coordinates, orbital elements, nutation, apparent position, distance,
-libration, parallactic angle, atmospheric refraction in both directions) are
-implemented, each with a precise (Meeus) and a cheaper approximate (Jensen
-et al.) variant; see `.` vs. `./approx` in `package.json#exports`. The bright
+Julian Day conversions, ΔT (IERS observations since 1962, Espenak & Meeus'
+polynomials around them), mean and apparent sidereal time, and Sun/Moon/Earth
+position math (coordinates, orbital elements, nutation, apparent position,
+distance, optical and physical libration, parallactic angle, phase, earthshine,
+eclipses, atmospheric refraction in both directions) are implemented, each with
+a precise (Meeus) and a cheaper approximate (Jensen et al.) variant; see `.`
+vs. `./approx` in `package.json#exports`. The bright
 star catalog is checked in (`src/data/`), but there is no star API yet.
 
 Stars are next, and the reason the package is named `sternzeit` at all:
@@ -55,6 +57,9 @@ The primary sources cited throughout the code (see individual function docstring
 - Daniel Müller (now Limberger), Juri Engel, Jürgen Döllner,
   ["Single-Pass Rendering of Day and Night Sky Phenomena"](https://diglib.eg.org/items/0b9332fd-d155-452a-b9e0-1c605d557730)
   (VMV 2012): lunar eclipse phase parameterization (`eclipse.ts`).
+
+The tests cross-check the implementation against [astronomia](https://github.com/commenthol/astronomia), an
+independent JavaScript implementation of Meeus (`tests/astronomia.spec.ts`, a dev dependency only).
 
 ## Development
 
