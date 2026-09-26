@@ -246,8 +246,9 @@ From the maximum, step the Julian Day by minutes and watch it unfold. The Moon d
 noticeable, then turns a dark red in the umbra, lit only by sunlight that Earth's atmosphere bends around the planet,
 its outer rim tinged blue by the ozone the light passes through. Tracing that light through the atmosphere gives the
 colors physically <Cite id="yapo2009" />, but far from real time. osgHimmel approximated them from the eclipse's `phase`
-instead <Cite id="mueller2012vmv" />. The panel only hints at those colors; rendering them properly, along with the
-Moon's surface, is the job of [nachtgestirn](../nachtgestirn/).
+instead <Cite id="mueller2012vmv" />, a lookup coordinate from 0 at the center to 1 as the discs part; the table also
+lists the <Term of="Eclipse magnitude">magnitude</Term>, the number the catalogs give. The panel only hints at those
+colors; rendering them properly, along with the Moon's surface, is the job of [nachtgestirn](../nachtgestirn/).
 
 <Table domain="eclipse" />
 <Controls />
@@ -290,8 +291,9 @@ import {
 const time = fromDate(new Date());
 // Unit vectors in the observer's ENU frame: x east, y north, z up.
 // A y-up engine takes them as (x, z, -y).
-const toSun = sun.direction(time, latitude, longitude);
-const toMoon = moon.direction(time, latitude, longitude);
+const observer = { latitude, longitude, heightM }; // heightM is optional
+const toSun = sun.direction(time, observer);
+const toMoon = moon.direction(time, observer);
 // Functions of a bare Julian Day take ephemeris time.
 const moonlight = moon.illuminatedFraction(julianEphemerisDay(time));
 ```
@@ -313,7 +315,7 @@ import {
 // the -0.833 degrees every almanac uses.
 const midnight = Math.floor(julianDayUT(fromDate(new Date())) - 0.5) + 0.5;
 const above = (jd: number, deg: number) =>
-    sun.horizontalPosition(fromJulianDay(jd), latitude, longitude)
+    sun.horizontalPosition(fromJulianDay(jd), { latitude, longitude })
         .altitude > deg;
 
 function crossings(deg: number): Date[] {

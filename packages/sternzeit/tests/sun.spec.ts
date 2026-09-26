@@ -61,7 +61,7 @@ test("sun.equatorialHorizontalParallax is on the order of the Sun's real ~8.8 ar
 test("sun.topocentricPosition nudges apparentPosition by no more than the Sun's parallax", () => {
     const time = precise.fromJulianDay(JDE);
     const apparent = precise.sun.apparentPosition(JDE);
-    const topocentric = precise.sun.topocentricPosition(time, 52.39, 13.09);
+    const topocentric = precise.sun.topocentricPosition(time, { latitude: 52.39, longitude: 13.09 });
 
     expect(Math.abs(topocentric.rightAscension - apparent.rightAscension)).toBeLessThan(8.8 / 3600);
     expect(Math.abs(topocentric.declination - apparent.declination)).toBeLessThan(8.8 / 3600);
@@ -81,9 +81,10 @@ test("approx.sun.equationOfCenter stays within a hundredth of a degree of the pr
 
 test("sun.direction and moon.direction are the unit vectors of their horizontal positions", () => {
     const time = { year: 2026, month: 6, day: 21, hour: 10, minute: 0, second: 0, utcOffsetSeconds: 0 };
+    const place = { latitude: 52.5, longitude: 13.4, heightM: 300 };
     for (const body of [precise.sun, precise.moon] as const) {
-        const direction = body.direction(time, 52.5, 13.4, 300);
-        expect(direction).toEqual(precise.horizontalToDirection(body.horizontalPosition(time, 52.5, 13.4, 300)));
+        const direction = body.direction(time, place);
+        expect(direction).toEqual(precise.horizontalToDirection(body.horizontalPosition(time, place)));
         expect(Math.hypot(...direction)).toBeCloseTo(1, 12);
     }
 });

@@ -178,8 +178,8 @@ test("observerGeocentric places an observer on the ellipsoid and above it", () =
 
 test("moon.topocentricPosition shifts with the observer's height", () => {
     const time = precise.fromJulianDay(2461265.0);
-    const low = precise.moon.topocentricPosition(time, 43, 0);
-    const high = precise.moon.topocentricPosition(time, 43, 0, 1000);
+    const low = precise.moon.topocentricPosition(time, { latitude: 43, longitude: 0 });
+    const high = precise.moon.topocentricPosition(time, { latitude: 43, longitude: 0, heightM: 1000 });
     const shift = Math.abs(high.declination - low.declination) + Math.abs(high.rightAscension - low.rightAscension);
     expect(shift * 3600).toBeGreaterThan(0.05);
     expect(shift * 3600).toBeLessThan(2);

@@ -16,7 +16,7 @@ export {
 } from "./math.js";
 
 // Coordinate systems.
-export type { Direction, EclipticalCoords, EquatorialCoords, HorizontalCoords } from "./coords.js";
+export type { Direction, EclipticalCoords, EquatorialCoords, HorizontalCoords, Observer } from "./coords.js";
 export type { RefractionConditions, ViewDistanceOptions } from "./earth.js";
 export { eclipticalToEquatorial, equatorialToHorizontal, horizontalToDirection } from "./coords.js";
 
@@ -103,6 +103,7 @@ export const moon = {
     direction: moonImpl.directionApprox,
     distance: moonImpl.distanceApprox,
     apparentAngularDiameter: moonImpl.apparentAngularDiameterApprox,
+    topocentricAngularDiameter: moonImpl.topocentricAngularDiameterApprox,
     opticalLibrations: moonImpl.opticalLibrationsApprox,
     librations: moonImpl.librationsApprox,
     parallacticAngle: moonImpl.parallacticAngleApprox,

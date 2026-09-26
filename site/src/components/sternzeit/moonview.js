@@ -71,17 +71,18 @@ function visibleRuns(points, angle, radius) {
 }
 
 function render() {
-    const { jd, latitude, longitude } = state;
+    const { jd } = state;
     const unitsPerPx = 200 / (svgEl.clientWidth || 200);
     const time = precise.fromJulianDay(jd);
-    const radius = (precise.moon.apparentAngularDiameter(ephemerisDay(jd)) / 2) * DEG * UNITS_PER_RADIAN;
+    const diameter = precise.moon.topocentricAngularDiameter(time, state);
+    const radius = (diameter / 2) * DEG * UNITS_PER_RADIAN;
     const total = precise.moon.librations(ephemerisDay(jd));
     const opticalPart = optical ? { longitude: 0, latitude: 0 } : precise.moon.opticalLibrations(ephemerisDay(jd));
     const l = total.longitude - opticalPart.longitude;
     const b = total.latitude - opticalPart.latitude;
     const axis = precise.moon.positionAngleOfAxis(ephemerisDay(jd));
-    const parallactic = precise.moon.parallacticAngle(time, latitude, longitude, state.heightM);
-    const horizontal = precise.moon.horizontalPosition(time, latitude, longitude, state.heightM);
+    const parallactic = precise.moon.parallacticAngle(time, state);
+    const horizontal = precise.moon.horizontalPosition(time, state);
     const earthshine = precise.moon.earthshine(ephemerisDay(jd));
     // On the sky, position angles run from north through east, counterclockwise with east to the left. The zenith is at
     // the parallactic angle, so with the zenith up, the Moon's north pole sits at axis - parallactic, counterclockwise.
@@ -90,7 +91,7 @@ function render() {
 
     // The bright limb's direction on screen, clockwise from up, and how far the terminator bulges. Turning the pole
     // up turns the whole view with it, the Sun's direction on screen included.
-    const sunFrame = sunInViewFrame(time, latitude, longitude, state.heightM);
+    const sunFrame = sunInViewFrame(time, state);
     const limb = Math.atan2(sunFrame.right, sunFrame.up) + (twist - tilt) * DEG;
     const bulge = sunFrame.toward / Math.hypot(sunFrame.right, sunFrame.up, sunFrame.toward);
 
@@ -187,7 +188,7 @@ function render() {
     }
     svgEl.innerHTML = svg;
 
-    const minutes = precise.moon.apparentAngularDiameter(ephemerisDay(jd)) * 60;
+    const minutes = diameter * 60;
     const ew = l >= 0 ? "E" : "W";
     const ns = b >= 0 ? "N" : "S";
     const tiltText = locked

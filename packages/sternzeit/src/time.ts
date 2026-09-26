@@ -91,24 +91,17 @@ export function deltaT(jd: JulianDay): number {
     return (1 - w) * trend + w * polynomialDeltaT(y);
 }
 
+// biome-ignore format: one branch to a line, as NASA lists them
 /** Espenak & Meeus' ΔT at a decimal year, in seconds. */
 function polynomialDeltaT(y: number): number {
     const long = (u: number) => -20 + 32 * u * u;
 
     if (y < -500) return long((y - 1820) / 100);
-    if (y < 500) {
-        return polynomial(y / 100, 10583.6, -1014.41, 33.78311, -5.952053, -0.1798452, 0.022174192, 0.0090316521);
-    }
-    if (y < 1600) {
-        const u = (y - 1000) / 100;
-        return polynomial(u, 1574.2, -556.01, 71.23472, 0.319781, -0.8503463, -0.005050998, 0.0083572073);
-    }
+    if (y <  500) return polynomial(y / 100, 10583.6, -1014.41, 33.78311, -5.952053, -0.1798452, 0.022174192, 0.0090316521);
+    if (y < 1600) return polynomial((y - 1000) / 100, 1574.2, -556.01, 71.23472, 0.319781, -0.8503463, -0.005050998, 0.0083572073);
     if (y < 1700) return polynomial(y - 1600, 120, -0.9808, -0.01532, 1 / 7129);
     if (y < 1800) return polynomial(y - 1700, 8.83, 0.1603, -0.0059285, 0.00013336, -1 / 1174000);
-    if (y < 1860) {
-        const t = y - 1800;
-        return polynomial(t, 13.72, -0.332447, 0.0068612, 0.0041116, -0.00037436, 1.21272e-5, -1.699e-7, 8.75e-10);
-    }
+    if (y < 1860) return polynomial(y - 1800, 13.72, -0.332447, 0.0068612, 0.0041116, -0.00037436, 1.21272e-5, -1.699e-7, 8.75e-10);
     if (y < 1900) return polynomial(y - 1860, 7.62, 0.5737, -0.251754, 0.01680668, -0.0004473624, 1 / 233174);
     if (y < 1920) return polynomial(y - 1900, -2.79, 1.494119, -0.0598939, 0.0061966, -0.000197);
     if (y < 1941) return polynomial(y - 1920, 21.2, 0.84493, -0.0761, 0.0020936);

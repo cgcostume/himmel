@@ -48,8 +48,8 @@ function offPanelMoon(dx, dy) {
 
 function renderSolar(jd) {
     const time = precise.fromJulianDay(jd);
-    const eclipse = precise.eclipse.solar(time, state.latitude, state.longitude, state.heightM);
-    const sunAltitude = precise.sun.horizontalPosition(time, state.latitude, state.longitude, state.heightM).altitude;
+    const eclipse = precise.eclipse.solar(time, state);
+    const sunAltitude = precise.sun.horizontalPosition(time, state).altitude;
     const sunRadiusDeg = precise.sun.apparentAngularDiameter(ephemerisDay(jd)) / 2;
     const moonRadiusDeg = precise.moon.apparentAngularDiameter(ephemerisDay(jd)) / 2;
     const scale = SUN_RADIUS_UNITS / sunRadiusDeg;
@@ -138,12 +138,7 @@ function renderLunar(jd) {
     else status = `none, the Moon is ${eclipse.separation.toFixed(1)}° from the shadow axis`;
 
     // An eclipse happens for everyone at once, but only those with the Moon above their horizon get to see it.
-    const moonAltitude = precise.moon.horizontalPosition(
-        precise.fromJulianDay(jd),
-        state.latitude,
-        state.longitude,
-        state.heightM,
-    ).altitude;
+    const moonAltitude = precise.moon.horizontalPosition(precise.fromJulianDay(jd), state).altitude;
     if (aboveVisibleHorizon(moonAltitude, state.heightM) < 0) {
         // The panel's frame is the sky's, not the observer's, so a Moon below the horizon veils all of it.
         svg += veiledHorizon(-HALF, HALF, unitsPerPx);
@@ -201,9 +196,9 @@ function mayEclipse(jd, lunar) {
  */
 function separationHere(jd) {
     const time = timeOf(jd);
-    const s = precise.sun.horizontalPosition(time, state.latitude, state.longitude, state.heightM);
+    const s = precise.sun.horizontalPosition(time, state);
     if (s.altitude <= 0) return null;
-    const m = precise.moon.horizontalPosition(time, state.latitude, state.longitude, state.heightM);
+    const m = precise.moon.horizontalPosition(time, state);
     return precise.angularSeparation(s.azimuth, s.altitude, m.azimuth, m.altitude);
 }
 
@@ -224,9 +219,7 @@ function deepest(middle, lunar) {
         const shadow = precise.eclipse.lunar(ephemerisDay(best.jd));
         return shadow.axisOffsetKm - precise.moon.MEAN_RADIUS_KM < shadow.umbraRadiusKm ? best.jd : null;
     }
-    return precise.eclipse.solar(timeOf(best.jd), state.latitude, state.longitude, state.heightM).phase < 1
-        ? best.jd
-        : null;
+    return precise.eclipse.solar(timeOf(best.jd), state).phase < 1 ? best.jd : null;
 }
 
 /**

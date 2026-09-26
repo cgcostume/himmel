@@ -81,7 +81,7 @@ const layers = [below, ground, above];
 // Every altitude here is over the visible horizon, as in the other figures: lifted by refraction, the horizon lowered by
 // the observer's height (see horizon.js). So rising and setting line up with the horizon ring and line to the second.
 function seen(body, time, latitude, longitude) {
-    const horizontal = body.horizontalPosition(time, latitude, longitude, state.heightM);
+    const horizontal = body.horizontalPosition(time, { latitude, longitude, heightM: state.heightM });
     return { ...horizontal, altitude: aboveVisibleHorizon(horizontal.altitude, state.heightM) };
 }
 

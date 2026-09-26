@@ -9,6 +9,7 @@ import {
     equatorialToHorizontal,
     type HorizontalCoords,
     horizontalToDirection,
+    type Observer,
 } from "./coords.js";
 import moonTables from "./data/moon.json" with { type: "json" };
 import * as earth from "./earth.js";
@@ -256,70 +257,33 @@ export function equatorialHorizontalParallaxApprox(t: JulianDay): number {
 /** The Moon's topocentric equatorial position: apparentPosition corrected for an observer's parallax, since
  *  at the Moon's distance (~384,000 km) that shift is on the order of a degree (sun.ts has the same shape,
  *  though its parallax is only ~8.8"). Feeds horizontalPosition below. */
-export function topocentricPosition(
-    time: AstronomicalTime,
-    latitude: number,
-    longitude: number,
-    observerHeightM = 0,
-): EquatorialCoords {
+export function topocentricPosition(time: AstronomicalTime, observer: Observer): EquatorialCoords {
     const t = julianEphemerisDay(time);
     const s = apparentSiderealTime(time);
 
-    return applyParallax(apparentPosition(t), equatorialHorizontalParallax(t), s, latitude, longitude, observerHeightM);
+    return applyParallax(apparentPosition(t), equatorialHorizontalParallax(t), s, observer);
 }
 
 /** Approximation of {@link topocentricPosition}, from the approximate chain. */
-export function topocentricPositionApprox(
-    time: AstronomicalTime,
-    latitude: number,
-    longitude: number,
-    observerHeightM = 0,
-): EquatorialCoords {
+export function topocentricPositionApprox(time: AstronomicalTime, observer: Observer): EquatorialCoords {
     const t = julianEphemerisDay(time);
     const s = apparentSiderealTimeApprox(time);
 
-    return applyParallax(
-        apparentPositionApprox(t),
-        equatorialHorizontalParallaxApprox(t),
-        s,
-        latitude,
-        longitude,
-        observerHeightM,
-    );
+    return applyParallax(apparentPositionApprox(t), equatorialHorizontalParallaxApprox(t), s, observer);
 }
 
 /** Horizontal position as seen by the observer, in degrees: the topocentric position turned by the local apparent
  *  sidereal time (Meeus 13.5, 13.6). The true altitude, without refraction. */
-export function horizontalPosition(
-    time: AstronomicalTime,
-    latitude: number,
-    longitude: number,
-    observerHeightM = 0,
-): HorizontalCoords {
-    const s = apparentSiderealTime(time);
-
-    return equatorialToHorizontal(
-        topocentricPosition(time, latitude, longitude, observerHeightM),
-        s,
-        latitude,
-        longitude,
-    );
+export function horizontalPosition(time: AstronomicalTime, observer: Observer): HorizontalCoords {
+    return equatorialToHorizontal(topocentricPosition(time, observer), apparentSiderealTime(time), observer);
 }
 
 /** Approximation of {@link horizontalPosition}, from the approximate chain. */
-export function horizontalPositionApprox(
-    time: AstronomicalTime,
-    latitude: number,
-    longitude: number,
-    observerHeightM = 0,
-): HorizontalCoords {
-    const s = apparentSiderealTimeApprox(time);
-
+export function horizontalPositionApprox(time: AstronomicalTime, observer: Observer): HorizontalCoords {
     return equatorialToHorizontal(
-        topocentricPositionApprox(time, latitude, longitude, observerHeightM),
-        s,
-        latitude,
-        longitude,
+        topocentricPositionApprox(time, observer),
+        apparentSiderealTimeApprox(time),
+        observer,
     );
 }
 
@@ -356,6 +320,23 @@ export function apparentAngularDiameter(t: JulianDay): number {
 /** Approximation of {@link apparentAngularDiameter}, from the approximate chain. */
 export function apparentAngularDiameterApprox(t: JulianDay): number {
     return 2 * Math.atan(MEAN_RADIUS_KM / distanceApprox(t)) * RAD_TO_DEG;
+}
+
+/**
+ * The Moon's angular diameter as seen by the observer, in degrees: larger than from Earth's center by up to about 1.7%
+ * when it stands high, as the observer is then that much closer to it. s' = s (1 + sin h sin π), after Meeus ch. 40.
+ */
+export function topocentricAngularDiameter(time: AstronomicalTime, observer: Observer): number {
+    const t = julianEphemerisDay(time);
+    const h = horizontalPosition(time, observer).altitude * DEG_TO_RAD;
+    return apparentAngularDiameter(t) * (1 + Math.sin(h) * Math.sin(equatorialHorizontalParallax(t) * DEG_TO_RAD));
+}
+
+export function topocentricAngularDiameterApprox(time: AstronomicalTime, observer: Observer): number {
+    const t = julianEphemerisDay(time);
+    const h = horizontalPositionApprox(time, observer).altitude * DEG_TO_RAD;
+    const parallax = equatorialHorizontalParallaxApprox(t) * DEG_TO_RAD;
+    return apparentAngularDiameterApprox(t) * (1 + Math.sin(h) * Math.sin(parallax));
 }
 
 export interface MoonLibration {
@@ -413,20 +394,20 @@ function physicalTerms(t: JulianDay): { rho: number; sigma: number; tau: number 
     const K1 = (119.75 + 131.849 * T) * DEG_TO_RAD;
     const K2 = (72.56 + 20.186 * T) * DEG_TO_RAD;
 
-    // biome-ignore format: one term per line, as in the book
+    // biome-ignore format: the series as Meeus prints it, wrapped by hand
     const rho =
         -0.02752 * Math.cos(Mm) - 0.02245 * Math.sin(F) + 0.00684 * Math.cos(Mm - 2 * F) - 0.00293 * Math.cos(2 * F) -
         0.00085 * Math.cos(2 * F - 2 * D) - 0.00054 * Math.cos(Mm - 2 * D) - 0.0002 * Math.sin(Mm + F) -
         0.0002 * Math.cos(Mm + 2 * F) - 0.0002 * Math.cos(Mm - F) + 0.00014 * Math.cos(Mm + 2 * F - 2 * D);
 
-    // biome-ignore format: one term per line, as in the book
+    // biome-ignore format: the series as Meeus prints it, wrapped by hand
     const sigma =
         -0.02816 * Math.sin(Mm) + 0.02244 * Math.cos(F) - 0.00682 * Math.sin(Mm - 2 * F) - 0.00279 * Math.sin(2 * F) -
         0.00083 * Math.sin(2 * F - 2 * D) + 0.00069 * Math.sin(Mm - 2 * D) + 0.0004 * Math.cos(Mm + F) -
         0.00025 * Math.sin(2 * Mm) - 0.00023 * Math.sin(Mm + 2 * F) + 0.0002 * Math.cos(Mm - F) +
         0.00019 * Math.sin(Mm - F) + 0.00013 * Math.sin(Mm + 2 * F - 2 * D) - 0.0001 * Math.cos(Mm - 3 * F);
 
-    // biome-ignore format: one term per line, as in the book
+    // biome-ignore format: the series as Meeus prints it, wrapped by hand
     const tau =
         0.0252 * E * Math.sin(M) + 0.00473 * Math.sin(2 * Mm - 2 * F) - 0.00467 * Math.sin(Mm) +
         0.00396 * Math.sin(K1) + 0.00276 * Math.sin(2 * Mm - 2 * D) + 0.00196 * Math.sin(O) -
@@ -464,29 +445,17 @@ export function librationsApprox(t: JulianDay): MoonLibration {
  * Parallactic angle (q), in degrees, per Meeus 14.1: the angle at the Moon between the directions to the celestial
  * north pole and to the zenith, from the Moon's topocentric position, as the observer sees it.
  */
-export function parallacticAngle(
-    time: AstronomicalTime,
-    latitude: number,
-    longitude: number,
-    observerHeightM = 0,
-): number {
-    const position = topocentricPosition(time, latitude, longitude, observerHeightM);
-    return parallactic(position, apparentSiderealTime(time), latitude, longitude);
+export function parallacticAngle(time: AstronomicalTime, observer: Observer): number {
+    return parallactic(topocentricPosition(time, observer), apparentSiderealTime(time), observer);
 }
 
 /** Approximation of {@link parallacticAngle}, from the approximate chain. */
-export function parallacticAngleApprox(
-    time: AstronomicalTime,
-    latitude: number,
-    longitude: number,
-    observerHeightM = 0,
-): number {
-    const position = topocentricPositionApprox(time, latitude, longitude, observerHeightM);
-    return parallactic(position, apparentSiderealTimeApprox(time), latitude, longitude);
+export function parallacticAngleApprox(time: AstronomicalTime, observer: Observer): number {
+    return parallactic(topocentricPositionApprox(time, observer), apparentSiderealTimeApprox(time), observer);
 }
 
 /** Meeus 14.1 from the local hour angle H = θ + L - α (Meeus ch. 13), all in degrees. */
-function parallactic(pos: EquatorialCoords, siderealTime: number, latitude: number, longitude: number): number {
+function parallactic(pos: EquatorialCoords, siderealTime: number, { latitude, longitude }: Observer): number {
     const la = latitude * DEG_TO_RAD;
     const de = pos.declination * DEG_TO_RAD;
     const H = (siderealTime + longitude - pos.rightAscension) * DEG_TO_RAD;
@@ -582,18 +551,13 @@ export function illuminatedFractionApprox(t: JulianDay): number {
 }
 
 /** Unit direction to the Moon in the observer's ENU frame (x east, y north, z up), for placing it in a scene. */
-export function direction(time: AstronomicalTime, latitude: number, longitude: number, observerHeightM = 0): Direction {
-    return horizontalToDirection(horizontalPosition(time, latitude, longitude, observerHeightM));
+export function direction(time: AstronomicalTime, observer: Observer): Direction {
+    return horizontalToDirection(horizontalPosition(time, observer));
 }
 
 /** Approximation of {@link direction}, from the approximate chain. */
-export function directionApprox(
-    time: AstronomicalTime,
-    latitude: number,
-    longitude: number,
-    observerHeightM = 0,
-): Direction {
-    return horizontalToDirection(horizontalPositionApprox(time, latitude, longitude, observerHeightM));
+export function directionApprox(time: AstronomicalTime, observer: Observer): Direction {
+    return horizontalToDirection(horizontalPositionApprox(time, observer));
 }
 
 /**
@@ -601,35 +565,18 @@ export function directionApprox(
  * the light direction for shading the Moon's disc. Not quite the Sun's own direction as seen from Earth: the Moon
  * sits ~384,000 km off to the side, which turns the vector by up to ~0.15°.
  */
-export function sunDirection(
-    time: AstronomicalTime,
-    latitude: number,
-    longitude: number,
-    observerHeightM = 0,
-): Direction {
+export function sunDirection(time: AstronomicalTime, observer: Observer): Direction {
     const t = julianEphemerisDay(time);
-
-    return between(
-        direction(time, latitude, longitude, observerHeightM),
-        distance(t),
-        sun.direction(time, latitude, longitude, observerHeightM),
-        sun.distance(t),
-    );
+    return between(direction(time, observer), distance(t), sun.direction(time, observer), sun.distance(t));
 }
 
 /** Approximation of {@link sunDirection}, from the approximate chain. */
-export function sunDirectionApprox(
-    time: AstronomicalTime,
-    latitude: number,
-    longitude: number,
-    observerHeightM = 0,
-): Direction {
+export function sunDirectionApprox(time: AstronomicalTime, observer: Observer): Direction {
     const t = julianEphemerisDay(time);
-
     return between(
-        directionApprox(time, latitude, longitude, observerHeightM),
+        directionApprox(time, observer),
         distanceApprox(t),
-        sun.directionApprox(time, latitude, longitude, observerHeightM),
+        sun.directionApprox(time, observer),
         sun.distanceApprox(t),
     );
 }

@@ -8,6 +8,7 @@ import {
     equatorialToHorizontal,
     type HorizontalCoords,
     horizontalToDirection,
+    type Observer,
 } from "./coords.js";
 import * as earth from "./earth.js";
 import { ASTRONOMICAL_UNIT_KM, DEG_TO_RAD, normalizeDegrees, polynomial, RAD_TO_DEG } from "./math.js";
@@ -137,86 +138,44 @@ export function equatorialHorizontalParallaxApprox(t: JulianDay): number {
  *  moon.ts's topocentricPosition for the same shape; the Sun's shift is only ~8.8" but nonzero. Feeds
  *  horizontalPosition below, so that comparing sun/moon horizontal positions (e.g. for eclipses) compares
  *  positions from the same observer-centered frame instead of mixing a geocentric Sun with a topocentric Moon. */
-export function topocentricPosition(
-    time: AstronomicalTime,
-    latitude: number,
-    longitude: number,
-    observerHeightM = 0,
-): EquatorialCoords {
+export function topocentricPosition(time: AstronomicalTime, observer: Observer): EquatorialCoords {
     const t = julianEphemerisDay(time);
     const s = apparentSiderealTime(time);
 
-    return applyParallax(apparentPosition(t), equatorialHorizontalParallax(t), s, latitude, longitude, observerHeightM);
+    return applyParallax(apparentPosition(t), equatorialHorizontalParallax(t), s, observer);
 }
 
 /** Approximation of {@link topocentricPosition}, from the approximate chain. */
-export function topocentricPositionApprox(
-    time: AstronomicalTime,
-    latitude: number,
-    longitude: number,
-    observerHeightM = 0,
-): EquatorialCoords {
+export function topocentricPositionApprox(time: AstronomicalTime, observer: Observer): EquatorialCoords {
     const t = julianEphemerisDay(time);
     const s = apparentSiderealTimeApprox(time);
 
-    return applyParallax(
-        apparentPositionApprox(t),
-        equatorialHorizontalParallaxApprox(t),
-        s,
-        latitude,
-        longitude,
-        observerHeightM,
-    );
+    return applyParallax(apparentPositionApprox(t), equatorialHorizontalParallaxApprox(t), s, observer);
 }
 
 /** Horizontal position as seen by the observer, in degrees: the topocentric position turned by the local apparent
  *  sidereal time (Meeus 13.5, 13.6). The true altitude, without refraction. */
-export function horizontalPosition(
-    time: AstronomicalTime,
-    latitude: number,
-    longitude: number,
-    observerHeightM = 0,
-): HorizontalCoords {
-    const s = apparentSiderealTime(time);
-
-    return equatorialToHorizontal(
-        topocentricPosition(time, latitude, longitude, observerHeightM),
-        s,
-        latitude,
-        longitude,
-    );
+export function horizontalPosition(time: AstronomicalTime, observer: Observer): HorizontalCoords {
+    return equatorialToHorizontal(topocentricPosition(time, observer), apparentSiderealTime(time), observer);
 }
 
 /** Approximation of {@link horizontalPosition}, from the approximate chain. */
-export function horizontalPositionApprox(
-    time: AstronomicalTime,
-    latitude: number,
-    longitude: number,
-    observerHeightM = 0,
-): HorizontalCoords {
-    const s = apparentSiderealTimeApprox(time);
-
+export function horizontalPositionApprox(time: AstronomicalTime, observer: Observer): HorizontalCoords {
     return equatorialToHorizontal(
-        topocentricPositionApprox(time, latitude, longitude, observerHeightM),
-        s,
-        latitude,
-        longitude,
+        topocentricPositionApprox(time, observer),
+        apparentSiderealTimeApprox(time),
+        observer,
     );
 }
 
 /** Unit direction to the Sun in the observer's ENU frame (x east, y north, z up): a renderer's light direction. */
-export function direction(time: AstronomicalTime, latitude: number, longitude: number, observerHeightM = 0): Direction {
-    return horizontalToDirection(horizontalPosition(time, latitude, longitude, observerHeightM));
+export function direction(time: AstronomicalTime, observer: Observer): Direction {
+    return horizontalToDirection(horizontalPosition(time, observer));
 }
 
 /** Approximation of {@link direction}, from the approximate chain. */
-export function directionApprox(
-    time: AstronomicalTime,
-    latitude: number,
-    longitude: number,
-    observerHeightM = 0,
-): Direction {
-    return horizontalToDirection(horizontalPositionApprox(time, latitude, longitude, observerHeightM));
+export function directionApprox(time: AstronomicalTime, observer: Observer): Direction {
+    return horizontalToDirection(horizontalPositionApprox(time, observer));
 }
 
 /** Distance from the center of the Sun to the center of the Earth, in kilometers, per Meeus 25.5. */

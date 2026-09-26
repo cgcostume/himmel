@@ -1,4 +1,5 @@
 // Terms used here are explained in the himmelszelt site's glossary (site/src/data/glossary.json).
+import type { Observer } from "./coords.js";
 import * as earth from "./earth.js";
 import { angularSeparation, DEG_TO_RAD, normalizeDegrees, positionAngle } from "./math.js";
 import * as moon from "./moon.js";
@@ -6,21 +7,13 @@ import * as sun from "./sun.js";
 import { type AstronomicalTime, type JulianDay, julianEphemerisDay } from "./time.js";
 
 /**
- * Piecewise-linear phase axis: `[0, inner]` maps to `[0, 0.5]` and `[inner, outer]` maps to `[0.5, 1]`, each
- * independently, not clamped past 1. Per Limberger et al., "Single-Pass Rendering of Day and Night Sky
- * Phenomena" (VMV 2012, Sec. 3.2): `inner`/`outer` (there, the umbra/penumbra radii) vary from eclipse to
- * eclipse, but a lookup-texture-style consumer needs the boundary between them at a *fixed* coordinate (0.5)
- * regardless, not one that drifts with the day's actual distances/radii.
+ * The eclipse phase: a distance from the center, piecewise linear so that `[0, inner]` maps to `[0, 0.5]` and `[inner,
+ * outer]` to `[0.5, 1]`, unclamped beyond. Per Limberger et al. 2012 (VMV, Sec. 3.2): inner and outer vary from eclipse
+ * to eclipse, but a renderer looking the eclipse's colors up in a texture needs the boundary between them at the same
+ * coordinate every time.
  */
 function phase(distance: number, inner: number, outer: number): number {
     return distance <= inner ? 0.5 * (distance / inner) : 0.5 + (0.5 * (distance - inner)) / (outer - inner);
-}
-
-/** The same distance against `outer` alone, as one global linear scale: 0 at center, 1 exactly at `outer`.
- *  Unlike `phase`, `inner` lands wherever inner/outer numerically falls, drifting eclipse to eclipse; useful
- *  when what's wanted is "how deep, proportionally" rather than a stable lookup coordinate. */
-function linearPhase(distance: number, outer: number): number {
-    return distance / outer;
 }
 
 export interface SolarEclipseState {
@@ -34,14 +27,16 @@ export interface SolarEclipseState {
      * How deep the eclipse is, not the Moon's phase (see `moon.phaseAngle` for that).
      * 0 (centered, deepest total/annular eclipse) to 1 (Sun/Moon discs just touching, first/last contact),
      * 0.5 exactly where the discs' edges align (the total/annular-to-partial boundary); above 1 means no
-     * eclipse. See `phase` above. Total vs. annular isn't encoded here (it depends on whether the Moon's or
-     * Sun's apparent disc is bigger, not on separation alone) - compare `sun.apparentAngularDiameter` and
-     * `moon.apparentAngularDiameter` directly if that distinction is needed.
+     * eclipse. The coordinate for a lookup texture, see `phase` above. Whether it is total or annular
+     * depends on which disc is larger: compare `sun.apparentAngularDiameter` with `moon.topocentricAngularDiameter`.
      */
     phase: number;
-    /** See `linearPhase` above: separation as one global fraction of the partial-eclipse radius (Sun+Moon
-     *  apparent radii), 0 to 1, not fixed to 0.5 at the total/annular boundary like `phase` is. */
-    linearPhase: number;
+    /**
+     * The eclipse magnitude, as NASA's local circumstances give it: the fraction of the Sun's diameter the Moon covers,
+     * along the line through both centers. 0 as the discs touch, 1 from totality on, (1 + k) / 2 at its center with k
+     * the ratio of the diameters; negative with no eclipse. The catalogs' magnitude of a central eclipse is k itself.
+     */
+    magnitude: number;
 }
 
 function classifySolarEclipse(
@@ -57,24 +52,19 @@ function classifySolarEclipse(
         separation,
         positionAngle: positionAngleDeg,
         phase: phase(separation, inner, outer),
-        linearPhase: linearPhase(separation, outer),
+        magnitude: (outer - separation) / (2 * sunRadius),
     };
 }
 
 /**
- * Whether, and how much, the Moon apparently covers the Sun as seen by an observer at (latitude, longitude).
+ * Whether, and how much, the Moon apparently covers the Sun as seen by the observer.
  * Purely angular (apparent positions and angular diameters); doesn't predict eclipse *paths*, only whether
  * one is visible from a given place at a given time.
  */
-export function solarEclipseState(
-    time: AstronomicalTime,
-    latitude: number,
-    longitude: number,
-    observerHeightM = 0,
-): SolarEclipseState {
+export function solarEclipseState(time: AstronomicalTime, observer: Observer): SolarEclipseState {
     const t = julianEphemerisDay(time);
-    const sh = sun.horizontalPosition(time, latitude, longitude, observerHeightM);
-    const mh = moon.horizontalPosition(time, latitude, longitude, observerHeightM);
+    const sh = sun.horizontalPosition(time, observer);
+    const mh = moon.horizontalPosition(time, observer);
     const separation = angularSeparation(sh.azimuth, sh.altitude, mh.azimuth, mh.altitude);
     const direction = positionAngle(sh.azimuth, sh.altitude, mh.azimuth, mh.altitude);
 
@@ -82,20 +72,15 @@ export function solarEclipseState(
         separation,
         direction,
         sun.apparentAngularDiameter(t) / 2,
-        moon.apparentAngularDiameter(t) / 2,
+        moon.topocentricAngularDiameter(time, observer) / 2,
     );
 }
 
 /** Approximation of {@link solarEclipseState}, from the approximate chain. */
-export function solarEclipseStateApprox(
-    time: AstronomicalTime,
-    latitude: number,
-    longitude: number,
-    observerHeightM = 0,
-): SolarEclipseState {
+export function solarEclipseStateApprox(time: AstronomicalTime, observer: Observer): SolarEclipseState {
     const t = julianEphemerisDay(time);
-    const sh = sun.horizontalPositionApprox(time, latitude, longitude, observerHeightM);
-    const mh = moon.horizontalPositionApprox(time, latitude, longitude, observerHeightM);
+    const sh = sun.horizontalPositionApprox(time, observer);
+    const mh = moon.horizontalPositionApprox(time, observer);
     const separation = angularSeparation(sh.azimuth, sh.altitude, mh.azimuth, mh.altitude);
     const direction = positionAngle(sh.azimuth, sh.altitude, mh.azimuth, mh.altitude);
 
@@ -103,7 +88,7 @@ export function solarEclipseStateApprox(
         separation,
         direction,
         sun.apparentAngularDiameterApprox(t) / 2,
-        moon.apparentAngularDiameterApprox(t) / 2,
+        moon.topocentricAngularDiameterApprox(time, observer) / 2,
     );
 }
 
@@ -117,12 +102,14 @@ export interface LunarEclipseState {
     positionAngle: number;
     /** How deep the eclipse is, not the Moon's phase (see `moon.phaseAngle` for that).
      *  0 (Moon centered on the shadow axis, deepest possible eclipse) to 1 (Moon at the outer edge of the
-     *  penumbra), 0.5 exactly at the umbra/penumbra boundary; above 1 outside the penumbra (no eclipse). See
-     *  `phase` above. */
+     *  penumbra), 0.5 exactly at the umbra/penumbra boundary; above 1 outside the penumbra (no eclipse). The
+     *  coordinate for a lookup texture of the eclipse's colors, see `phase` above. */
     phase: number;
-    /** See `linearPhase` above: the Moon's axis offset as one global fraction of the penumbra's radius, 0 to
-     *  1, not fixed to 0.5 at the umbra/penumbra boundary like `phase` is. */
-    linearPhase: number;
+    /** The umbral magnitude as the catalogs give it: the fraction of the Moon's diameter inside the umbra. 1 or more is
+     *  total, below 0 the Moon is outside it. Geometric shadow, so a little below the catalogs' enlarged one. */
+    umbralMagnitude: number;
+    /** The penumbral magnitude: the fraction of the Moon's diameter inside the penumbra. */
+    penumbralMagnitude: number;
     /** Radius of Earth's umbra (core shadow) at the Moon's distance, in kilometers. */
     umbraRadiusKm: number;
     /** Radius of Earth's penumbra (partial shadow) at the Moon's distance, in kilometers. */
@@ -160,7 +147,8 @@ function classifyLunarEclipse(
         axisOffsetKm,
         positionAngle: positionAngleDeg,
         phase: phase(df, epsilonU, epsilonP),
-        linearPhase: linearPhase(df, epsilonP),
+        umbralMagnitude: (umbraKm + moon.MEAN_RADIUS_KM - axisOffsetKm) / (2 * moon.MEAN_RADIUS_KM),
+        penumbralMagnitude: (penumbraKm + moon.MEAN_RADIUS_KM - axisOffsetKm) / (2 * moon.MEAN_RADIUS_KM),
         umbraRadiusKm: umbraKm,
         penumbraRadiusKm: penumbraKm,
     };

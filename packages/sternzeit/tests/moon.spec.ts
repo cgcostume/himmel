@@ -87,8 +87,8 @@ test("moon.earthshine peaks near new moon, vanishes near full moon, and approx s
 test("moon.sunDirection is a unit vector within a fraction of a degree of the Sun's own direction", () => {
     const time = precise.fromJulianDay(JDE);
     for (const ns of [precise, approx]) {
-        const d = ns.moon.sunDirection(time, 52.4, 13.1);
-        const s = ns.horizontalToDirection(ns.sun.horizontalPosition(time, 52.4, 13.1));
+        const d = ns.moon.sunDirection(time, { latitude: 52.4, longitude: 13.1 });
+        const s = ns.horizontalToDirection(ns.sun.horizontalPosition(time, { latitude: 52.4, longitude: 13.1 }));
         expect(Math.hypot(...d)).toBeCloseTo(1, 9);
         const angle = Math.acos(Math.min(1, d[0] * s[0] + d[1] * s[1] + d[2] * s[2])) * precise.RAD_TO_DEG;
         expect(angle).toBeLessThan(0.2);

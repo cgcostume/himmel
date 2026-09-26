@@ -86,7 +86,7 @@ test("the observer's place and the topocentric Moon agree (chapter 11, 40.2, 40.
         );
         // Meeus counts longitudes positive west. The parallax comes from 8.794" at 1 AU there, the radius here.
         const theirs = A.parallax.topocentric(c, rhoSinPhi, rhoCosPhi, -longitude * D, jd);
-        const topocentric = S.moon.topocentricPosition(time, latitude, longitude, height);
+        const topocentric = S.moon.topocentricPosition(time, { latitude, longitude, heightM: height });
         expect(Math.abs(angle(topocentric.rightAscension, theirs.ra * R))).toBeLessThan(0.1 * ARCSEC);
         expect(Math.abs(topocentric.declination - theirs.dec * R)).toBeLessThan(0.1 * ARCSEC);
     }
@@ -102,10 +102,10 @@ test("the Moon's phase angle and parallactic angle agree (48.2, 48.3, 14.1)", ()
         expect(Math.abs(S.moon.phaseAngle(jd) - A.moonillum.phaseAngleEquatorial(cMoon, cSun) * R)).toBeLessThan(1e-9);
 
         const time = S.fromJulianDay(jd);
-        const at = S.moon.topocentricPosition(time, latitude, longitude);
+        const at = S.moon.topocentricPosition(time, { latitude, longitude });
         const hourAngle = (S.apparentSiderealTime(time) + longitude - at.rightAscension) * D;
         const theirs = A.parallactic.parallacticAngle(latitude * D, at.declination * D, hourAngle) * R;
-        expect(Math.abs(angle(S.moon.parallacticAngle(time, latitude, longitude), theirs))).toBeLessThan(1e-9);
+        expect(Math.abs(angle(S.moon.parallacticAngle(time, { latitude, longitude }), theirs))).toBeLessThan(1e-9);
     }
 });
 

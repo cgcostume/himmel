@@ -73,12 +73,12 @@ const normalize = (a) => {
  * across the view, up towards the zenith, and toward the viewer. It is what tilts the crescent, and it belongs to
  * the observer, not to any one panel, so every figure that shows the Moon from here has to agree on it.
  */
-export function sunInViewFrame(time, latitude, longitude, heightM) {
-    const lineOfSight = precise.moon.direction(time, latitude, longitude, heightM);
+export function sunInViewFrame(time, observer) {
+    const lineOfSight = precise.moon.direction(time, observer);
     // (v x z) x v is the zenith with the line of sight taken out of it: straight up, across the view.
     const up = normalize(cross(cross(lineOfSight, [0, 0, 1]), lineOfSight));
     const right = cross(lineOfSight, up);
-    const sun = precise.moon.sunDirection(time, latitude, longitude, heightM);
+    const sun = precise.moon.sunDirection(time, observer);
     return { right: dot(sun, right), up: dot(sun, up), toward: -dot(sun, lineOfSight) };
 }
 

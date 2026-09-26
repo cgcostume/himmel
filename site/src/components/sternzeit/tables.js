@@ -27,10 +27,11 @@ const UNITS = {
     viewDistanceWithinAtmosphere: "km",
     orbitEccentricity: "",
     "solar.phase": "",
-    "solar.linearPhase": "",
+    "solar.magnitude": "",
     "lunar.axisOffsetKm": "km",
     "lunar.phase": "",
-    "lunar.linearPhase": "",
+    "lunar.umbralMagnitude": "",
+    "lunar.penumbralMagnitude": "",
     "lunar.umbraRadiusKm": "km",
     "lunar.penumbraRadiusKm": "km",
     illuminatedFraction: "",
@@ -140,8 +141,7 @@ function nameCell(name, field) {
 // The Sun's current true altitude: what the refraction and view-distance rows are evaluated for, since they need a
 // direction and the Sun's is the one a sky renderer cares about most.
 function sunAltitude(jd) {
-    return precise.sun.horizontalPosition(precise.fromJulianDay(jd), state.latitude, state.longitude, state.heightM)
-        .altitude;
+    return precise.sun.horizontalPosition(precise.fromJulianDay(jd), state).altitude;
 }
 
 // Refraction is only meaningful for a body at or near the horizon, not for one well below it: null reads as n/a.
@@ -152,7 +152,7 @@ function refractionTowardsSun(fn, jd, apparent) {
     return fn(apparent ? altitude + precise.earth.atmosphericRefraction(altitude, conditions) : altitude, conditions);
 }
 
-// How to call an export that isn't just fn(julianDay). Anything not listed here falls back to
+// How to call an export that isn't just fn(julianDay). The state is an observer too: it has latitude, longitude, heightM. Anything not listed here falls back to
 // fn.length === 0 ? fn() : fn(jd), with jd in ephemeris time.
 const CALL_OVERRIDES = {
     atmosphericRefraction: (fn, jd) => refractionTowardsSun(fn, jd, false),
@@ -164,11 +164,11 @@ const CALL_OVERRIDES = {
     // jd is already an absolute instant; fromJulianDay(jd) (offset 0) round-trips it as a UT AstronomicalTime,
     // which is what julianDayUT() inside horizontalPosition/parallacticAngle expects. A nonzero offset here
     // would double-shift the instant, since jd carries no timezone to begin with.
-    horizontalPosition: (fn, jd) => fn(precise.fromJulianDay(jd), state.latitude, state.longitude, state.heightM),
-    topocentricPosition: (fn, jd) => fn(precise.fromJulianDay(jd), state.latitude, state.longitude, state.heightM),
-    parallacticAngle: (fn, jd) => fn(precise.fromJulianDay(jd), state.latitude, state.longitude, state.heightM),
-    sunDirection: (fn, jd) => fn(precise.fromJulianDay(jd), state.latitude, state.longitude, state.heightM),
-    direction: (fn, jd) => fn(precise.fromJulianDay(jd), state.latitude, state.longitude, state.heightM),
+    horizontalPosition: (fn, jd) => fn(precise.fromJulianDay(jd), state),
+    topocentricPosition: (fn, jd) => fn(precise.fromJulianDay(jd), state),
+    parallacticAngle: (fn, jd) => fn(precise.fromJulianDay(jd), state),
+    sunDirection: (fn, jd) => fn(precise.fromJulianDay(jd), state),
+    direction: (fn, jd) => fn(precise.fromJulianDay(jd), state),
     airPressureRatio: (fn) => fn(state.heightM),
     horizonDip: (fn) => fn(state.heightM),
     // The time functions take the moment itself, as a date; deltaT takes its Julian Day in UT.
@@ -179,7 +179,8 @@ const CALL_OVERRIDES = {
     apparentSiderealTime: (fn, jd) => fn(precise.fromJulianDay(jd)),
     deltaT: (fn, jd) => fn(jd),
     // lunar takes just jd like the fn(jd) default already handles; only solar needs observer location too.
-    solar: (fn, jd) => fn(precise.fromJulianDay(jd), state.latitude, state.longitude, state.heightM),
+    solar: (fn, jd) => fn(precise.fromJulianDay(jd), state),
+    topocentricAngularDiameter: (fn, jd) => fn(precise.fromJulianDay(jd), state),
 };
 
 const DECIMALS = 4;

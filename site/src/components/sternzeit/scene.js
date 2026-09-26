@@ -483,8 +483,8 @@ function frame() {
     const observerRa = siderealTime + longitude;
     const observerPos = sphericalToVector(observerRa, latitude, EARTH_R);
 
-    const sunHorizontal = precise.sun.horizontalPosition(time, latitude, longitude, state.heightM);
-    const moonHorizontal = precise.moon.horizontalPosition(time, latitude, longitude, state.heightM);
+    const sunHorizontal = precise.sun.horizontalPosition(time, state);
+    const moonHorizontal = precise.moon.horizontalPosition(time, state);
     // The locked views show sunrise and sunset to the second, so their altitudes are over the visible horizon: lifted by
     // refraction, the horizon lowered by the observer's height (see horizon.js). The horizon line stays where it is.
     const overHorizon = (h) => ({ ...h, altitude: aboveVisibleHorizon(h.altitude, state.heightM) });
@@ -494,7 +494,7 @@ function frame() {
     const earthshine = precise.moon.earthshine(ephemerisDay(jd));
     // The tilt of the crescent is the observer's, not the panel's: taken from the sky itself, so it matches the
     // Moon's own figure rather than following this panel's stretched projection.
-    const sunFrame = sunInViewFrame(time, latitude, longitude, state.heightM);
+    const sunFrame = sunInViewFrame(time, state);
     const towardsSun = { x: sunFrame.right, y: -sunFrame.up };
     updateAltAzPanel(sunView, sunSeen, moonSeen, lit, earthshine, towardsSun);
     updateAltAzPanel(moonView, moonSeen, sunSeen, lit, earthshine, towardsSun);

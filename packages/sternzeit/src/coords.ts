@@ -38,6 +38,16 @@ export function eclipticalToEquatorial(ecl: EclipticalCoords, obliquity: number)
     };
 }
 
+/** Where on Earth the sky is seen from. */
+export interface Observer {
+    /** Geographic latitude, in degrees, positive north. */
+    latitude: number;
+    /** Geographic longitude, in degrees, positive east. */
+    longitude: number;
+    /** Height above sea level, in meters; 0 if left out. */
+    heightM?: number;
+}
+
 /**
  * Equatorial to horizontal coordinates, per Meeus 13.5, 13.6. `siderealTime` is Greenwich's, in degrees: the apparent
  * one for an apparent position. `longitude` is positive east, the geographic convention, so the local sidereal time is
@@ -47,8 +57,7 @@ export function eclipticalToEquatorial(ecl: EclipticalCoords, obliquity: number)
 export function equatorialToHorizontal(
     equ: EquatorialCoords,
     siderealTime: number,
-    latitude: number,
-    longitude: number,
+    { latitude, longitude }: Observer,
 ): HorizontalCoords {
     // Local hour angle: H = θ - α (Meeus ch. 13).
     const H = (siderealTime + longitude - equ.rightAscension) * DEG_TO_RAD;
@@ -93,12 +102,10 @@ export function applyParallax(
     position: EquatorialCoords,
     parallax: number,
     siderealTime: number,
-    latitude: number,
-    longitude: number,
-    observerHeightM = 0,
+    { latitude, longitude, heightM = 0 }: Observer,
 ): EquatorialCoords {
     const H = (siderealTime + longitude - position.rightAscension) * DEG_TO_RAD;
-    const { rhoSinPhi, rhoCosPhi } = observerGeocentric(latitude, observerHeightM);
+    const { rhoSinPhi, rhoCosPhi } = observerGeocentric(latitude, heightM);
     const pi = parallax * DEG_TO_RAD;
     const delta = position.declination * DEG_TO_RAD;
 
