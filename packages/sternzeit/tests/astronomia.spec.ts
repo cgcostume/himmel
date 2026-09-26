@@ -44,7 +44,8 @@ test("the Sun agrees (chapter 25)", () => {
         const T = (jd - S.J2000) / 36525;
         // The mean anomaly comes from 47.3 here and from 25.3 there.
         expect(Math.abs(angle(S.sun.trueLongitude(jd), A.solar.trueLongitude(T).lon * R))).toBeLessThan(0.001 * ARCSEC);
-        expect(Math.abs(S.sun.distance(jd) / S.ASTRONOMICAL_UNIT_KM - A.solar.radius(T))).toBeLessThan(1e-7);
+        expect(Math.abs(S.sun.distance(jd) / S.ASTRONOMICAL_UNIT_KM - A.solar.radius(T))).toBeLessThan(1e-8);
+        expect(S.earth.orbitEccentricity(jd)).toBeCloseTo(A.solar.eccentricity(T), 12);
         // astronomia takes 25.8's shortcut, the nutation from its largest term only; the full series moves it by 2".
         const ours = S.sun.apparentPosition(jd);
         const theirs = A.solar.apparentEquatorial(jd);

@@ -7,7 +7,7 @@
 //  - `apparentPosition(t, ra2000, de2000, pmRa2000, pmDe2000)`: J2000 catalog position to equatorial
 //    coordinates for the given date. Proper motion first (the star's own drift across the sky, arcsec/year),
 //    then precession of the equinoxes (the slow wobble of the coordinate frame itself, ~50"/year, which
-//    dominates over any single star's motion). Meeus ch. 20/21 and 23.
+//    dominates over any single star's motion). Meeus ch. 21 to 23.
 //  - `horizontalPosition(...)`: the above, plus `equatorialToHorizontal` with the observer's latitude,
 //    longitude and sidereal time, exactly as `sun.ts`/`moon.ts` already do it.
 //  - Colorimetry, all static per star, which is why the catalog ships precomputed sRGB rather than B-V:

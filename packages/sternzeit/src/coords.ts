@@ -23,7 +23,7 @@ export interface HorizontalCoords {
     altitude: number;
 }
 
-/** Ecliptical to equatorial coordinates, per Meeus' "Astronomical Algorithms" (13.3, 13.4). */
+/** Ecliptical to equatorial coordinates, per Meeus 13.3, 13.4. */
 export function eclipticalToEquatorial(ecl: EclipticalCoords, obliquity: number): EquatorialCoords {
     const e = obliquity * DEG_TO_RAD;
     const l = ecl.longitude * DEG_TO_RAD;
@@ -40,7 +40,7 @@ export function eclipticalToEquatorial(ecl: EclipticalCoords, obliquity: number)
 }
 
 /**
- * Equatorial to horizontal coordinates, per Meeus' "Astronomical Algorithms" (12.5, 12.6).
+ * Equatorial to horizontal coordinates, per Meeus 13.5, 13.6.
  * `observersLongitude` is positive east (standard geographic convention: LST = GST + east longitude),
  * verified against the 2024-04-08 total solar eclipse via eclipse.ts's solarEclipseState. Meeus' own
  * azimuth formula is measured westward from south; 180 degrees is added below to return the compass
@@ -52,7 +52,7 @@ export function equatorialToHorizontal(
     observersLatitude: number,
     observersLongitude: number,
 ): HorizontalCoords {
-    // Local hour angle: H = θ - α (AA.p88).
+    // Local hour angle: H = θ - α (Meeus ch. 13).
     const H = (siderealTime + observersLongitude - equ.rightAscension) * DEG_TO_RAD;
     const declination = equ.declination * DEG_TO_RAD;
 
@@ -68,14 +68,14 @@ export function equatorialToHorizontal(
     };
 }
 
-/** Earth's equatorial radius (a) of the IAU 1976 ellipsoid, in kilometers, as in Meeus' chapter 11. Parallaxes are
+/** Earth's equatorial radius (a) of the IAU 1976 ellipsoid, in kilometers, as in Meeus ch. 11. Parallaxes are
  *  defined against it, not against the mean radius. */
 export const EQUATORIAL_RADIUS_KM = 6378.14;
 /** Polar to equatorial axis ratio (b/a) of the same ellipsoid. */
 const POLAR_AXIS_RATIO = 0.99664719;
 
 /** The observer's geocentric position (ρ sin φ', ρ cos φ') in Earth equatorial radii, on the ellipsoid and
- *  `observerHeightM` above it, per Meeus' "Astronomical Algorithms" (chapter 11). */
+ *  `observerHeightM` above it, per Meeus ch. 11. */
 export function observerGeocentric(latitude: number, observerHeightM = 0): { rhoSinPhi: number; rhoCosPhi: number } {
     const phi = latitude * DEG_TO_RAD;
     const u = Math.atan(POLAR_AXIS_RATIO * Math.tan(phi));
@@ -87,7 +87,7 @@ export function observerGeocentric(latitude: number, observerHeightM = 0): { rho
 }
 
 /** Corrects a geocentric equatorial position for parallax as seen from an observer's location, on the ellipsoid and at
- *  its height, per Meeus' "Astronomical Algorithms" (40.2, 40.3). Uses the same hour-angle convention as
+ *  its height, per Meeus 40.2, 40.3. Uses the same hour-angle convention as
  *  equatorialToHorizontal. Shared by sun.ts and moon.ts: the Moon's parallax is large enough (~1 degree) to always
  *  matter, the Sun's is tiny (~8.8") but applying it too keeps their topocentric positions on the same footing for
  *  eclipse math. */

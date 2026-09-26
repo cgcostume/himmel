@@ -6,6 +6,16 @@ export function frac(value: number): number {
     return value - Math.trunc(value);
 }
 
+/** c0 + c1·t + c2·t² + ..., evaluated by Horner's scheme: the coefficients in the order the sources print them. */
+export function polynomial(t: number, ...coefficients: number[]): number {
+    return coefficients.reduceRight((sum, c) => sum * t + c, 0);
+}
+
+/** A table's rows, as in its JSON, flattened into one Float64Array for fast strided loops. */
+export function flatTable(rows: readonly (readonly number[])[]): Float64Array {
+    return Float64Array.from(rows.flat());
+}
+
 export const DEG_TO_RAD = Math.PI / 180;
 export const RAD_TO_DEG = 180 / Math.PI;
 

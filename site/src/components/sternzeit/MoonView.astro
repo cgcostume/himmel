@@ -6,7 +6,10 @@ import "./sternzeit.css";
 <figure class="moon-figure" id="moon-view">
     <div class="moon-view" data-export="moon">
         <button type="button" class="view-toggle" data-field="lockMoon" aria-pressed="false" title="Lock the view to the Moon itself: north up, no horizon">moon-locked</button>
-        <svg viewBox="-100 -100 200 200" aria-hidden="true"></svg>
+        <div class="moon-panel">
+            <svg viewBox="-100 -100 200 200" aria-hidden="true"></svg>
+            <button type="button" class="view-toggle libration-toggle" data-field="opticalLibration" aria-pressed="true" title="The tilt of the Moon's axis against its orbit and its uneven speed along it let us see a little around its edges">optical libration</button>
+        </div>
         <p class="moon-status" data-field="status"></p>
     </div>
     <figcaption class="figure-caption">
@@ -17,7 +20,8 @@ import "./sternzeit.css";
         <Term of="Position angle of axis">position angle of the axis</Term> and the{" "}
         <Term of="Parallactic angle">parallactic angle</Term> (arc). The dashed circles are its size at apogee and perigee.
         Magnified, with the horizon at the same scale. The button in the corner locks the view to the Moon itself,
-        its north up and the horizon gone, leaving the librations as the only motion.
+        its north up and the horizon gone, leaving the librations as the only motion. The button at the bottom switches the
+        optical libration off, leaving only the physical one, too small to see here.
     </figcaption>
 </figure>
 

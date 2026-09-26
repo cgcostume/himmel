@@ -4,6 +4,7 @@
 
 import { writeFileSync } from "node:fs";
 
+const SOURCE = "IERS EOP C04 (UT1 - UTC) and USNO tai-utc.dat: ΔT = 32.184 s + (TAI - UTC) - (UT1 - UTC), in seconds";
 const text = async (url) => (await fetch(url)).text();
 
 // UT1 - UTC, daily, from the Paris Observatory. Columns: year, month, day, hour, MJD, x, y, UT1 - UTC.
@@ -25,5 +26,9 @@ for (const line of c04.split("\n")) {
     if (year !== 1962 + deltaT.length - 1) throw new Error(`missing a year before ${year}`);
 }
 
-writeFileSync(new URL("../src/data/deltat.json", import.meta.url), `${JSON.stringify({ firstYear: 1962, deltaT })}\n`);
+// Ten years to a line, two decimals each, so the columns line up.
+const decades = Array.from({ length: Math.ceil(deltaT.length / 10) }, (_, i) => deltaT.slice(10 * i, 10 * i + 10));
+const values = decades.map((decade) => `        ${decade.map((v) => v.toFixed(2)).join(", ")}`).join(",\n");
+const json = `{\n    "source": ${JSON.stringify(SOURCE)},\n    "firstYear": 1962,\n    "deltaT": [\n${values}\n    ]\n}\n`;
+writeFileSync(new URL("../src/data/deltat.json", import.meta.url), json);
 console.log(`ΔT for January 1, 1962 to ${1962 + deltaT.length - 1}, last ${deltaT.at(-1)} s`);

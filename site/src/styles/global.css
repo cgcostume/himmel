@@ -26,9 +26,12 @@
 }
 /* Clip on the root, not on the body: the body's own value is not what the viewport scrolls by, so the tooltips
    parked off to the right (see .term-tip, shifted into view only once they are opened) would widen the page. */
+/* No scroll anchoring: the figures and tables redraw in place at the same height, so there is nothing to hold steady,
+   and Firefox anchored to a redrawn node and threw the page thousands of pixels down when a set of controls opened. */
 html {
     overflow-x: clip;
     overflow-y: scroll;
+    overflow-anchor: none;
     background: var(--bg);
 }
 body {

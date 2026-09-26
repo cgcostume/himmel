@@ -9,7 +9,6 @@ references:
     - jensen2001
     - saemundsson1986
     - bennett1982
-    - bretagnon1982
     - nssdc
     - nishita1993
     - bruneton2008
@@ -53,7 +52,7 @@ in the middle of the day.
 
 Every figure and table on this page shows one moment and one place. The same controls sit folded up below every
 table, so there is no need to scroll back up here. The pin fills in your location and looks up its height above sea
-level, which matters mostly for the air.
+level, which matters mostly for the air. Animated a day a step, the Moon's phases and libration are easiest to follow.
 
 ## Counting time the astronomer's way
 
@@ -117,7 +116,8 @@ atmosphere <Cite id="nishita1993" /> <Cite id="bruneton2008" />, and the refract
 minutes after it has geometrically set. Refraction comes in two directions, from the true altitude
 <Cite id="saemundsson1986" /> and from the apparent one <Cite id="bennett1982" />, and a renderer bending its view rays
 wants the latter. These rows are evaluated towards the Sun. More than a degree below the horizon, refraction shows as
-`n/a`, and the ray simply ends in the ground: 0 km at sea level and a little more from a mountain, whose horizon lies lower.
+`n/a`, and the ray simply ends in the ground: 0 km at sea level and a little more from a mountain, whose horizon lies
+lower.
 
 The tilt and the vernal equinox are also what the sky's coordinates are built on. There are several coordinate
 systems, and each exists because one step of the computation is simplest in it.
@@ -125,7 +125,7 @@ systems, and each exists because one step of the computation is simplest in it.
 (<Fig id="armillary-sphere" />), as their equator. The Sun never leaves it, and the Moon and the planets stay within a
 few degrees, so orbits are computed here: an ecliptic longitude counted from the vernal equinox, and a small latitude
 off the plane. The orbit itself is almost a circle, at an eccentricity of about 0.0167
-<Cite id="bretagnon1982" />.
+<Cite id="meeus1998" />.
 
 <Term of="Equatorial coordinates">Equatorial coordinates</Term> take Earth's equator instead: right ascension along it,
 also counted from the vernal equinox, and declination north or south of it. This is the sky's own map, the one star
@@ -151,9 +151,9 @@ The prefixes of the function names say how far a position has been corrected, as
 - `horizontal`: as altitude and azimuth above the observer's horizon.
 
 For a renderer, it all ends in two calls: `horizontalPosition`, and `horizontalToDirection` for a unit vector in the
-local east-north-up frame, ENU for short: x east, y north, z up. A y-up engine takes it as `(x, z, -y)`. Refraction is left out on purpose: the altitude returned is the true one, not the apparent
-altitude the eye sees, which refraction lifts by more than the Sun's own diameter at the horizon. Bending the rays is
-the atmosphere's job.
+local east-north-up frame, ENU for short: x east, y north, z up. A y-up engine takes it as `(x, z, -y)`. Refraction is
+left out on purpose: the altitude returned is the true one, not the apparent altitude the eye sees, which refraction
+lifts by more than the Sun's own diameter at the horizon. Bending the rays is the atmosphere's job.
 
 ## The Sun
 
@@ -169,8 +169,7 @@ there, the topocentric and the horizontal position bring it to the observer, as 
 <DayArc />
 <Controls />
 
-Step through a year and watch the Sun's arc rise and sink with the seasons. The Moon moves about 13° a day against the
-stars, so its path never quite closes.
+The Moon moves about 13° a day against the stars, so its path never quite closes.
 
 The analemma's height swings with the seasons, from the tilt of Earth's axis. Its sideways swing comes
 from the <Term of="Equation of time">equation of time</Term>: Earth moves faster along its orbit in January than in
@@ -200,10 +199,10 @@ most here.
 
 The rows after `distance` are for rendering the Moon rather than locating it. The Moon always shows the same face,
 almost: tilted orbit and varying speed let us peek a few degrees around its edges over a month, the optical
-<Term of="Libration">libration</Term>, and the Moon's own slight wobble adds a few hundredths of a degree. The <Term of="Position angle of axis">position angle of the axis</Term>
-says how the Moon's north pole is oriented on the sky, and the <Term of="Parallactic angle">parallactic angle</Term>
-how that sky direction relates to your local "up". Together they determine how the Moon's surface, and its lit
-crescent, appear rotated for you.
+<Term of="Libration">libration</Term>, and the Moon's own slight wobble adds a few hundredths of a degree. The
+<Term of="Position angle of axis">position angle of the axis</Term> says how the Moon's north pole is oriented on the
+sky, and the <Term of="Parallactic angle">parallactic angle</Term> how that sky direction relates to your local "up".
+Together they determine how the Moon's surface, and its lit crescent, appear rotated for you.
 
 The last four rows light it. The <Term of="Phase angle">phase angle</Term>, the angle Sun-Moon-Earth, says how much of
 the lit half faces us, and the <Term of="Illuminated fraction">illuminated fraction</Term> turns that into what the
@@ -419,3 +418,20 @@ const next = nextTotalLunarEclipse(julianDayUT(fromDate(new Date())));
 The same goes for the other libraries: the Moon's phase, libration, sun direction and earthshine are what
 [nachtgestirn](../nachtgestirn/) shades the Moon with, sidereal time is what will turn the stars of
 [sternenheer](../sternenheer/), and the Sun's and the Moon's directions light the clouds of [gewoelk](../gewoelk/).
+
+## The people behind the numbers
+
+Almost every number in this library goes back to Jean Meeus, a Belgian meteorologist who worked at Brussels Airport
+until 1993 and computed the sky in his spare time. His Astronomical Algorithms <Cite id="meeus1998" /> turned the
+celestial mechanics of the observatories into recipes for a pocket calculator, and it is still the book every astronomy
+library is checked against. The asteroid 2213 Meeus carries his name.
+
+The library's two refraction formulas, one for each direction, come from either end of the craft. George G. Bennett
+fitted the one behind `earth.atmosphericRefractionFromApparent` for navigators, who by 1982 worked out their positions
+on programmable calculators <Cite id="bennett1982" />. Þorsteinn Sæmundsson, astronomer at the University of Iceland
+and for decades the editor of its almanac, fitted the other, behind `earth.atmosphericRefraction`
+<Cite id="saemundsson1986" />.
+The approximate variants follow the night sky model of Henrik Wann Jensen and his
+colleagues <Cite id="jensen2001" />, which renders moonlight, starlight, zodiacal light and airglow from their physics.
+And Fred Espenak, for decades at NASA's Goddard Space Flight Center and known as Mr. Eclipse, compiled the eclipse
+canons with Meeus, along with the polynomials for ΔT <Cite id="espenak2006" />.

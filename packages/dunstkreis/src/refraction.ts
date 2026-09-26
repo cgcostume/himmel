@@ -31,13 +31,12 @@ export interface RefractionConditions {
 }
 
 /**
- * Refraction, in degrees, as a function of the *apparent* altitude it produced, per Meeus' "Astronomical
- * Algorithms" (15.3) and G.G. Bennett, "The Calculation of the Astronomical Refraction in Marine Navigation"
- * (1982). ~34.5' at the horizon, 0 at the zenith.
+ * Refraction, in degrees, as a function of the *apparent* altitude it produced, per Meeus 16.3 from
+ * Bennett 1982. ~34.5' at the horizon, 0 at the zenith.
  *
  * This is the direction a renderer needs, since a camera ray is by definition an apparent direction:
  * subtracting this from a ray's apparent altitude gives the true altitude to sample the sky at.
- * `@himmelszelt/sternzeit`'s `earth.atmosphericRefraction` is the inverse relation (15.4, true to apparent), for
+ * `@himmelszelt/sternzeit`'s `earth.atmosphericRefraction` is the inverse relation (Meeus 16.4, true to apparent), for
  * correcting a computed body position instead. Apply one or the other, never both.
  *
  * The fit is stated for apparent altitudes of 0 and up and has a pole at -4.4°, so the input is clamped at 0.
@@ -52,7 +51,7 @@ export function atmosphericRefractionFromApparent(
     // The constant zeroes R at the zenith, which the bare fit misses by ~0.0014'.
     const R = 1 / Math.tan((h + 7.31 / (h + 4.4)) * DEG_TO_RAD) + 0.0013515216737563;
 
-    // AA.15's P/1010 · 283/(273+T) scaling, as a multiplier that is exactly 1 at the fit's own conditions.
+    // Meeus' P/1010 · 283/(273+T) scaling (ch. 16), as a multiplier that is exactly 1 at the fit's own conditions.
     return (R / 60) * airPressureRatio(observerHeightM) * (283 / (273 + temperatureC)); // R is in arcminutes.
 }
 

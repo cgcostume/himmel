@@ -38,7 +38,7 @@ export const references: Record<string, Reference> = {
         venue: "NASA Technical Publication TP-2006-214141",
         year: 2006,
         url: "https://eclipse.gsfc.nasa.gov/SEpubs/5MCSE.html",
-        note: "Every solar eclipse from 2000 BCE to 3000 CE.",
+        note: "Every solar eclipse from 2000 BCE to 3000 CE, and the polynomials for ΔT.",
     },
     espenak2009: {
         authors: "Fred Espenak, Jean Meeus",
@@ -64,13 +64,6 @@ export const references: Record<string, Reference> = {
         url: "https://graphics.cs.yale.edu/publications/physically-based-night-sky-model",
         note: "The approximate variants' main source.",
     },
-    bretagnon1982: {
-        authors: "Pierre Bretagnon",
-        title: "Théorie du mouvement de l'ensemble des planètes. Solution VSOP82",
-        venue: "Astronomy and Astrophysics 114",
-        year: 1982,
-        note: "Earth's orbital eccentricity.",
-    },
     bennett1982: {
         authors: "G. G. Bennett",
         title: "The Calculation of Astronomical Refraction in Marine Navigation",
@@ -84,6 +77,28 @@ export const references: Record<string, Reference> = {
         venue: "Sky and Telescope 72",
         year: 1986,
         note: "Atmospheric refraction from the true altitude.",
+    },
+    sagan1977: {
+        authors: "Carl Sagan",
+        title: "The Dragons of Eden: Speculations on the Evolution of Human Intelligence",
+        venue: "Random House",
+        year: 1977,
+        note: "The Cosmic Calendar.",
+    },
+    kurzgesagt2023: {
+        authors: "Kurzgesagt – In a Nutshell",
+        title: "4.5 Billion Years in 1 Hour",
+        venue: "YouTube",
+        year: 2023,
+        url: "https://www.youtube.com/watch?v=S7TUe5w6RHo",
+        note: "Earth's history at a million years a second.",
+    },
+    roddenberry1966: {
+        authors: "Gene Roddenberry",
+        title: "Star Trek",
+        venue: "NBC",
+        year: 1966,
+        note: "The stardate, in German Sternzeit.",
     },
     vandehulst1980: {
         authors: "Hendrik C. van de Hulst",

@@ -1,6 +1,6 @@
 // Terms used here are explained in the himmelszelt site's glossary (site/src/data/glossary.json).
 import observedDeltaT from "./data/deltat.json" with { type: "json" };
-import { dayFraction, frac, toInt } from "./math.js";
+import { dayFraction, frac, polynomial, toInt } from "./math.js";
 
 /** A calendar date/time used for astronomical calculations. */
 export interface AstronomicalTime {
@@ -32,7 +32,7 @@ export const STANDARD_EQUINOX: JulianDay = J2000;
 
 /**
  * Julian Day for a given calendar date/time, as given, without applying `utcOffsetSeconds` (see {@link julianDayUT}),
- * per Meeus' "Astronomical Algorithms" (ch. 7). Dates from 1582-10-15 on are Gregorian, earlier ones Julian, as in
+ * per Meeus ch. 7. Dates from 1582-10-15 on are Gregorian, earlier ones Julian, as in
  * Meeus; the ten days the reform skipped return 0. Valid for years from -4712 on.
  */
 export function julianDay(time: AstronomicalTime): JulianDay {
@@ -67,9 +67,8 @@ export function julianDayUT(time: AstronomicalTime): JulianDay {
 /**
  * ΔT = TT - UT, in seconds, at a given Julian Day (UT): how far Earth's slowing, uneven rotation has fallen behind the
  * uniform time the ephemerides run on. About a minute today, hours in antiquity, and unpredictable in detail for the
- * future. Observed values from the IERS since 1962, before that the polynomials of Espenak & Meeus, "Polynomial
- * Expressions for Delta T", from the Five Millennium Canon of Solar Eclipses (NASA TP-2006-214141), fitted to
- * Morrison & Stephenson (2004). After the last observation, its recent trend blends into their extrapolation over a
+ * future. Observed values from the IERS since 1962, before that the polynomials of Espenak & Meeus 2006, from the
+ * Five Millennium Canon of Solar Eclipses (NASA TP-2006-214141), fitted to Morrison & Stephenson 2004. After the last observation, its recent trend blends into their extrapolation over a
  * century. https://eclipse.gsfc.nasa.gov/SEhelp/deltatpoly2004.html
  */
 export function deltaT(jd: JulianDay): number {
@@ -93,39 +92,28 @@ export function deltaT(jd: JulianDay): number {
 /** Espenak & Meeus' ΔT at a decimal year, in seconds. */
 function polynomialDeltaT(y: number): number {
     const long = (u: number) => -20 + 32 * u * u;
-    const poly = (t: number, ...c: number[]) => c.reduceRight((sum, k) => sum * t + k, 0);
 
     if (y < -500) return long((y - 1820) / 100);
     if (y < 500) {
-        return poly(y / 100, 10583.6, -1014.41, 33.78311, -5.952053, -0.1798452, 0.022174192, 0.0090316521);
+        return polynomial(y / 100, 10583.6, -1014.41, 33.78311, -5.952053, -0.1798452, 0.022174192, 0.0090316521);
     }
     if (y < 1600) {
         const u = (y - 1000) / 100;
-        return poly(u, 1574.2, -556.01, 71.23472, 0.319781, -0.8503463, -0.005050998, 0.0083572073);
+        return polynomial(u, 1574.2, -556.01, 71.23472, 0.319781, -0.8503463, -0.005050998, 0.0083572073);
     }
-    if (y < 1700) return poly(y - 1600, 120, -0.9808, -0.01532, 1 / 7129);
-    if (y < 1800) return poly(y - 1700, 8.83, 0.1603, -0.0059285, 0.00013336, -1 / 1174000);
+    if (y < 1700) return polynomial(y - 1600, 120, -0.9808, -0.01532, 1 / 7129);
+    if (y < 1800) return polynomial(y - 1700, 8.83, 0.1603, -0.0059285, 0.00013336, -1 / 1174000);
     if (y < 1860) {
         const t = y - 1800;
-        return poly(
-            t,
-            13.72,
-            -0.332447,
-            0.0068612,
-            0.0041116,
-            -0.00037436,
-            0.0000121272,
-            -0.0000001699,
-            0.000000000875,
-        );
+        return polynomial(t, 13.72, -0.332447, 0.0068612, 0.0041116, -0.00037436, 1.21272e-5, -1.699e-7, 8.75e-10);
     }
-    if (y < 1900) return poly(y - 1860, 7.62, 0.5737, -0.251754, 0.01680668, -0.0004473624, 1 / 233174);
-    if (y < 1920) return poly(y - 1900, -2.79, 1.494119, -0.0598939, 0.0061966, -0.000197);
-    if (y < 1941) return poly(y - 1920, 21.2, 0.84493, -0.0761, 0.0020936);
-    if (y < 1961) return poly(y - 1950, 29.07, 0.407, -1 / 233, 1 / 2547);
-    if (y < 1986) return poly(y - 1975, 45.45, 1.067, -1 / 260, -1 / 718);
-    if (y < 2005) return poly(y - 2000, 63.86, 0.3345, -0.060374, 0.0017275, 0.000651814, 0.00002373599);
-    if (y < 2050) return poly(y - 2000, 62.92, 0.32217, 0.005589);
+    if (y < 1900) return polynomial(y - 1860, 7.62, 0.5737, -0.251754, 0.01680668, -0.0004473624, 1 / 233174);
+    if (y < 1920) return polynomial(y - 1900, -2.79, 1.494119, -0.0598939, 0.0061966, -0.000197);
+    if (y < 1941) return polynomial(y - 1920, 21.2, 0.84493, -0.0761, 0.0020936);
+    if (y < 1961) return polynomial(y - 1950, 29.07, 0.407, -1 / 233, 1 / 2547);
+    if (y < 1986) return polynomial(y - 1975, 45.45, 1.067, -1 / 260, -1 / 718);
+    if (y < 2005) return polynomial(y - 2000, 63.86, 0.3345, -0.060374, 0.0017275, 0.000651814, 0.00002373599);
+    if (y < 2050) return polynomial(y - 2000, 62.92, 0.32217, 0.005589);
     if (y < 2150) return long((y - 1820) / 100) - 0.5628 * (2150 - y);
     return long((y - 1820) / 100);
 }

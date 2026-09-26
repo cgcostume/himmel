@@ -22,11 +22,14 @@ const SUN_ARROW_GAP = 5;
 const SUN_ARROW_LENGTH = 14;
 
 const view = document.querySelector(".moon-view");
-const svgEl = view.querySelector(":scope > svg");
+const svgEl = view.querySelector(".moon-panel > svg");
 const statusEl = view.querySelector('[data-field="status"]');
 const lockButton = view.querySelector('[data-field="lockMoon"]');
 // Locked to the Moon: its north up rather than the zenith, and no horizon, so only the librations still move.
 let locked = false;
+const opticalButton = view.querySelector('[data-field="opticalLibration"]');
+// Off leaves only the physical libration, the Moon's own wobble, well below a pixel here.
+let optical = true;
 
 const f = (n) => n.toFixed(2);
 const polyline = (points, cls) =>
@@ -72,7 +75,10 @@ function render() {
     const unitsPerPx = 200 / (svgEl.clientWidth || 200);
     const time = precise.fromJulianDay(jd);
     const radius = (precise.moon.apparentAngularDiameter(ephemerisDay(jd)) / 2) * UNITS_PER_RADIAN;
-    const { longitude: l, latitude: b } = precise.moon.librations(ephemerisDay(jd));
+    const total = precise.moon.librations(ephemerisDay(jd));
+    const opticalPart = optical ? { longitude: 0, latitude: 0 } : precise.moon.opticalLibrations(ephemerisDay(jd));
+    const l = total.longitude - opticalPart.longitude;
+    const b = total.latitude - opticalPart.latitude;
     const axis = precise.moon.positionAngleOfAxis(ephemerisDay(jd));
     const parallactic = precise.moon.parallacticAngle(time, latitude, longitude);
     const horizontal = precise.moon.horizontalPosition(time, latitude, longitude, state.heightM);
@@ -196,6 +202,12 @@ function render() {
 lockButton.addEventListener("click", () => {
     locked = !locked;
     lockButton.setAttribute("aria-pressed", String(locked));
+    render();
+});
+
+opticalButton.addEventListener("click", () => {
+    optical = !optical;
+    opticalButton.setAttribute("aria-pressed", String(optical));
     render();
 });
 

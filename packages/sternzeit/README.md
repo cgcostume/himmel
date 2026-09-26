@@ -36,7 +36,8 @@ HPI: ["Photorealistisches Rendering atmosphärischer Effekte in geovirtuellen 3D
 Echtzeit"](https://daniellimberger.de/resources/2012%20%E2%80%93%20Mueller%20%28now%20Limberger%29%20%E2%80%93%20Photorealistisches%20Rendering%20atmosphaerischer%20Effekte%20in%20geovirtuellen%203D-Umgebungen%20in%20Echtzeit.pdf)
 (2012, German).
 
-The primary sources cited throughout the code (see individual function docstrings for exact section/equation numbers):
+The sources cited throughout the code. The docstrings cite them short: `Meeus 47.1` is equation 47.1, `Meeus ch. 53`
+chapter 53 and `Meeus table 22.A` a table of the 2nd edition; `Jensen et al. 2001` is the night sky model, and so on.
 
 - Jean Meeus, *Astronomical Algorithms* (2nd ed., Willmann-Bell, 1998): the precise variants' main source.
 - H. Wann Jensen, F. Durand, J. Dorsey, M. M. Stark, P. Shirley, S. Premože,
@@ -45,12 +46,16 @@ The primary sources cited throughout the code (see individual function docstring
 - NSSDC planetary fact sheets: [Earth](http://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html),
   [Moon](http://nssdc.gsfc.nasa.gov/planetary/factsheet/moonfact.html),
   [Sun](http://nssdc.gsfc.nasa.gov/planetary/factsheet/sunfact.html): mean radii and similar constants.
-- P. Bretagnon, *Théorie du mouvement de l'ensemble des planètes. Solution VSOP82* (1982): Earth's orbital eccentricity.
 - G. G. Bennett, "The Calculation of Astronomical Refraction in Marine Navigation" (Journal of Navigation,
   1982), and Þorsteinn Sæmundsson, "Atmospheric Refraction" (Sky and Telescope, 1986): atmospheric refraction.
-  Meeus gives both directions as separate empirical fits: Bennett's (15.3) takes the apparent altitude
-  (`atmosphericRefractionFromApparent`, what a renderer warping a camera ray needs), Sæmundsson's (15.4) the
+  Meeus gives both directions as separate empirical fits: Bennett's (16.3) takes the apparent altitude
+  (`atmosphericRefractionFromApparent`, what a renderer warping a camera ray needs), Sæmundsson's (16.4) the
   true one (`atmosphericRefraction`). They differ by ~5' at the horizon and are not interchangeable.
+- J. Laskar (Astronomy and Astrophysics 157, 1986): the mean obliquity, by way of Meeus 22.3.
+- F. Espenak, J. Meeus, [*Five Millennium Canon of Solar Eclipses*](https://eclipse.gsfc.nasa.gov/SEpubs/5MCSE.html)
+  (NASA TP-2006-214141), fitted to L. V. Morrison, F. R. Stephenson (2004): ΔT before 1962 and after the last
+  observation; since 1962 the IERS' observed values (`src/data/deltat.json`).
+- H. C. van de Hulst, *Multiple Light Scattering* (1980): earthshine.
 - T. Nishita, T. Sirai, K. Tadamura, E. Nakamae, "Display of the Earth Taking into Account Atmospheric
   Scattering" (SIGGRAPH 1993), and E. Bruneton, F. Neyret, "Precomputed Atmospheric Scattering" (2008):
   atmosphere thickness constant.

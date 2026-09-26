@@ -107,6 +107,8 @@
 .steps {
     display: flex;
     flex-wrap: wrap;
+    /* Buttons, not text: a quick double tap must not select a label. */
+    user-select: none;
 }
 .steps input {
     position: absolute;
@@ -300,7 +302,7 @@ tbody tr:hover {
 .altaz-panel > svg,
 .analemma-panel > svg,
 .eclipse-panel > svg,
-.moon-view > svg {
+.moon-panel > svg {
     display: block;
     width: 100%;
     aspect-ratio: 1 / 1;
@@ -610,6 +612,14 @@ figure[id] {
 .moon-view {
     max-width: 26rem;
     margin: 0 auto 0.75rem;
+}
+/* The libration switch: in the panel's bottom left corner, as the lock is in its top left one. */
+.moon-panel {
+    position: relative;
+}
+.moon-panel > .libration-toggle {
+    top: auto;
+    bottom: 6px;
 }
 .moon-status {
     margin: 0.5rem 0 0;

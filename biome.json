@@ -21,6 +21,12 @@
                     }
                 }
             }
+        },
+        {
+            "includes": ["packages/*/src/data/*.json"],
+            "formatter": {
+                "enabled": false
+            }
         }
     ]
 }

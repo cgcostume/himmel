@@ -47,8 +47,8 @@ naturally falls off with height and vanishes at the top of the atmosphere.
 
 The implementation is exported from the shared WGSL layer so that the moon, star, and cloud modules can warp
 their rays with the same function. Because a camera ray is an *apparent* direction, it uses Bennett's fit
-(Meeus AA.15.3, apparent to true), the WGSL twin of `@himmelszelt/sternzeit`'s
-`earth.atmosphericRefractionFromApparent`. Its companion `earth.atmosphericRefraction` is AA.15.4, running
+(Meeus 16.3, apparent to true), the WGSL twin of `@himmelszelt/sternzeit`'s
+`earth.atmosphericRefractionFromApparent`. Its companion `earth.atmosphericRefraction` is Meeus 16.4, running
 true to apparent, for consumers correcting a computed body position instead. The two differ by ~5' at the
 horizon and are not interchangeable; a test pins them to each other as inverses so they cannot drift.
 

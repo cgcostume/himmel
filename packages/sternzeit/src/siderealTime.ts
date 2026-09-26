@@ -9,10 +9,7 @@ import {
     julianEphemerisDay,
 } from "./time.js";
 
-/**
- * Mean sidereal time at Greenwich, in degrees, per Meeus' "Astronomical
- * Algorithms" (12.4).
- */
+/** Mean sidereal time at Greenwich, in degrees, per Meeus 12.4. */
 export function meanSiderealTime(time: AstronomicalTime): number {
     const jd = julianDayUT(time);
     const T = julianCenturiesSinceStandardEquinox(jd);
@@ -23,10 +20,7 @@ export function meanSiderealTime(time: AstronomicalTime): number {
     return normalizeDegrees(t);
 }
 
-/**
- * Faster mean sidereal time approximation, in degrees, from Jensen et al.,
- * "A Physically-Based Night Sky Model" (2001).
- */
+/** Mean sidereal time at Greenwich, in degrees: approximation per Jensen et al. 2001. */
 export function meanSiderealTimeApprox(time: AstronomicalTime): number {
     const jd = julianDayUT(time);
     const T = julianCenturiesSinceStandardEquinox(jd);
@@ -37,7 +31,7 @@ export function meanSiderealTimeApprox(time: AstronomicalTime): number {
 
 /**
  * Apparent sidereal time at Greenwich, in degrees: the mean one plus the equation of the equinoxes (Δψ cos ε), per
- * Meeus' "Astronomical Algorithms" (ch. 12). It is measured from the true equinox, so it is the one an apparent right
+ * Meeus ch. 12. It is measured from the true equinox, so it is the one an apparent right
  * ascension needs for its hour angle. The two differ by at most about a second of time.
  */
 export function apparentSiderealTime(time: AstronomicalTime): number {

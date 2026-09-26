@@ -13,15 +13,15 @@ fn dkAirPressureRatio(observerHeightM: f32) -> f32 {
     return exp(-observerHeightM / DK_PRESSURE_SCALE_HEIGHT_M);
 }
 
-// Refraction, in degrees, as a function of the apparent altitude (degrees) that produced it. Meeus'
-// "Astronomical Algorithms" (15.3) / Bennett (1982), with the trailing constant zeroing it at the zenith.
+// Refraction, in degrees, as a function of the apparent altitude (degrees) that produced it. Meeus 16.3
+// from Bennett 1982, with the trailing constant zeroing it at the zenith.
 // The fit has a pole at -4.4 degrees, so the input is clamped at 0; rays below the horizontal are either
 // ground or, for an elevated observer, within ~1 degree of the horizon, where that is a fine approximation.
 fn dkAtmosphericRefractionFromApparent(apparentAltitude: f32, observerHeightM: f32, temperatureC: f32) -> f32 {
     let h = max(apparentAltitude, 0.0);
     let R = 1.0 / tan((h + 7.31 / (h + 4.4)) * DK_DEG_TO_RAD) + 0.0013515216737563;
 
-    // AA.15's P/1010 * 283/(273+T) scaling, a multiplier that is exactly 1 at the fit's own conditions.
+    // Meeus' P/1010 * 283/(273+T) scaling (ch. 16), a multiplier that is exactly 1 at the fit's own conditions.
     return (R / 60.0) * dkAirPressureRatio(observerHeightM) * (283.0 / (273.0 + temperatureC));
 }
 
